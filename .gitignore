@@ -1,0 +1,29 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local game files - do not commit ROMs or emulator saves
+roms/
+states/
+*.gba
+*.gb
+*.gbc
+*.sav
+*.srm
+*.state
+
+# Training outputs
+runs/
+videos/
+logs/
+models/
+checkpoints/
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

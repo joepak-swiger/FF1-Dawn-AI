@@ -1,0 +1,2 @@
+stable-retro==1.0.1
+stable-baselines3[extra]==2.9.0
