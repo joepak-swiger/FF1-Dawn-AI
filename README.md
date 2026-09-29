@@ -15,3 +15,9 @@ Start after party creation in Final Fantasy I and train an agent to:
 ## Important
 
 ROMs, save states, videos, training runs, and model checkpoints are intentionally not committed to GitHub.
+
+## Public release / ROM notice
+
+This repository does not include game ROMs, save files, save states, trained model files, checkpoints, generated videos, or GIFs.
+
+You must provide your own legally obtained ROM. Local ROMs, save files, model outputs, checkpoints, and generated media are intentionally ignored by Git.
