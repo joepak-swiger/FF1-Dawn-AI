@@ -15,7 +15,7 @@ class FF1NesEnv(gym.Env):
     Starts from our saved Cornelia overworld state.
     Uses a small discrete action space.
     Returns stacked grayscale screen frames.
-    Gives reward for seeing new screen states.
+    Rewards exploration while discouraging button-spam and standing still.
     """
 
     metadata = {"render_modes": ["rgb_array"]}
@@ -27,6 +27,12 @@ class FF1NesEnv(gym.Env):
         action_freq=16,
         frame_stack=3,
         obs_size=84,
+        novelty_reward=1.0,
+        revisit_penalty=-0.02,
+        same_screen_penalty=-0.02,
+        repeat_action_penalty=-0.03,
+        max_stuck_penalty=-0.30,
+        print_buttons=True,
     ):
         super().__init__()
 
@@ -40,6 +46,12 @@ class FF1NesEnv(gym.Env):
         self.frame_stack = frame_stack
         self.obs_size = obs_size
 
+        self.novelty_reward = novelty_reward
+        self.revisit_penalty = revisit_penalty
+        self.same_screen_penalty = same_screen_penalty
+        self.repeat_action_penalty = repeat_action_penalty
+        self.max_stuck_penalty = max_stuck_penalty
+
         stable_retro.data.Integrations.add_custom_path(str(self.custom_integrations))
 
         self.retro_env = stable_retro.make(
@@ -50,10 +62,12 @@ class FF1NesEnv(gym.Env):
         )
 
         self.buttons = list(getattr(self.retro_env, "buttons", []))
-        print("Stable-Retro buttons:", self.buttons)
 
-        # Movement works on the overworld.
-        # A/B are also needed once random battles start.
+        if print_buttons:
+            print("Stable-Retro buttons:", self.buttons)
+
+        # NES mapping from our boot/audit:
+        # ['B', None, 'SELECT', 'START', 'UP', 'DOWN', 'LEFT', 'RIGHT', 'A']
         self.action_names = ["UP", "DOWN", "LEFT", "RIGHT", "A", "B"]
         self.button_indexes = [4, 5, 6, 7, 8, 0]
 
@@ -66,11 +80,21 @@ class FF1NesEnv(gym.Env):
             dtype=np.uint8,
         )
 
+        if not self.state_path.exists():
+            raise FileNotFoundError(f"Missing start state: {self.state_path}")
+
         self.start_state = self.state_path.read_bytes()
+
         self.rgb = None
         self.recent_frames = None
         self.seen_hashes = set()
         self.step_count = 0
+
+        self.last_action = None
+        self.same_action_streak = 0
+
+        self.last_screen_key = None
+        self.same_screen_streak = 0
 
     def _empty_retro_action(self):
         return np.zeros(self.retro_env.action_space.shape, dtype=np.int8)
@@ -96,6 +120,7 @@ class FF1NesEnv(gym.Env):
             action = self._empty_retro_action()
 
         done = False
+
         for _ in range(count):
             done = self._step_retro(action) or done
 
@@ -111,14 +136,12 @@ class FF1NesEnv(gym.Env):
         return done
 
     def _preprocess(self, rgb):
-        # RGB -> grayscale -> 84x84
         gray = np.mean(rgb[:, :, :3], axis=2).astype(np.uint8)
         img = Image.fromarray(gray)
         img = img.resize((self.obs_size, self.obs_size), Image.Resampling.BILINEAR)
         return np.array(img, dtype=np.uint8)
 
     def _screen_hash(self):
-        # Tiny hash so animation noise matters less than full pixels.
         tiny = Image.fromarray(self.rgb).resize((32, 32), Image.Resampling.BILINEAR)
         return hashlib.sha1(np.array(tiny).tobytes()).hexdigest()
 
@@ -146,8 +169,13 @@ class FF1NesEnv(gym.Env):
         self.seen_hashes = set()
         self.step_count = 0
 
-        screen_key = self._screen_hash()
-        self.seen_hashes.add(screen_key)
+        self.last_action = None
+        self.same_action_streak = 0
+
+        self.last_screen_key = self._screen_hash()
+        self.same_screen_streak = 0
+
+        self.seen_hashes.add(self.last_screen_key)
 
         return self._get_obs(), {}
 
@@ -156,17 +184,44 @@ class FF1NesEnv(gym.Env):
         button_index = self.button_indexes[action]
         button_name = self.action_names[action]
 
+        if self.last_action == action:
+            self.same_action_streak += 1
+        else:
+            self.same_action_streak = 1
+
+        self.last_action = action
+
         done = self._press_button_index(button_index)
 
         screen_key = self._screen_hash()
         is_new_screen = screen_key not in self.seen_hashes
 
-        reward = 1.0 if is_new_screen else -0.01
+        if screen_key == self.last_screen_key:
+            self.same_screen_streak += 1
+        else:
+            self.same_screen_streak = 0
+
+        reward_parts = {}
 
         if is_new_screen:
+            reward_parts["novelty"] = self.novelty_reward
             self.seen_hashes.add(screen_key)
+        else:
+            reward_parts["revisit"] = self.revisit_penalty
 
+        if self.same_screen_streak >= 3:
+            stuck_penalty = self.same_screen_penalty * self.same_screen_streak
+            reward_parts["same_screen_penalty"] = max(stuck_penalty, self.max_stuck_penalty)
+
+        if self.same_action_streak >= 5:
+            repeat_penalty = self.repeat_action_penalty * (self.same_action_streak - 4)
+            reward_parts["repeat_action_penalty"] = max(repeat_penalty, self.max_stuck_penalty)
+
+        reward = float(sum(reward_parts.values()))
+
+        self.last_screen_key = screen_key
         self.step_count += 1
+
         truncated = self.step_count >= self.max_steps
         terminated = bool(done)
 
@@ -174,6 +229,10 @@ class FF1NesEnv(gym.Env):
             "button": button_name,
             "unique_screens": len(self.seen_hashes),
             "step_count": self.step_count,
+            "same_action_streak": self.same_action_streak,
+            "same_screen_streak": self.same_screen_streak,
+            "is_new_screen": is_new_screen,
+            "reward_parts": reward_parts,
         }
 
         return self._get_obs(), reward, terminated, truncated, info
