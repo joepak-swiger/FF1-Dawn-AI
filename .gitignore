@@ -27,3 +27,4 @@ checkpoints/
 Thumbs.db
 .vscode/
 .idea/
+*.nes
