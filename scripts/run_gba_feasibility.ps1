@@ -7,6 +7,16 @@ if ($args.Count -gt 1 -or ($args.Count -eq 1 -and $args[0] -ne '--dry-run')) {
 $mode = if ($args.Count -eq 0) { 'run' } else { '--dry-run' }
 
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$bashRunnerPaths = @(
+    (Join-Path $projectRoot 'scripts\run_gba_feasibility.sh'),
+    (Join-Path $projectRoot 'scripts\run_nes_ram_experiment.sh')
+)
+try {
+    & (Join-Path $PSScriptRoot 'normalize_bash_line_endings.ps1') -Paths $bashRunnerPaths | Out-Host
+} catch {
+    [Console]::Error.WriteLine("ERROR: Could not normalize Bash runner line endings: $($_.Exception.Message)")
+    exit 2
+}
 $driveRoot = [System.IO.Path]::GetPathRoot($projectRoot)
 if (-not $driveRoot -or $driveRoot -notmatch '^([A-Za-z]):\\$') {
     [Console]::Error.WriteLine("ERROR: Expected a drive-mounted project path; got '$projectRoot'.")
@@ -29,6 +39,10 @@ try {
     [Console]::Error.WriteLine("ERROR: Could not start WSL command '$wslExe': $($_.Exception.Message)")
     [Console]::Error.WriteLine('No experiment log exists because the Bash runner did not start.')
     exit 2
+}
+if ($runnerExit -lt 0) {
+    [Console]::Error.WriteLine("ERROR: WSL could not start the Linux process (native exit code $runnerExit). The Bash runner did not start, so no experiment log exists.")
+    exit 1
 }
 if ($runnerExit -ne 0) {
     [Console]::Error.WriteLine("ERROR: WSL/Bash returned exit code $runnerExit.")

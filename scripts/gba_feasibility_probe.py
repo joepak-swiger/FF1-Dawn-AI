@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
+import math
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -80,11 +82,18 @@ def _save_trace_frame(output_dir: Path, rows: list[dict], step: int, button: str
     fraction = None
     if previous is not None and previous.shape == image.shape:
         fraction = float(np.mean(np.any(previous != image, axis=2)))
+    image_hash = hashlib.sha256(image.tobytes()).hexdigest()
+    known_screens = {item["image_sha256"]: item["screen_id"] for item in rows}
+    screen_id = known_screens.get(image_hash)
+    if screen_id is None:
+        screen_id = f"screen_{len(known_screens) + 1:03d}"
     row = {
         "step": step,
         "button": button,
         "phase": phase,
         "changed_pixel_fraction": "" if fraction is None else f"{fraction:.6f}",
+        "screen_id": screen_id,
+        "image_sha256": image_hash,
         "screenshot": name,
     }
     rows.append(row)
@@ -96,6 +105,64 @@ def _save_trace_frame(output_dir: Path, rows: list[dict], step: int, button: str
             writer.writeheader()
         writer.writerow(row)
         handle.flush()
+
+
+def _summarize_party_trace(output_dir: Path, rows: list[dict]) -> dict:
+    """Create compact ordered contact sheets and exact-frame repeat statistics.
+
+    Screen IDs indicate exact screenshot equality only; they do not name or
+    classify game screens and cannot prove an input caused a transition.
+    """
+    released = [row for row in rows if row["phase"] in {"boot_idle", "released"}]
+    repeated = []
+    for previous, current in zip(released, released[1:]):
+        if previous["image_sha256"] == current["image_sha256"]:
+            repeated.append({"previous_step": previous["step"], "step": current["step"], "button": current["button"]})
+    tile_w, thumb_w, thumb_h, caption_h, columns = 160, 144, 96, 30, 5
+    sheets = []
+    for sheet_index, offset in enumerate(range(0, len(released), 25), start=1):
+        group = released[offset:offset + 25]
+        row_count = math.ceil(len(group) / columns)
+        canvas = Image.new("RGB", (columns * tile_w, row_count * (thumb_h + caption_h)), "white")
+        draw = ImageDraw.Draw(canvas)
+        for index, event in enumerate(group):
+            with Image.open(output_dir / event["screenshot"]) as source:
+                thumb = source.convert("RGB")
+                thumb.thumbnail((thumb_w, thumb_h))
+            x, y = (index % columns) * tile_w, (index // columns) * (thumb_h + caption_h)
+            canvas.paste(thumb, (x + (tile_w - thumb.width) // 2, y))
+            delta = event["changed_pixel_fraction"] or "first"
+            caption = f"{event['step']} {event['button']} {event['screen_id']}"
+            draw.text((x + 2, y + thumb_h + 2), caption[:26], fill="black", font=ImageFont.load_default())
+            draw.text((x + 2, y + thumb_h + 16), f"pixel change {delta}"[:25], fill="black", font=ImageFont.load_default())
+        canvas.quantize(colors=48, method=Image.Quantize.MEDIANCUT).save(
+            output_dir / f"party_setup_contact_sheet_{sheet_index:02d}.png", optimize=True
+        )
+        sheets.append(f"party_setup_contact_sheet_{sheet_index:02d}.png")
+    unique_screens = len({row["image_sha256"] for row in released})
+    summary = {
+        "ordered_action_screens": sum(row["phase"] == "released" for row in rows),
+        "boot_idle_screens": sum(row["phase"] == "boot_idle" for row in rows),
+        "unique_exact_frame_signatures": unique_screens,
+        "consecutive_exact_duplicate_screens": repeated,
+        "contact_sheets": sheets,
+        "screen_semantics_classified": False,
+        "identical_frames_prove_stall": False,
+    }
+    (output_dir / "party_setup_trace_summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    return summary
+
+
+def _initial_milestones() -> dict:
+    return {
+        "rom_integration_boots": {"status": "not_run", "evidence": "No runtime launched."},
+        "input_controls_function": {"status": "not_verified", "evidence": "Mapped buttons and accepted action calls do not alone prove in-game control."},
+        "party_creation_works": {"status": "not_verified", "evidence": "Requires visual confirmation of the resulting party screen."},
+        "playable_scene_reached": {"status": "not_verified", "evidence": "A title, logo, or character-selection frame is not a playable checkpoint."},
+        "native_state_serialized": {"status": "not_run", "evidence": "No runtime state created."},
+        "state_restored_after_reset": {"status": "not_run", "evidence": "No reset/reload attempt run."},
+        "gameplay_resumes_correctly": {"status": "not_verified", "evidence": "Requires a confirmed playable scene and a verified resumed game action."},
+    }
 
 
 def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
@@ -123,22 +190,33 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
         "state_origin": "serialized directly from this Stable-Retro core",
         "external_mgba_state_loaded": False,
         "integration_files_modified": False,
+        "milestones": _initial_milestones(),
     }
+    trace_rows: list[dict] = []
+    trace_previous: np.ndarray | None = None
+    trace_step = 0
+    if automate_party_setup:
+        report["party_setup_trace_csv"] = str(output_dir / "party_setup_trace.csv")
     try:
         reset = env.reset()
         obs = np.asarray(reset[0] if isinstance(reset, tuple) else reset)
         if obs.ndim != 3 or obs.shape[2] < 3:
             raise RuntimeError(f"Unexpected reset observation shape: {obs.shape}")
+        report["milestones"]["rom_integration_boots"] = {
+            "status": "partially_verified",
+            "evidence": f"Stable-Retro reset returned RGB observation {list(obs.shape)}; this confirms core initialization, but the image is not automatically classified as a game boot/title screen.",
+        }
 
         button_names = list(getattr(env, "buttons", []))
         indices = {str(name).upper(): index for index, name in enumerate(button_names) if name}
         missing = [name for name in ("A", "START") if name not in indices]
         if missing:
             raise RuntimeError(f"Stable-Retro integration does not expose buttons: {missing}")
-
-        trace_rows: list[dict] = []
-        trace_previous: np.ndarray | None = None
-        trace_step = 0
+        report["button_mapping"] = {name: indices[name] for name in indices}
+        report["milestones"]["input_controls_function"] = {
+            "status": "partially_verified",
+            "evidence": "Required A/START (and route buttons when requested) are mapped and action calls returned observations; in-game navigation effect is not independently confirmed.",
+        }
 
         def tap(name: str) -> np.ndarray:
             nonlocal trace_previous, trace_step
@@ -180,22 +258,45 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
         state = env.em.get_state()
         if not state:
             raise RuntimeError("Stable-Retro returned an empty native emulator state")
-        (output_dir / "stable_retro_core.state").write_bytes(state)
+        state_path = output_dir / "stable_retro_core.state"
+        bytes_written = state_path.write_bytes(state)
+        if bytes_written != len(state) or state_path.read_bytes() != state:
+            raise RuntimeError("Native Stable-Retro state did not round-trip to disk byte-for-byte")
+        report["milestones"]["native_state_serialized"] = {
+            "status": "passed",
+            "evidence": f"Active Stable-Retro core serialized {len(state)} bytes and the local file matched byte-for-byte.",
+        }
 
         # Continue from the generated checkpoint, reset the same emulator,
         # reload it, and replay identical inputs. Matching frames establish a
         # real native-core round trip without importing an mGBA savestate.
         expected = _run(env, indices["A"], 8)
         expected = _run(env, None, 24)
-        env.reset()
-        env.em.set_state(state)
-        actual = _run(env, indices["A"], 8)
-        actual = _run(env, None, 24)
+        report["milestones"]["state_restored_after_reset"] = {
+            "status": "in_progress",
+            "evidence": "Reset and native state reload started; deterministic continuation is being checked.",
+        }
+        try:
+            env.reset()
+            env.em.set_state(state)
+            actual = _run(env, indices["A"], 8)
+            actual = _run(env, None, 24)
+        except Exception as restore_error:
+            report["milestones"]["state_restored_after_reset"] = {
+                "status": "failed",
+                "evidence": f"Reset/reload/replay raised {type(restore_error).__name__}: {restore_error}",
+            }
+            raise
         matched = expected.shape == actual.shape and np.array_equal(expected, actual)
         Image.fromarray(actual[:, :, :3].astype(np.uint8)).save(output_dir / "gba_after_reload_resume.png")
+        report["milestones"]["state_restored_after_reset"] = {
+            "status": "passed" if matched else "failed",
+            "evidence": "After env.reset and native set_state, replayed A/idle frames were compared byte-for-byte with the pre-reset continuation.",
+        }
         if not matched:
             raise RuntimeError("Native Stable-Retro state failed deterministic reset/reload/resume comparison")
 
+        trace_analysis = _summarize_party_trace(output_dir, trace_rows) if automate_party_setup else None
         report.update({
             "status": "passed",
             "observation_shape": list(obs.shape),
@@ -206,6 +307,9 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
             "party_setup_trace_rows": len(trace_rows),
             "party_setup_trace_csv": str(output_dir / "party_setup_trace.csv") if automate_party_setup else None,
             "party_setup_trace_screenshots": len(trace_rows),
+            "party_setup_trace_summary": "party_setup_trace_summary.json" if automate_party_setup else None,
+            "party_setup_trace_analysis": trace_analysis,
+            "party_setup_contact_sheets": trace_analysis["contact_sheets"] if trace_analysis else [],
             "native_state_bytes": len(state),
             "reset_reload_resume_frame_match": True,
             "checkpoint_path": str(output_dir / "stable_retro_core.state"),
@@ -218,8 +322,22 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
             "battery_save_verified": False,
         })
         return report
+    except Exception as exc:
+        report["failure"] = f"{type(exc).__name__}: {exc}"
+        raise
     finally:
         env.close()
+        if automate_party_setup and trace_rows and "party_setup_trace_summary" not in report:
+            try:
+                report["party_setup_trace_summary"] = "party_setup_trace_summary.json"
+                report["party_setup_trace_analysis"] = _summarize_party_trace(output_dir, trace_rows)
+            except Exception as trace_error:
+                report["trace_summary_failure"] = f"{type(trace_error).__name__}: {trace_error}"
+        if automate_party_setup:
+            report["party_setup_trace_screenshots"] = len(trace_rows)
+            trace_path = output_dir / "party_setup_trace.csv"
+            report["party_setup_trace_csv"] = str(trace_path) if trace_path.is_file() else None
+        (output_dir / "runtime_progress.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
 
 
 def main() -> int:
@@ -238,6 +356,7 @@ def main() -> int:
         "runtime_requested": bool(args.runtime),
         "status": "failed",
         "format_inspection": {"status": "not_started", "artifacts": []},
+        "milestones": _initial_milestones(),
     }
     try:
         output_dir = unique_output_dir(args.output_dir)
@@ -267,10 +386,14 @@ def main() -> int:
         if args.runtime:
             runtime = report["runtime"]
             report_text.append(f"Native core reset/reload/resume frame match: {runtime.get('reset_reload_resume_frame_match', False)}")
-            report_text.append("Party creation and battery-save loading are not covered by this short smoke.")
+            report_text.append("Party creation/playability and battery-save loading are not verified by this probe.")
             if runtime.get("party_setup_trace_csv"):
                 report_text.append(f"Party macro trace: {runtime['party_setup_trace_csv']} ({runtime.get('party_setup_trace_rows', 0)} screenshots/rows; inspect each input in order).")
-                report_text.append("A successful reset/reload frame match proves state serialization only; party creation/playability remains visually unverified.")
+                report_text.append(f"Party macro contact sheets: {', '.join(runtime.get('party_setup_contact_sheets', [])) or 'not generated'}.")
+        report_text.extend(["", "Milestones:"])
+        for name, item in report.get("milestones", {}).items():
+            report_text.append(f"- {name}: {item['status']} — {item['evidence']}")
+        report_text.append("- gameplay_resumes_correctly is not established by a frame match unless the checkpoint is separately confirmed playable.")
         (output_dir / "run_report.txt").write_text("\n".join(report_text) + "\n", encoding="utf-8")
         print(f"GBA feasibility report: {output_dir / 'run_report.txt'}")
         print(f"Metrics: {output_dir / 'metrics.json'}")
@@ -278,11 +401,33 @@ def main() -> int:
     except Exception as exc:
         report["failure"] = f"{type(exc).__name__}: {exc}"
         if output_dir is not None:
+            progress_path = output_dir / "runtime_progress.json"
+            if progress_path.is_file():
+                try:
+                    report["runtime"] = json.loads(progress_path.read_text(encoding="utf-8"))
+                    report["milestones"] = report["runtime"].get("milestones", report["milestones"])
+                except (OSError, json.JSONDecodeError):
+                    pass
             (output_dir / "metrics.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-            (output_dir / "run_report.txt").write_text(
-                f"FF1 Dawn of Souls GBA feasibility probe\nStatus: failed\nFailure: {report['failure']}\n",
-                encoding="utf-8",
-            )
+            failure_lines = [
+                "FF1 Dawn of Souls GBA feasibility probe",
+                "Status: failed",
+                f"Failure: {report['failure']}",
+                "",
+                "Milestones:",
+            ]
+            failure_lines.extend(f"- {name}: {item['status']} — {item['evidence']}" for name, item in report["milestones"].items())
+            runtime = report.get("runtime", {})
+            for key, label in (
+                ("party_setup_trace_csv", "Party trace CSV"),
+                ("party_setup_trace_summary", "Party trace summary"),
+                ("candidate_party_screenshot", "Candidate checkpoint screenshot"),
+            ):
+                if runtime.get(key):
+                    failure_lines.append(f"{label}: {runtime[key]}")
+            if runtime.get("party_setup_contact_sheets"):
+                failure_lines.append(f"Party contact sheets: {', '.join(runtime['party_setup_contact_sheets'])}")
+            (output_dir / "run_report.txt").write_text("\n".join(failure_lines) + "\n", encoding="utf-8")
             print(f"Failure report: {output_dir / 'run_report.txt'}", file=sys.stderr)
         print(f"GBA feasibility probe failed: {type(exc).__name__}: {exc}", file=sys.stderr)
         return 1

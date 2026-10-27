@@ -201,6 +201,54 @@ The NES launcher fix is pushed to `main` as `ec7c86e`. Real WSL invocation was
 denied from this Codex environment, so the launcher still needs a one-time
 double-click check on the project PC before a new NES capture.
 
+## 2026-10-27 — GBA launcher CRLF failure and recovery fix
+
+- The owner reported the GBA launcher failed before emulator startup with Bash
+  parsing `set -Eeuo pipefail` as `set: pipefail`. This checkout's raw
+  `scripts/run_gba_feasibility.sh` and `scripts/run_nes_ram_experiment.sh`
+  bytes had CRLF on every line and no UTF-8 BOM, which is consistent with the
+  reported WSL Bash error. Git Bash in this Windows environment accepts a raw
+  CRLF fixture, and WSL could not be launched here, so the exact failure is not
+  reproduced locally; CRLF is the leading cause, with that platform difference
+  still unverified.
+- Added `.gitattributes` to enforce LF for Bash and CRLF for CMD and PowerShell
+  files. Added a Windows line-ending normalizer to the GBA
+  launcher preflight; it repairs only the two Bash runner scripts before WSL
+  starts, including pre-existing CRLF/BOM copies.
+- Strengthened the Windows launcher test to create an isolated deliberately
+  CRLF/BOM-encoded runner, invoke the real CMD/PowerShell launch path with a
+  mock WSL executable, and verify the runner is normalized before dispatch.
+  It also checks default/dry-run forwarding and error-code propagation, then
+  validates syntax and execution with Git Bash where available.
+- Expanded GBA diagnostics: every action trace carries an exact-image screen
+  ID, changed-pixel fraction, and screenshot; the probe creates a compact
+  contact sheet and exact-duplicate summary. Reports now list the seven
+  requested milestones independently. Exact frame matching is not presented
+  as proof of a playable scene or working resumed gameplay.
+- The local GBA launcher run that triggered this task stopped before the
+  emulator. No new GBA runtime output exists, and this Codex session still
+  cannot access WSL (`Wsl/E_ACCESSDENIED`). The party-setup macro is unchanged
+  because there is no new gameplay trace to justify an input-sequence change.
+- The repaired launcher was invoked locally in `--dry-run` mode. WSL again
+  returned `Wsl/E_ACCESSDENIED` before Bash started; the wrapper reported that
+  no experiment log exists and returned Windows exit code 1. Mocked-Wsl tests
+  cover argument forwarding and this negative startup-error path.
+- Validation completed: 24 Python unit tests passed, both Windows launcher
+  regression scripts passed (including a deliberately CRLF/BOM GBA runner),
+  Git Bash `-n` passed for both production shell runners, and `git diff
+  --check` passed. This validates the repair mechanism, not actual WSL or GBA
+  gameplay.
+- NES state/reward logic and the v0.7 model are unchanged. No training or
+  runtime capture was started. The NES runner receives the same LF protection.
+
+### GBA evidence status
+
+Boot, in-game control effectiveness, party creation, playable scene, native
+state serialization, reset restoration, and gameplay resume must be assessed
+separately. The current static inspection and old boot-logo screenshots do not
+pass any GBA gameplay milestone. The repaired one-click launcher is the next
+runtime check; it should preserve a failed trace/report under unique run IDs.
+
 ## 2026-10-27 — Independent NES scene review and GBA runtime status
 
 - The local checkout was synchronized to merged PR #3 (`adb1fe2`); prior
