@@ -1,5 +1,10 @@
 # GBA custom party and playable checkpoint
 
+> **Superseded profile:** this historical run used Seed/Red Mage in slot 4.
+> The official profile is canonical Mustard, displayed as Mustar, / Red Mage.
+> This run is retained as historical evidence and is not a valid official-party
+> checkpoint.
+
 Run `20261027_222507_734422Z` completed the custom party and playable-field checks from a clean game reset.
 
 Independent matching clean-start run: `20261027_222448_322832Z`.

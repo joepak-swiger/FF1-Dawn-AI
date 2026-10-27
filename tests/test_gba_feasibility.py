@@ -216,7 +216,7 @@ class GbaStateFormatTests(unittest.TestCase):
     def test_custom_party_profiles_and_keyboard_navigation_are_exact(self):
         self.assertEqual([(m.display_name, m.job) for m in GBA_CUSTOM_PARTY], [
             ("Sif", "Warrior"), ("Myth", "Thief"),
-            ("Milo", "Monk"), ("Seed", "Red Mage"),
+            ("Milo", "Monk"), ("Mustar", "Red Mage"),
         ])
         self.assertEqual([(m.display_name, m.job) for m in NES_SECONDARY_PARTY], [
             ("Sif", "Warrior"), ("Must", "White Mage"),
@@ -252,12 +252,14 @@ class GbaStateFormatTests(unittest.TestCase):
             root = Path(temp)
             run = root / "20261027_test"
             run.mkdir()
+            repeat = root / "independent-run"
+            repeat.mkdir()
             output = root / "published"
             members = [
                 {"canonical_name": "Sif", "display_name": "Sif", "display_name_matches_verified_key_sequence": True},
                 {"canonical_name": "Myth", "display_name": "Myth", "display_name_matches_verified_key_sequence": True},
                 {"canonical_name": "Milo", "display_name": "Milo", "display_name_matches_verified_key_sequence": True},
-                {"canonical_name": "Seed", "display_name": "Seed", "display_name_matches_verified_key_sequence": True},
+                {"canonical_name": "Mustard", "display_name": "Mustar", "display_name_matches_verified_key_sequence": True},
             ]
             passed = {name: {"status": "passed"} for name in (
                 "four_characters_confirmed", "party_setup_completed", "playable_field_reached",
@@ -274,10 +276,13 @@ class GbaStateFormatTests(unittest.TestCase):
             (run / "metrics.json").write_text(json.dumps(metrics), encoding="utf-8")
             for filename in ("gba_custom_party_roster.png", "gba_after_reload_resume.png"):
                 Image.new("RGB", (240, 160), (30, 90, 160)).save(run / filename)
+                Image.new("RGB", (240, 160), (70, 120, 180)).save(repeat / filename)
+            (repeat / "metrics.json").write_text(json.dumps(metrics), encoding="utf-8")
             packaged = package_run(run, output, ["independent-run"])
             public = json.loads((packaged / "metrics.json").read_text(encoding="utf-8"))
             self.assertEqual(public["matching_clean_run_count"], 2)
-            self.assertEqual(public["party"][3]["display_name"], "Seed")
+            self.assertEqual(public["party"][3]["display_name"], "Mustar")
+            self.assertTrue((packaged / "proof_independent-run.png").is_file())
             report = (packaged / "REPORT.md").read_text(encoding="utf-8")
             self.assertIn("independent-run", report)
             self.assertNotIn(str(root), report)

@@ -20,7 +20,7 @@ GBA_CUSTOM_PARTY = (
     PartyMember("Sif", "Sif", "Warrior"),
     PartyMember("Myth", "Myth", "Thief"),
     PartyMember("Milo", "Milo", "Monk"),
-    PartyMember("Seed", "Seed", "Red Mage"),
+    PartyMember("Mustard", "Mustar", "Red Mage"),
 )
 
 NES_SECONDARY_PARTY = (

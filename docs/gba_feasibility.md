@@ -21,7 +21,7 @@ menu states stop the route instead of guessing. Stable-Retro must use
 `Actions.ALL`: the custom integration has no valid-action list and default
 `FILTERED` mode drops START, which is the party editor's Done input. The route
 creates the official GBA party Sif (Warrior), Myth (Thief), Milo (Monk), and
-Seed (Red Mage). Names are typed from the actual on-screen keyboard; each
+Mustard (displayed as Mustar; Red Mage). Names are typed from the actual on-screen keyboard; each
 character cursor is checked against a tolerant visual anchor before A selects
 it. The class picker's white-hand cursor is read from its four observed option
 positions, then checked again before the class is confirmed. The final roster
@@ -69,16 +69,18 @@ small `proof.png` under `docs/experiments/gba_feasibility/<run-id>/`.
 
 ## Current result and next check
 
-The requested GBA party and playable Cornelia checkpoint passed twice from
-independent clean starts on 2026-10-27. Sanitized evidence is published under
-`docs/experiments/gba_feasibility/20261027_222507_734422Z/`; the separate local
-native checkpoint for that run is under
-`states/gba_custom_party/20261027_222507_734422Z/`. Both runs verified the
-visible roster Sif/Warrior, Myth/Thief, Milo/Monk, and Seed/Red Mage; each
-restored the native state and passed four cardinal movement controls against
-deterministic idle controls. Battery-save loading has not been tested. The
-next milestone is a GBA Gymnasium adapter and a small non-training AI
-gameplay smoke test.
+Earlier runs and evidence directories `20261027_222448_322832Z` and
+`20261027_222507_734422Z` used Seed/Red Mage. They remain intact as historical
+experiments but are superseded and do not satisfy the official GBA roster.
+Since that historical experiment, two fresh independent sessions
+(20261027_224615_320655Z and 20261027_224639_424839Z) passed with the correct
+Mustard/Mustar Red Mage roster. Sanitized evidence is published under
+docs/experiments/gba_feasibility/20261027_224615_320655Z/. Both sessions
+verified party submission, Cornelia, native save/reset/reload, and all four
+directions beyond idle controls.
+
+Battery-save loading has not been tested. Next build a reward-neutral
+Gymnasium adapter and short gameplay smoke against the corrected checkpoint.
 
 ## Offline format inspection
 

@@ -2,10 +2,9 @@
 
 **Updated:** 2026-10-27
 **Current milestone:** GBA Dawn of Souls is the primary development target.
-The custom party (Sif/Warrior, Myth/Thief, Milo/Monk, Seed/Red Mage) and a
-playable Cornelia checkpoint were verified from two independent clean starts,
-including native restore and four-direction movement. The next milestone is a
-GBA Gymnasium adapter and small gameplay smoke test. NES remains secondary;
+Two fresh independent runs verified the official Sif/Warrior, Myth/Thief,
+Milo/Monk, Mustard/Red Mage party (GBA alias Mustar), Cornelia, native
+checkpoint restoration, and four-direction movement. NES remains secondary;
 v0.7 stays trusted, and RAM signals remain provisional.
 
 ## What the recordings show
@@ -299,9 +298,9 @@ rewards before that evidence exists.
 
 ## 2026-10-27 — GBA custom party and repeatable Cornelia checkpoint
 
-- Updated the GBA party profile to the exact requested names/classes: Sif
-  (Warrior), Myth (Thief), Milo (Monk), and Seed (Red Mage). The secondary NES
-  profile remains Sif/Warrior, Mustard/White Mage, Lock/Black Mage, Milo/Monk.
+- The initial GBA profile used the unauthorized Seed (Red Mage) substitution;
+  the secondary NES profile remains Sif/Warrior, Mustard/White Mage,
+  Lock/Black Mage, Milo/Monk.
 - Replaced automatic naming with character-by-character keyboard navigation.
   Each requested letter is checked against a tolerant visual keyboard cursor
   anchor before it is entered. The selected class is checked from the white
@@ -322,17 +321,16 @@ rewards before that evidence exists.
 - Added a safe evidence packager that refuses unverified milestones, wrong
   roster profiles, missing proof frames, and output overwrite. It emits only a
   report, compact JSON and small contact sheet.
-- WSL test suite: 36 tests passed before the exact Seed full-runtime runs;
-  runtime completed twice with all gameplay readiness milestones verified.
-  No PPO training or NES model/reward changes were made.
+- Review correction: replace Seed with canonical Mustard / in-game Mustar;
+  historical Seed states/evidence remain preserved and superseded. Two new
+  independent runs verified the corrected party and four-direction restore.
+  Evidence: docs/experiments/gba_feasibility/20261027_224615_320655Z/.
+  Native checkpoints remain local and ignored.
 
 ### Next GBA milestone
 
-Build a Gymnasium-compatible wrapper around the verified native Cornelia
-checkpoint, document its reset/step contract, and run a small policy
-interaction smoke test (not a long training job). Confirm action mapping,
-observation shape, deterministic checkpoint reset, and at least one safe
-movement/interaction episode. Keep NES v0.7 untouched.
+Build a reward-neutral Gymnasium adapter and short gameplay smoke for the
+corrected custom-party checkpoint. Keep NES v0.7 untouched.
 
 
 ## 2026-10-27 — Sanitized NES evidence publication and GBA launcher

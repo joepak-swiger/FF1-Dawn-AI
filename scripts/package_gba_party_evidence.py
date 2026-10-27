@@ -26,8 +26,7 @@ def build_proof(run_dir: Path, output_path: Path) -> None:
     canvas.save(output_path, optimize=True)
 
 
-def package_run(run_dir: Path, destination: Path | None = None, repeat_run_ids: list[str] | None = None) -> Path:
-    run_dir = run_dir.resolve()
+def validate_run(run_dir: Path) -> tuple[dict, dict, dict]:
     metrics_path = run_dir / "metrics.json"
     if not metrics_path.is_file():
         raise FileNotFoundError(metrics_path)
@@ -35,6 +34,40 @@ def package_run(run_dir: Path, destination: Path | None = None, repeat_run_ids: 
     runtime = metrics.get("runtime", {})
     machine = runtime.get("party_state_machine", {})
     milestones = runtime.get("milestones", {})
+    if runtime.get("gameplay_readiness") != "verified":
+        raise ValueError(f"Refusing unverified gameplay run: {run_dir.name}")
+    if machine.get("classes") != ["Warrior", "Thief", "Monk", "Red Mage"]:
+        raise ValueError(f"Custom GBA class roster mismatch: {run_dir.name}")
+    names = machine.get("entered_names", [])
+    canonical = [item.get("canonical_name") for item in names]
+    displays = [item.get("display_name") for item in names]
+    if canonical != ["Sif", "Myth", "Milo", "Mustard"] or displays != ["Sif", "Myth", "Milo", "Mustar"]:
+        raise ValueError(f"Custom GBA name roster mismatch: {run_dir.name}")
+    if not all(item.get("display_name_matches_verified_key_sequence") for item in names):
+        raise ValueError(f"Name keyboard evidence missing: {run_dir.name}")
+    for milestone in (
+        "four_characters_confirmed", "party_setup_completed", "playable_field_reached",
+        "native_checkpoint_saved", "native_checkpoint_restored", "field_movement_after_restore",
+    ):
+        if milestones.get(milestone, {}).get("status") != "passed":
+            raise ValueError(f"Required milestone did not pass in {run_dir.name}: {milestone}")
+    movement = machine.get("movement_verification", {}).get("directions", {})
+    if any(not movement.get(direction, {}).get("passed") for direction in ("UP", "DOWN", "LEFT", "RIGHT")):
+        raise ValueError(f"Four-direction restore movement was not verified: {run_dir.name}")
+    return metrics, runtime, machine
+
+
+def package_run(run_dir: Path, destination: Path | None = None, repeat_run_ids: list[str] | None = None) -> Path:
+    run_dir = run_dir.resolve()
+    metrics, runtime, machine = validate_run(run_dir)
+    milestones = runtime.get("milestones", {})
+    repeats: list[tuple[str, Path]] = []
+    for run_id in repeat_run_ids or []:
+        if Path(run_id).name != run_id or run_id == run_dir.name:
+            raise ValueError(f"Invalid independent run ID: {run_id!r}")
+        repeated = run_dir.parent / run_id
+        validate_run(repeated)
+        repeats.append((run_id, repeated))
     required = (
         "gba_custom_party_roster.png",
         "gba_after_reload_resume.png",
@@ -42,30 +75,19 @@ def package_run(run_dir: Path, destination: Path | None = None, repeat_run_ids: 
     for filename in required:
         if not (run_dir / filename).is_file():
             raise FileNotFoundError(run_dir / filename)
-    if runtime.get("gameplay_readiness") != "verified":
-        raise ValueError("Refusing to publish an unverified gameplay run")
-    if machine.get("classes") != ["Warrior", "Thief", "Monk", "Red Mage"]:
-        raise ValueError("Custom GBA class roster does not match the published profile")
     names = machine.get("entered_names", [])
-    displays = [item.get("display_name") for item in names]
-    if displays != ["Sif", "Myth", "Milo", "Seed"]:
-        raise ValueError("Custom GBA displayed names do not match the published profile")
-    if not all(item.get("display_name_matches_verified_key_sequence") for item in names):
-        raise ValueError("At least one displayed name lacks keyboard cursor evidence")
-    for milestone in (
-        "four_characters_confirmed", "party_setup_completed", "playable_field_reached",
-        "native_checkpoint_saved", "native_checkpoint_restored", "field_movement_after_restore",
-    ):
-        if milestones.get(milestone, {}).get("status") != "passed":
-            raise ValueError(f"Required milestone did not pass: {milestone}")
 
     dest = destination or PROJECT_ROOT / "docs" / "experiments" / "gba_feasibility" / run_dir.name
     dest = dest.resolve()
     dest.mkdir(parents=True, exist_ok=False)
     public_metrics = {
         "run_id": run_dir.name,
-        "other_matching_successful_run_ids": repeat_run_ids or [],
-        "matching_clean_run_count": 1 + len(repeat_run_ids or []),
+        "other_matching_successful_run_ids": [run_id for run_id, _ in repeats],
+        "matching_clean_run_count": 1 + len(repeats),
+        "independent_sessions": [
+            {"run_id": run_dir.name, "verified": True},
+            *({"run_id": run_id, "verified": True} for run_id, _ in repeats),
+        ],
         "execution_status": metrics.get("status"),
         "gameplay_readiness": runtime.get("gameplay_readiness"),
         "party": [
@@ -114,7 +136,7 @@ def package_run(run_dir: Path, destination: Path | None = None, repeat_run_ids: 
         "",
         "The screenshot contact sheet is the compact visual evidence. Character letters were selected only after the on-screen keyboard cursor matched the requested letter anchor. The roster itself was visually inspected. Class choice was read from the visible picker cursor position and checked after each confirmation.",
         "",
-        "The original generic checkpoint and all earlier experiment directories were left untouched. The native state and full diagnostic trace remain local and are not included in this package. This establishes a repeatable playable setup checkpoint, not long-term party survival, save-RAM persistence, or reinforcement-learning readiness without a Gymnasium adapter.",
+        "The original generic checkpoint and all earlier experiment directories were left untouched. The native state and full diagnostic trace remain local and are not included in this package. This establishes a repeatable playable setup checkpoint, not long-term party survival, save-RAM persistence, or reinforcement-learning readiness.",
         "",
         "## Milestones",
         "",
@@ -125,6 +147,8 @@ def package_run(run_dir: Path, destination: Path | None = None, repeat_run_ids: 
         report.insert(3, "")
     (dest / "REPORT.md").write_text("\n".join(report) + "\n", encoding="utf-8")
     build_proof(run_dir, dest / "proof.png")
+    for run_id, repeated in repeats:
+        build_proof(repeated, dest / f"proof_{run_id}.png")
     return dest
 
 
