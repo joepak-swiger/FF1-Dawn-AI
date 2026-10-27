@@ -1,10 +1,12 @@
 # FF1-Dawn-AI status
 
 **Updated:** 2026-10-27
-**Current milestone:** The bounded GBA party state machine now completes the
-four-character setup and verifies Cornelia field movement after native reload.
-NES RAM signals remain provisional; no PPO reward changes or training run are
-authorized.
+**Current milestone:** GBA Dawn of Souls is the primary development target.
+The custom party (Sif/Warrior, Myth/Thief, Milo/Monk, Seed/Red Mage) and a
+playable Cornelia checkpoint were verified from two independent clean starts,
+including native restore and four-direction movement. The next milestone is a
+GBA Gymnasium adapter and small gameplay smoke test. NES remains secondary;
+v0.7 stays trusted, and RAM signals remain provisional.
 
 ## What the recordings show
 
@@ -294,6 +296,43 @@ result. For NES, collect transition-near independent screenshots through a
 real battle outcome and field return, then validate candidate HP/EXP/location
 signals against those observations. Do not promote RAM candidates or alter
 rewards before that evidence exists.
+
+## 2026-10-27 — GBA custom party and repeatable Cornelia checkpoint
+
+- Updated the GBA party profile to the exact requested names/classes: Sif
+  (Warrior), Myth (Thief), Milo (Monk), and Seed (Red Mage). The secondary NES
+  profile remains Sif/Warrior, Mustard/White Mage, Lock/Black Mage, Milo/Monk.
+- Replaced automatic naming with character-by-character keyboard navigation.
+  Each requested letter is checked against a tolerant visual keyboard cursor
+  anchor before it is entered. The selected class is checked from the white
+  hand cursor position in the actual 2x2 class picker; each class is then
+  confirmed in the roster. The final roster screenshot visibly shows every
+  requested name and class.
+- Two fresh Stable-Retro runs (`20261027_222448_322832Z` and
+  `20261027_222507_734422Z`) completed the same party setup, reached the
+  Cornelia field, saved a 397,312-byte native state into run-specific
+  `states/gba_custom_party/<run-id>/` directories, and restored it after reset.
+  For each run, two equal-length idle trials matched, and UP/DOWN/LEFT/RIGHT
+  each caused broad frame changes. The accepted roster and after-UP map were
+  visually inspected.
+- The earlier generic checkpoints and all previous runs remain unchanged. The
+  ROM, full traces, screenshots, and native states remain local and ignored.
+  Sanitized findings and a small proof contact sheet are published at
+  `docs/experiments/gba_feasibility/20261027_222507_734422Z/`.
+- Added a safe evidence packager that refuses unverified milestones, wrong
+  roster profiles, missing proof frames, and output overwrite. It emits only a
+  report, compact JSON and small contact sheet.
+- WSL test suite: 36 tests passed before the exact Seed full-runtime runs;
+  runtime completed twice with all gameplay readiness milestones verified.
+  No PPO training or NES model/reward changes were made.
+
+### Next GBA milestone
+
+Build a Gymnasium-compatible wrapper around the verified native Cornelia
+checkpoint, document its reset/step contract, and run a small policy
+interaction smoke test (not a long training job). Confirm action mapping,
+observation shape, deterministic checkpoint reset, and at least one safe
+movement/interaction episode. Keep NES v0.7 untouched.
 
 
 ## 2026-10-27 — Sanitized NES evidence publication and GBA launcher

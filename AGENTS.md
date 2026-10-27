@@ -51,12 +51,17 @@ performed or tested here.
 
 ## Two-track development
 
-- Track A is NES FF1. Preserve v0.7 as the trusted baseline. Keep RAM signals
-  provisional until independently checked; do not add unverified RAM rewards
-  or start large training runs.
-- Track B is GBA Dawn of Souls feasibility. Keep exploratory code and findings
-  on a dedicated `codex/gba-*` branch until reviewed. Do not disturb the NES
-  environment, model, ROM, recordings, or save states.
+- GBA Dawn of Souls is the PRIMARY development target. NES FF1 remains a
+  secondary experiment. Preserve NES v0.7 as the trusted baseline; keep RAM
+  signals provisional and do not add unverified RAM rewards or start large
+  training runs.
+- Official GBA party: Sif (Warrior), Myth (Thief), Milo (Monk), Seed (Red
+  Mage). Official NES secondary party: Sif (Warrior), Mustard (White Mage),
+  Lock (Black Mage), Milo (Monk). Preserve canonical requested names and any
+  platform-specific UI aliases in `ff1_dawn_ai/party_config.py`.
+- Keep GBA exploratory code and findings on the dedicated `codex/gba-*`
+  branch until reviewed. Do not disturb the NES environment, model, ROM,
+  recordings, or save states.
 - Prefer making save states directly through the active Stable-Retro core and
   verifying reset/reload/resume. Do not repeat speculative mGBA savestate
   conversion or copy guessed battery-save filenames into the real integration.
@@ -65,6 +70,10 @@ performed or tested here.
 - Before GBA training, confirm repeatable boot, mapped controls, a visually
   verified playable post-party checkpoint, and native state save/reset/reload/
   resume. Never commit ROMs, saves, native states, or raw captures.
+- Verified GBA custom-party checkpoints are stored locally under unique
+  `states/gba_custom_party/<run-id>/` paths. The probe must never overwrite
+  earlier generic or custom checkpoints. Publish compact evidence with
+  `scripts/package_gba_party_evidence.py`; exclude native states and raw traces.
 
 ## Reporting
 
@@ -75,7 +84,7 @@ observed results from hypotheses.
 
 ## Current two-track and evidence workflow
 
-- Preserve NES v0.7 as the trusted baseline; keep RAM signals provisional and do not use them as rewards before independent game-state validation.
+- GBA is primary; preserve NES v0.7 as the secondary track's trusted baseline. Keep NES RAM signals provisional and do not use them as rewards before independent game-state validation.
 - Use `run_gba_feasibility.cmd` (or `--dry-run`) for the parallel GBA track. Do not ask the owner to enter WSL or activate the environment. Keep this feasibility work isolated. The bounded party state machine uses locally observed screen anchors, verifies all four name rows and the party confirmation prompt, then tests a colorful field candidate with reset/reload movement controls. Keep each milestone independent; never infer party/playability from process exit status or a save-state round trip alone.
 - For the GBA party state machine, inspect `party_setup_trace.csv`, `party_state_machine_trace.json`, and per-input `party_trace_*.png` when a transition fails. Runtime traces, screenshots, native states, ROMs, and saves remain local and ignored. Stable-Retro must use `Actions.ALL` for this integration: its default filtered mode discards START, the party-editor Done input.
 - GBA trace screen IDs are exact image hashes for grouping only; they do not classify screen meaning or prove a stall. A valid native reset/reload frame match does not verify that its checkpoint is playable or that resumed gameplay works.

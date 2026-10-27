@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 import numpy as np
+from PIL import Image
 
 
 class Screen(StrEnum):
@@ -27,6 +28,7 @@ class Screen(StrEnum):
     PARTY_SETUP = "party_setup"
     PARTY_CONFIRM = "party_confirmation"
     CLASS_SELECT = "class_selection"
+    NAME_ENTRY = "name_entry"
 
 
 # SHA-256 of full RGB frames saved after released actions in the local v1.0
@@ -54,9 +56,35 @@ _FULL_FRAME_STATES = {
 # and class picker. Hashing this region ignores the changing party names.
 _PARTY_PANEL_SHA256 = "d54115b271798cff25168cedef392afc7367ccaf10fa115d4a5012a34cfc496e"
 _CLASS_HEADER_SHA256 = "dd449c3356296e62cf988c8b8303b2b91351a0b9922f6aae6a6bbfb0b3b59725"
-_CLASS_PICKER_WARRIOR_SHA256 = "d59e07b6461203392dfde70a8f34f95ad44bc0d0e1cd793b5ffb325a500ceb6c"
-_CLASS_PICKER_MONK_SHA256 = "d1dd6725897809bca84668fb7876524b366d4a0f81dec17ed11e13d7a884d3e5"
+_CLASS_PICKER_CURSOR_BOXES = {
+    "Warrior": (105, 46), "Thief": (168, 46),
+    "Monk": (105, 75), "Red Mage": (168, 75),
+}
 _PARTY_CONFIRM_PANEL_SHA256 = "7ac10055b41a6e6580bdf7e349ef09ed73bd3a872de12fd7c3a54b74bff9df89"
+_NAME_ENTRY_TITLE_SHA256 = "513a1df39bc114621fc5129f887a4e4d354251d88283e526f880f505ce582011"
+_NAME_ENTRY_FOOTER_SHA256 = "e140b3061fd2985e3ccdb6a17c8011ca7686e7f3d4d926d8c478bc708c64daa8"
+
+# The game keyboard has irregular row lengths. Letter coordinates and the
+# cursor anchors below were measured from the actual name-entry screen.
+NAME_KEY_ROWS = ("ABCDEFGHIJ", "KLMNOPQRST", "UVWXYZ", "abcdefghij", "klmnopqrst", "uvwxyz")
+NAME_KEY_POSITIONS = {letter: (row, column) for row, keys in enumerate(NAME_KEY_ROWS) for column, letter in enumerate(keys)}
+NAME_KEY_CURSOR_PHASH = {
+    "S": "caa3115eeaa35156baa9544cff33044efb92885ffe502a4bcdf0aaa9cc215555",
+    "i": "ca83115eeaa31556baa9544cff33044efb92885ffd28226dcf522a7bcc035555",
+    "f": "caa3115eeaa311daaaa9564cff3304cedbb6885f7d182269cd64aa6f4c035555",
+    "M": "caa3115ceaab155ebaa9544cfb33044cfbb28c5ffc382a69cd302aeb4c435555",
+    "y": "c883155aeaa311d6aaa9544cfb3304ccfb968c5bfd0c3a6dc7303aedcc435555",
+    "t": "c8a3115ceaa31156aaa91448ff3304ecfbb68d5bfd182aedcdb4226bcc435555",
+    "h": "caa3155ecaa3515eaaa9544cfb3304ceff92885ffb682a69c59022bbcc435555",
+    "l": "caa3115eeaa31156aaa97448ff33044eff96885ffd303a0fdd00a2f9cc435555",
+    "o": "c883115acaa311deeaa91658ff3304cefbb2885ffd18226bdd302aedcc435555",
+    "u": "caa3115eeaa31156aaa95448fb3304ccffb2885fff302a69c4362ae9de435555",
+    "s": "ca83155ceaa35156baa9544cfb3304ecfdb6885fff10322dd5a02a5bcc435555",
+    "a": "caa31558eaa3115ebaa95648fb33044cffb2885ffc3c226fcde02ae9cc035555",
+    "r": "caa3115eeba31556baa9544cff33046cfbb28c57fe102a69cd6032bbcc035555",
+    "e": "c883115eeaa31156aaa91448ff3304cef9968c5fff30226bddc4baedcc035555",
+    "d": "ca83115ceaa31156aaa9744cff33044cff968c5ffc703a6bc714a23dcc435555",
+}
 
 
 def _sha256(array: np.ndarray) -> str:
@@ -81,6 +109,11 @@ def classify_screen(frame: np.ndarray) -> Screen:
         class_header = _sha256(rgb[0:24, 160:240, :])
         if class_header == _CLASS_HEADER_SHA256:
             return Screen.CLASS_SELECT
+        if (
+            _sha256(rgb[0:24, 98:240, :]) == _NAME_ENTRY_TITLE_SHA256
+            and _sha256(rgb[141:160, 98:240, :]) == _NAME_ENTRY_FOOTER_SHA256
+        ):
+            return Screen.NAME_ENTRY
     return Screen.UNKNOWN
 
 
@@ -125,15 +158,65 @@ def name_changed(before: np.ndarray, after: np.ndarray, row: int, min_pixels: in
 
 
 def class_picker_choice(frame: np.ndarray) -> str | None:
-    """Return the two locally verified picker selections; otherwise unknown."""
+    """Return a locally anchored class picker selection; otherwise unknown."""
     image = np.asarray(frame)
     if image.ndim != 3 or image.shape[:2] != (160, 240) or classify_screen(image) != Screen.CLASS_SELECT:
         return None
-    options = _sha256(image[29:108, 100:240, :3])
-    return {
-        _CLASS_PICKER_WARRIOR_SHA256: "Warrior",
-        _CLASS_PICKER_MONK_SHA256: "Monk",
-    }.get(options)
+    # The selection cursor is a white hand immediately above the option label.
+    # Its location is more stable than whole-panel hashes across roster rows.
+    scores = {}
+    for job, (x, y) in _CLASS_PICKER_CURSOR_BOXES.items():
+        patch = image[y:y + 12, x:x + 12, :3].astype(np.int16)
+        neutral_bright = (patch.min(axis=2) > 170) & ((patch.max(axis=2) - patch.min(axis=2)) < 60)
+        scores[job] = int(np.count_nonzero(neutral_bright))
+    choice = max(scores, key=scores.get)
+    runner_up = max(value for job, value in scores.items() if job != choice)
+    return choice if scores[choice] >= 6 and scores[choice] - runner_up >= 4 else None
+
+
+def name_key_cursor_matches(frame: np.ndarray, letter: str) -> bool:
+    """Verify the requested key cursor by a tolerant, discriminative visual anchor.
+
+    Low-frequency perceptual hashes tolerate small frame-phase/palette changes
+    while retaining a margin over the other requested key locations. A raw
+    SHA comparison was too brittle when the cursor blink differed by a few
+    frames between an anchor capture and an independent fresh start.
+    """
+    if letter not in NAME_KEY_CURSOR_PHASH or classify_screen(frame) != Screen.NAME_ENTRY:
+        return False
+    image = np.asarray(frame)
+    crop = Image.fromarray(image[35:135, 98:240, :3]).convert("L")
+    pixels = np.asarray(crop.resize((64, 64), Image.Resampling.BILINEAR), dtype=np.float32)
+    n = np.arange(64, dtype=np.float32)
+    k = np.arange(16, dtype=np.float32)[:, None]
+    basis = np.cos(np.pi * (2 * n + 1) * k / (2 * 64)).astype(np.float32)
+    basis[0] *= np.sqrt(1 / 64)
+    basis[1:] *= np.sqrt(2 / 64)
+    coefficients = basis @ pixels @ basis.T
+    flattened = coefficients.ravel()
+    median = np.median(flattened[1:])
+    signature = sum((int(value > median) << index) for index, value in enumerate(flattened))
+    anchors = {key: int(value, 16) for key, value in NAME_KEY_CURSOR_PHASH.items()}
+    distances = {key: (signature ^ value).bit_count() for key, value in anchors.items()}
+    expected_distance = distances[letter]
+    next_distance = min(distance for key, distance in distances.items() if key != letter)
+    return expected_distance <= 16 and next_distance - expected_distance >= 6
+
+
+def name_key_position(letter: str) -> tuple[int, int]:
+    try:
+        return NAME_KEY_POSITIONS[letter]
+    except KeyError as exc:
+        raise ValueError(f"Unsupported GBA name-entry character: {letter!r}") from exc
+
+
+def class_navigation(job: str) -> tuple[str, ...]:
+    """Observed direction sequence from the class picker's Warrior anchor."""
+    paths = {"Warrior": (), "Thief": ("RIGHT",), "Monk": ("DOWN",), "Red Mage": ("RIGHT", "DOWN")}
+    try:
+        return paths[job]
+    except KeyError as exc:
+        raise ValueError(f"Unsupported Dawn of Souls class: {job!r}") from exc
 
 
 def looks_like_cornelia_field(frame: np.ndarray) -> bool:

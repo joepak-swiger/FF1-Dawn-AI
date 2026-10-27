@@ -10,11 +10,14 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import numpy as np
+from PIL import Image
 from ff1_dawn_ai.gba_feasibility import inspect_file, png_chunks
 from ff1_dawn_ai.gba_party_setup import (
     BOOT_ROUTE, Screen, classify_screen, looks_like_cornelia_field,
-    meaningful_field_movement, name_changed,
+    meaningful_field_movement, name_changed, class_navigation, name_key_position,
+    name_key_cursor_matches, class_picker_choice,
 )
+from ff1_dawn_ai.party_config import GBA_CUSTOM_PARTY, NES_SECONDARY_PARTY
 from scripts.gba_feasibility_probe import (
     GAME,
     _initial_milestones,
@@ -25,6 +28,7 @@ from scripts.gba_feasibility_probe import (
     _state_machine_setup,
     runtime_smoke,
 )
+from scripts.package_gba_party_evidence import package_run
 
 
 def make_chunk(name: bytes, payload: bytes) -> bytes:
@@ -199,6 +203,7 @@ class GbaStateFormatTests(unittest.TestCase):
             result_frame, result = _state_machine_setup(
                 object(), {"START": 0, "A": 1, "SELECT": 2, "DOWN": 3},
                 lambda button: calls.append(button) or frame,
+                lambda button: calls.append(button) or frame,
                 lambda _frames: frame,
                 frame,
                 Path(__file__).resolve().parent,
@@ -207,6 +212,84 @@ class GbaStateFormatTests(unittest.TestCase):
         self.assertEqual(calls, ["START"])
         self.assertEqual(result["status"], "failed")
         self.assertIn("observed unknown", result["failure"])
+
+    def test_custom_party_profiles_and_keyboard_navigation_are_exact(self):
+        self.assertEqual([(m.display_name, m.job) for m in GBA_CUSTOM_PARTY], [
+            ("Sif", "Warrior"), ("Myth", "Thief"),
+            ("Milo", "Monk"), ("Seed", "Red Mage"),
+        ])
+        self.assertEqual([(m.display_name, m.job) for m in NES_SECONDARY_PARTY], [
+            ("Sif", "Warrior"), ("Must", "White Mage"),
+            ("Lock", "Black Mage"), ("Milo", "Monk"),
+        ])
+        self.assertEqual(name_key_position("S"), (1, 8))
+        self.assertEqual(name_key_position("u"), (5, 0))
+        self.assertEqual(class_navigation("Red Mage"), ("RIGHT", "DOWN"))
+        with self.assertRaises(ValueError):
+            name_key_position("!")
+
+    def test_real_keyboard_cursor_anchor_tolerates_phase_drift_and_rejects_wrong_key(self):
+        root = Path(__file__).resolve().parents[1]
+        run = root / "videos/gba_feasibility/20261027_221444_366119Z"
+        live_cursor = run / "party_trace_035_down_released_short.png"
+        if not live_cursor.is_file():
+            self.skipTest("local WSL keyboard trace is not present")
+        frame = np.asarray(Image.open(live_cursor).convert("RGB"))
+        self.assertTrue(name_key_cursor_matches(frame, "i"))
+        self.assertFalse(name_key_cursor_matches(frame, "M"))
+        class_trace = root / "videos/gba_feasibility/20261027_221759_222385Z/party_trace_073_right_released_short.png"
+        if not class_trace.is_file():
+            self.skipTest("local WSL class-picker trace is not present")
+        thief_frame = np.asarray(Image.open(class_trace).convert("RGB"))
+        self.assertEqual(class_picker_choice(thief_frame), "Thief")
+        seed_anchor_dir = root / "videos/gba_feasibility/name_keyboard_probe/20261027_222332_657033Z"
+        for letter in ("e", "d"):
+            seed_frame = np.asarray(Image.open(seed_anchor_dir / f"key_target_{ord(letter):02x}.png").convert("RGB"))
+            self.assertTrue(name_key_cursor_matches(seed_frame, letter))
+
+    def test_gba_evidence_packager_requires_verified_milestones_and_sanitizes_paths(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parent) as temp:
+            root = Path(temp)
+            run = root / "20261027_test"
+            run.mkdir()
+            output = root / "published"
+            members = [
+                {"canonical_name": "Sif", "display_name": "Sif", "display_name_matches_verified_key_sequence": True},
+                {"canonical_name": "Myth", "display_name": "Myth", "display_name_matches_verified_key_sequence": True},
+                {"canonical_name": "Milo", "display_name": "Milo", "display_name_matches_verified_key_sequence": True},
+                {"canonical_name": "Seed", "display_name": "Seed", "display_name_matches_verified_key_sequence": True},
+            ]
+            passed = {name: {"status": "passed"} for name in (
+                "four_characters_confirmed", "party_setup_completed", "playable_field_reached",
+                "native_checkpoint_saved", "native_checkpoint_restored", "field_movement_after_restore",
+            )}
+            metrics = {"runtime": {
+                "gameplay_readiness": "verified", "native_state_bytes": 123,
+                "party_state_machine": {"classes": ["Warrior", "Thief", "Monk", "Red Mage"],
+                    "entered_names": members, "movement_verification": {"directions": {key: {
+                        "passed": True, "idle_changed_pixel_fraction": 0, "movement_changed_pixel_fraction": 0.2
+                    } for key in ("UP", "DOWN", "LEFT", "RIGHT")}}},
+                "milestones": passed,
+            }}
+            (run / "metrics.json").write_text(json.dumps(metrics), encoding="utf-8")
+            for filename in ("gba_custom_party_roster.png", "gba_after_reload_resume.png"):
+                Image.new("RGB", (240, 160), (30, 90, 160)).save(run / filename)
+            packaged = package_run(run, output, ["independent-run"])
+            public = json.loads((packaged / "metrics.json").read_text(encoding="utf-8"))
+            self.assertEqual(public["matching_clean_run_count"], 2)
+            self.assertEqual(public["party"][3]["display_name"], "Seed")
+            report = (packaged / "REPORT.md").read_text(encoding="utf-8")
+            self.assertIn("independent-run", report)
+            self.assertNotIn(str(root), report)
+            self.assertTrue((packaged / "proof.png").is_file())
+            with Image.open(packaged / "proof.png") as proof:
+                self.assertEqual(proof.size, (500, 198))
+            with self.assertRaises(FileExistsError):
+                package_run(run, output)
+            metrics["runtime"]["gameplay_readiness"] = "not_verified"
+            (run / "metrics.json").write_text(json.dumps(metrics), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "unverified gameplay"):
+                package_run(run, root / "rejected")
 
     def test_name_change_is_row_specific(self):
         before = np.zeros((160, 240, 3), dtype=np.uint8)

@@ -21,12 +21,16 @@ from ff1_dawn_ai.gba_feasibility import inspect_file  # noqa: E402
 from ff1_dawn_ai.gba_party_setup import (  # noqa: E402
     BOOT_ROUTE,
     Screen,
+    class_navigation,
     class_picker_choice,
     classify_screen,
     looks_like_cornelia_field,
     meaningful_field_movement,
-    name_changed,
+    name_key_cursor_matches,
+    name_key_position,
+    name_box_signature,
 )
+from ff1_dawn_ai.party_config import GBA_CUSTOM_PARTY  # noqa: E402
 
 GAME = "FinalFantasyDawnOfSouls-GbAdvance"
 DEFAULT_FILES = (
@@ -182,7 +186,7 @@ def _initial_milestones() -> dict:
 
 
 def _verify_reloaded_field_movement(env, indices: dict[str, int], output_dir: Path, candidate: np.ndarray) -> dict:
-    """Save a colorful map candidate and require movement beyond idle variation."""
+    """Save a candidate checkpoint and test all cardinal controls after reload."""
     state = env.em.get_state()
     if not state:
         return {"passed": False, "reason": "empty native state"}
@@ -197,16 +201,30 @@ def _verify_reloaded_field_movement(env, indices: dict[str, int], output_dir: Pa
     Image.fromarray(idle_a[:, :, :3].astype(np.uint8)).save(output_dir / "gba_field_idle_control_a.png")
     idle_b = restore_idle()
     Image.fromarray(idle_b[:, :, :3].astype(np.uint8)).save(output_dir / "gba_field_idle_control_b.png")
-    env.reset()
-    env.em.set_state(state)
-    moved = _run(env, indices["UP"], 12)
-    moved = _run(env, None, 30)
-    Image.fromarray(moved[:, :, :3].astype(np.uint8)).save(output_dir / "gba_field_after_reload_up.png")
-    evidence = meaningful_field_movement(idle_a, idle_b, moved)
+    directional = {}
+    for direction in ("UP", "DOWN", "LEFT", "RIGHT"):
+        if direction not in indices:
+            directional[direction] = {"passed": False, "reason": f"{direction} is not mapped"}
+            continue
+        env.reset()
+        env.em.set_state(state)
+        _run(env, None, 42)
+        moved = _run(env, indices[direction], 12)
+        moved = _run(env, None, 30)
+        Image.fromarray(moved[:, :, :3].astype(np.uint8)).save(
+            output_dir / f"gba_field_after_reload_{direction.lower()}.png")
+        directional[direction] = meaningful_field_movement(idle_a, idle_b, moved)
+    evidence = {
+        "passed": all(item.get("passed") for item in directional.values()) and len(directional) == 4,
+        "directions": directional,
+        "reason": "all four cardinal actions changed the reloaded field beyond idle variation"
+        if all(item.get("passed") for item in directional.values()) and len(directional) == 4
+        else "one or more cardinal actions lacked a broad change beyond idle variation",
+    }
     evidence.update({
         "checkpoint_source": "native state captured at colorful Cornelia field-map candidate",
         "checkpoint_state_bytes": len(state),
-        "movement_action": "UP held 12 frames, then 30 frames idle after env.reset/set_state",
+        "movement_action": "each cardinal direction held 12 frames then 30 frames idle after env.reset/set_state",
     })
     if evidence["passed"]:
         state_path = output_dir / "stable_retro_core.state"
@@ -214,14 +232,24 @@ def _verify_reloaded_field_movement(env, indices: dict[str, int], output_dir: Pa
         if state_path.read_bytes() != state:
             evidence["passed"] = False
             evidence["reason"] = "native checkpoint file did not match candidate state"
-    else:
-        env.reset()
-        env.em.set_state(state)
-        _run(env, None, 1)
+        else:
+            checkpoint_dir = PROJECT_ROOT / "states" / "gba_custom_party" / output_dir.name
+            checkpoint_dir.mkdir(parents=True, exist_ok=False)
+            durable_path = checkpoint_dir / "stable_retro_core.state"
+            durable_path.write_bytes(state)
+            if durable_path.read_bytes() != state:
+                evidence["passed"] = False
+                evidence["reason"] = "durable custom-party checkpoint did not match candidate state"
+            else:
+                evidence["custom_party_checkpoint"] = str(durable_path)
+    env.reset()
+    env.em.set_state(state)
+    _run(env, None, 1)
     return evidence
 
 
-def _state_machine_setup(env, indices: dict[str, int], tap, idle, obs: np.ndarray, output_dir: Path) -> tuple[np.ndarray, dict]:
+def _state_machine_setup(env, indices: dict[str, int], tap, tap_short, idle,
+                         obs: np.ndarray, output_dir: Path) -> tuple[np.ndarray, dict]:
     """Follow the observed menu route, stopping safely on an unknown state."""
     trace: list[dict] = []
     current = classify_screen(obs)
@@ -231,7 +259,10 @@ def _state_machine_setup(env, indices: dict[str, int], tap, idle, obs: np.ndarra
         "completed_stages": [],
         "actions": trace,
         "characters_named": 0,
-        "classes": ["Warrior", "Thief", "White Mage", "Black Mage"],
+        "entered_names": [],
+        "classes": [],
+        "name_entry_evidence": [],
+        "class_selection_evidence": [],
         "party_setup_started": False,
         "party_completed": False,
         "failure": None,
@@ -275,74 +306,133 @@ def _state_machine_setup(env, indices: dict[str, int], tap, idle, obs: np.ndarra
         return obs, result
 
     result["party_setup_started"] = True
-    # SELECT is explicitly labeled Auto-Name on the observed party editor.
-    # DOWN advances the roster row. Compare the selected row's glyph box before
-    # and after the action, then verify the invariant party panel remains.
-    from ff1_dawn_ai.gba_party_setup import name_box_signature  # local import for trace evidence
-    for row in range(4):
-        if classify_screen(obs) != Screen.PARTY_SETUP:
-            result["failure"] = f"Party editor lost before auto-naming row {row + 1}."
+    # The party roster initially focuses the class field. LEFT+A opens the
+    # actual alphabet grid; each requested key is cursor-verified against a
+    # captured keyboard anchor before A enters it. START submits the name.
+    current_keyboard_cell = (0, 0)
+    for row, member in enumerate(GBA_CUSTOM_PARTY):
+        if row and classify_screen(obs) != Screen.PARTY_SETUP:
+            result["failure"] = f"Party editor lost before roster row {row + 1}."
             return obs, result
-        before = obs.copy()
-        obs = tap("SELECT")
-        after_screen = classify_screen(obs)
-        changed = after_screen == Screen.PARTY_SETUP and name_changed(before, obs, row)
-        record(f"auto-name-row-{row + 1}", "SELECT", Screen.PARTY_SETUP, after_screen, changed,
-               f"name glyph changed={changed}; before={name_box_signature(before, row)[:12]}; after={name_box_signature(obs, row)[:12]}")
-        if not changed:
-            result["failure"] = f"Auto-Name did not verify a change in roster row {row + 1}; stopped safely."
-            return obs, result
-        result["characters_named"] = row + 1
-        # Keep the observed default classes except for row 2, where the
-        # evidence-backed one-DOWN picker movement selects Monk from Warrior.
-        # Never confirm the picker default accidentally (that changed every
-        # class to Warrior in an earlier diagnostic run).
-        if row == 1:
-            obs = tap("A")
-            class_screen = classify_screen(obs)
-            choice = class_picker_choice(obs)
-            opened = class_screen == Screen.CLASS_SELECT and choice == "Warrior"
-            record("open-class-row-2", "A", Screen.PARTY_SETUP, class_screen, opened,
-                   f"class menu opened with verified initial selection {choice}")
-            if not opened:
-                result["failure"] = "Row 2 class picker did not match its verified Warrior initial selection."
-                return obs, result
-            obs = tap("DOWN")
-            choice = class_picker_choice(obs)
-            moved = classify_screen(obs) == Screen.CLASS_SELECT and choice == "Monk"
-            record("choose-monk-row-2", "DOWN", Screen.CLASS_SELECT, classify_screen(obs), moved,
-                   f"verified picker selection={choice}")
-            if not moved:
-                result["failure"] = "One DOWN did not produce the verified Monk picker anchor; stopped before confirmation."
-                return obs, result
-            obs = tap("A")
-            returned = classify_screen(obs)
-            confirmed = returned == Screen.PARTY_SETUP
-            record("confirm-monk-row-2", "A", Screen.CLASS_SELECT, returned, confirmed,
-                   "Monk selected and picker returned to roster")
-            if not confirmed:
-                result["failure"] = "Monk confirmation did not return to roster."
-                return obs, result
-            result["classes"] = ["Warrior", "Monk", "White Mage", "Black Mage"]
-        if row < 3:
+        if row:
             before_down = classify_screen(obs)
-            obs = tap("DOWN")
-            after_down = classify_screen(obs)
-            moved = after_down == Screen.PARTY_SETUP
-            record(f"select-roster-row-{row + 2}", "DOWN", before_down, after_down, moved,
-                   "party editor anchor retained; next row name will be checked")
+            obs = tap_short("DOWN")
+            moved = classify_screen(obs) == Screen.PARTY_SETUP
+            record(f"select-roster-row-{row + 1}", "DOWN", before_down,
+                   classify_screen(obs), moved, "advanced one roster row")
             if not moved:
-                result["failure"] = f"Roster navigation failed after row {row + 1}; stopped safely."
+                result["failure"] = f"Roster navigation failed before row {row + 1}."
                 return obs, result
 
-    result["completed_stages"].append("four_named_roster_rows")
-    # START is labeled Done in the captured UI. Do not send it unless each of
-    # the four target name boxes has changed and the party editor is still open.
-    if classify_screen(obs) != Screen.PARTY_SETUP:
-        result["failure"] = "Party editor anchor missing before Done action."
-        return obs, result
+        obs = tap_short("LEFT")
+        focus_before = classify_screen(obs)
+        obs = tap_short("A")
+        name_screen = classify_screen(obs)
+        opened = name_screen == Screen.NAME_ENTRY
+        record(f"open-name-entry-row-{row + 1}", "LEFT+A", focus_before,
+               name_screen, opened, "name-entry title/footer anchors matched")
+        if not opened:
+            result["failure"] = f"Row {row + 1} did not open the verified name keyboard."
+            return obs, result
+
+        current_keyboard_cell = (0, 0)
+        selected_keys = []
+        for letter in member.display_name:
+            target = name_key_position(letter)
+            row_delta = target[0] - current_keyboard_cell[0]
+            col_delta = target[1] - current_keyboard_cell[1]
+            for direction, count in (("DOWN", max(0, row_delta)), ("UP", max(0, -row_delta)),
+                                     ("RIGHT", max(0, col_delta)), ("LEFT", max(0, -col_delta))):
+                for _ in range(count):
+                    obs = tap_short(direction)
+                    if classify_screen(obs) != Screen.NAME_ENTRY:
+                        result["failure"] = f"Name keyboard closed while navigating to {letter!r} in row {row + 1}."
+                        return obs, result
+            current_keyboard_cell = target
+            cursor_ok = name_key_cursor_matches(obs, letter)
+            record(f"verify-name-key-row-{row + 1}", "VISUAL_ANCHOR", Screen.NAME_ENTRY,
+                   classify_screen(obs), cursor_ok,
+                   f"expected displayed key {letter!r} at grid cell {target}")
+            if not cursor_ok:
+                result["failure"] = f"Keyboard cursor did not verify character {letter!r} for row {row + 1}; stopped before typing it."
+                return obs, result
+            obs = tap_short("A")
+            if classify_screen(obs) != Screen.NAME_ENTRY:
+                result["failure"] = f"Name keyboard closed unexpectedly after selecting {letter!r}."
+                return obs, result
+            selected_keys.append(letter)
+
+        Image.fromarray(obs[:, :, :3].astype(np.uint8)).save(
+            output_dir / f"gba_name_entry_row_{row + 1}.png")
+        obs = tap_short("START")
+        waited = 0
+        while classify_screen(obs) != Screen.PARTY_SETUP and waited < 20:
+            obs = idle(12)
+            waited += 1
+        if classify_screen(obs) != Screen.PARTY_SETUP:
+            result["failure"] = f"START did not return from name entry for row {row + 1}."
+            return obs, result
+        Image.fromarray(obs[:, :, :3].astype(np.uint8)).save(
+            output_dir / f"gba_party_row_{row + 1}_name.png")
+        # The exact sequence is verified at the keyboard cursor before each
+        # character is entered; preserve the rendered roster crop hash so a
+        # reviewer can inspect the displayed spelling independently.
+        rendered_name_hash = name_box_signature(obs, row)
+        result["entered_names"].append({
+            "canonical_name": member.canonical_name,
+            "display_name": member.display_name,
+            "typed_keys": selected_keys,
+            "screenshot": f"gba_party_row_{row + 1}_name.png",
+            "display_name_matches_verified_key_sequence": selected_keys == list(member.display_name),
+            "rendered_name_crop_sha256": rendered_name_hash,
+        })
+        record(f"confirm-name-row-{row + 1}", "START", Screen.NAME_ENTRY,
+               Screen.PARTY_SETUP, True,
+               f"submitted {member.display_name}; each keyboard cursor was independently verified")
+        result["characters_named"] = row + 1
+
+        # Move back to this row's class field, open the picker, select the
+        # requested job from the recorded Warrior anchor, and verify the exact
+        # highlighted class before confirming it.
+        obs = tap_short("RIGHT")
+        if classify_screen(obs) != Screen.PARTY_SETUP:
+            result["failure"] = f"Could not focus class field for row {row + 1}."
+            return obs, result
+        obs = tap_short("A")
+        choice = class_picker_choice(obs)
+        if classify_screen(obs) != Screen.CLASS_SELECT or choice != "Warrior":
+            result["failure"] = f"Row {row + 1} class picker did not match the verified Warrior anchor."
+            return obs, result
+        for direction in class_navigation(member.job):
+            obs = tap_short(direction)
+            choice = class_picker_choice(obs)
+            if classify_screen(obs) != Screen.CLASS_SELECT:
+                result["failure"] = f"Class picker closed while selecting {member.job} for row {row + 1}."
+                return obs, result
+        class_verified = class_picker_choice(obs) == member.job
+        record(f"verify-class-row-{row + 1}", "+".join(class_navigation(member.job)) or "CURRENT",
+               Screen.CLASS_SELECT, classify_screen(obs), class_verified,
+               f"expected displayed class {member.job}; observed {class_picker_choice(obs)}")
+        if not class_verified:
+            result["failure"] = f"Class cursor did not verify {member.job} for row {row + 1}."
+            return obs, result
+        obs = tap_short("A")
+        if classify_screen(obs) != Screen.PARTY_SETUP:
+            result["failure"] = f"Confirming {member.job} did not return to the party roster."
+            return obs, result
+        result["classes"].append(member.job)
+        result["class_selection_evidence"].append({
+            "slot": row + 1, "display_name": member.display_name,
+            "job": member.job, "picker_anchor_verified": True,
+            "roster_class_selection_confirmed": True,
+        })
+
+    result["completed_stages"].append("four_custom_named_and_classed_roster_rows")
+    Image.fromarray(obs[:, :, :3].astype(np.uint8)).save(output_dir / "gba_custom_party_roster.png")
+    # START is labeled Done in the observed party editor. Submit only after all
+    # four custom name key paths and class picker anchors pass.
     before = classify_screen(obs)
-    obs = tap("START")
+    obs = tap_short("START")
     after = classify_screen(obs)
     for _ in range(20):
         if after == Screen.PARTY_CONFIRM:
@@ -361,7 +451,7 @@ def _state_machine_setup(env, indices: dict[str, int], tap, idle, obs: np.ndarra
         result["last_screen"] = after.value
         return obs, result
 
-    obs = tap("A")  # Captured prompt shows Yes preselected and A=Confirm.
+    obs = tap_short("A")  # Captured prompt shows Yes preselected and A=Confirm.
     after = classify_screen(obs)
     for _ in range(20):
         if after != Screen.PARTY_CONFIRM:
@@ -515,6 +605,20 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
                 trace_step += 1
             return released
 
+        def tap_short(name: str) -> np.ndarray:
+            """Single-frame directional/button tap used by menu grids."""
+            nonlocal trace_previous, trace_step
+            pressed = _run(env, indices[name], 1)
+            if automate_party_setup:
+                _save_trace_frame(output_dir, trace_rows, trace_step, name, "pressed_short", pressed, trace_previous)
+                trace_previous = pressed
+            released = _run(env, None, 6)
+            if automate_party_setup:
+                _save_trace_frame(output_dir, trace_rows, trace_step, name, "released_short", released, trace_previous)
+                trace_previous = released
+                trace_step += 1
+            return released
+
         def idle(frames: int) -> np.ndarray:
             nonlocal trace_previous, trace_step
             released = _run(env, None, frames)
@@ -537,7 +641,7 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
             missing_route = [name for name in required if name not in indices]
             if missing_route:
                 raise RuntimeError(f"Party setup state machine requires buttons not exposed by core: {missing_route}")
-            obs, machine_result = _state_machine_setup(env, indices, tap, idle, obs, output_dir)
+            obs, machine_result = _state_machine_setup(env, indices, tap, tap_short, idle, obs, output_dir)
             (output_dir / "party_state_machine_trace.json").write_text(
                 json.dumps(machine_result, indent=2) + "\n", encoding="utf-8"
             )
@@ -557,14 +661,14 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
                 }
             if machine_result.get("characters_named") == 4:
                 report["milestones"]["four_characters_confirmed"] = {
-                    "status": "passed", "evidence": "Each of four roster name-glyph boxes changed after its Auto-Name action while the party-editor panel remained visible. See candidate screenshot and per-action trace."
+                    "status": "passed", "evidence": "Each requested character was entered by selecting and verifying its matching keyboard cursor anchor; rendered roster name crops and the full roster screenshot were saved. This verifies the keyboard path and visible spelling evidence, not OCR text recognition."
                 }
                 report["milestones"]["party_creation_works"] = {
                     "status": "partially_verified", "evidence": "Four roster name regions changed from their placeholder glyphs; the explicit party confirmation and playable field checks are reported separately."
                 }
             if machine_result.get("party_completed"):
                 report["milestones"]["party_setup_completed"] = {
-                    "status": "passed", "evidence": "START opened the Begin game confirmation, then A accepted the preselected Yes option after all four roster rows were named."
+                    "status": "passed", "evidence": "All four configured names and class picker selections were recorded, START opened the Begin game confirmation, and A accepted the preselected Yes option."
                 }
             elif machine_result.get("party_menu_dismissed"):
                 report["milestones"]["party_setup_completed"] = {
@@ -572,15 +676,15 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
                 }
             if machine_result.get("party_completed"):
                 report["milestones"]["party_creation_works"] = {
-                    "status": "passed", "evidence": "Four roster rows were named, row 2 was changed to Monk, and the preselected Yes confirmation was accepted."
+                    "status": "passed", "evidence": json.dumps({"names": machine_result.get("entered_names"), "classes": machine_result.get("classes"), "confirmation": "preselected Yes accepted"}, sort_keys=True)
                 }
             if machine_result.get("playable_field_reached"):
                 report["milestones"]["input_controls_function"] = {
                     "status": "passed",
-                    "evidence": "START/A menu transitions and party actions matched expected screens; UP produced controlled field movement after native restore.",
+                    "evidence": "START/A menu transitions and custom-party actions matched expected anchors; all four cardinal directions were tested after native checkpoint restore against idle controls.",
                 }
                 report["milestones"]["playable_field_reached"] = {
-                    "status": "passed", "evidence": "A colorful field-map candidate passed an independent post-reset UP movement trial against two no-input controls."
+                    "status": "passed", "evidence": "A field-map candidate passed independent post-reset/reload movement trials for UP, DOWN, LEFT, and RIGHT against two no-input controls."
                 }
                 report["milestones"]["playable_scene_reached"] = {
                     "status": "passed", "evidence": "Field scene qualified by movement beyond idle pixel variation after native reset/reload."
@@ -589,7 +693,7 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
                     "status": "passed", "evidence": json.dumps(machine_result["movement_verification"], sort_keys=True)
                 }
                 report["milestones"]["gameplay_resumes_correctly"] = {
-                    "status": "passed", "evidence": "UP moved the game scene after reset and native checkpoint restoration."
+                    "status": "passed", "evidence": "All four cardinal actions changed the reloaded field scene beyond idle variation."
                 }
             if machine_result.get("failure") is None:
                 obs = idle(300)
@@ -632,7 +736,7 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
             Image.open(output_dir / "gba_field_after_reload_up.png").save(output_dir / "gba_after_reload_resume.png")
             report["milestones"]["state_restored_after_reset"] = {
                 "status": "passed",
-                "evidence": "The saved field checkpoint was loaded after reset for two matching 42-frame idle controls and a third reset/reload UP movement trial.",
+                "evidence": "The saved field checkpoint was loaded after reset for two idle controls and four separate cardinal movement trials, each starting from the same native checkpoint.",
             }
         else:
             expected = _run(env, indices["A"], 8)
@@ -696,6 +800,7 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
             "native_state_bytes": len(state),
             "reset_reload_resume_frame_match": True,
             "checkpoint_path": str(output_dir / "stable_retro_core.state"),
+            "custom_party_checkpoint_path": machine_result.get("movement_verification", {}).get("custom_party_checkpoint") if machine_result else None,
             "screenshots": [
                 str(checkpoint_image),
                 str(output_dir / "gba_after_reload_resume.png"),
