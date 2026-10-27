@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import sys
 from datetime import datetime, timezone
@@ -70,6 +71,33 @@ def _run(env, button_index: int | None, frames: int) -> np.ndarray:
     return obs
 
 
+def _save_trace_frame(output_dir: Path, rows: list[dict], step: int, button: str, phase: str,
+                      obs: np.ndarray, previous: np.ndarray | None) -> None:
+    """Save one post-input image and a durable trace row for party-route diagnosis."""
+    image = np.asarray(obs)[:, :, :3].astype(np.uint8)
+    name = f"party_trace_{step:03d}_{button.lower()}_{phase}.png"
+    Image.fromarray(image).save(output_dir / name)
+    fraction = None
+    if previous is not None and previous.shape == image.shape:
+        fraction = float(np.mean(np.any(previous != image, axis=2)))
+    row = {
+        "step": step,
+        "button": button,
+        "phase": phase,
+        "changed_pixel_fraction": "" if fraction is None else f"{fraction:.6f}",
+        "screenshot": name,
+    }
+    rows.append(row)
+    trace_path = output_dir / "party_setup_trace.csv"
+    write_header = not trace_path.exists()
+    with trace_path.open("a", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(row))
+        if write_header:
+            writer.writeheader()
+        writer.writerow(row)
+        handle.flush()
+
+
 def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
     """Generate a checkpoint from this Stable-Retro core and verify resume."""
     try:
@@ -108,14 +136,31 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
         if missing:
             raise RuntimeError(f"Stable-Retro integration does not expose buttons: {missing}")
 
+        trace_rows: list[dict] = []
+        trace_previous: np.ndarray | None = None
+        trace_step = 0
+
         def tap(name: str) -> np.ndarray:
-            _run(env, indices[name], 8)
-            return _run(env, None, 18)
+            nonlocal trace_previous, trace_step
+            pressed = _run(env, indices[name], 8)
+            if automate_party_setup:
+                _save_trace_frame(output_dir, trace_rows, trace_step, name, "pressed", pressed, trace_previous)
+                trace_previous = pressed
+            released = _run(env, None, 18)
+            if automate_party_setup:
+                _save_trace_frame(output_dir, trace_rows, trace_step, name, "released", released, trace_previous)
+                trace_previous = released
+                trace_step += 1
+            return released
 
         # Deterministic boot/menu input. The optional setup macro reuses the
         # previously explored route, but its screenshot still needs visual
         # confirmation before it can be called a playable post-party state.
         obs = _run(env, None, 360)
+        if automate_party_setup:
+            _save_trace_frame(output_dir, trace_rows, trace_step, "NONE", "boot_idle", obs, None)
+            trace_previous = obs
+            trace_step += 1
         if automate_party_setup:
             for _ in range(20):
                 tap("START")
@@ -158,6 +203,9 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
             "button_names": button_names,
             "tested_inputs": ["START", "A"],
             "party_setup_macro_attempted": bool(automate_party_setup),
+            "party_setup_trace_rows": len(trace_rows),
+            "party_setup_trace_csv": str(output_dir / "party_setup_trace.csv") if automate_party_setup else None,
+            "party_setup_trace_screenshots": len(trace_rows),
             "native_state_bytes": len(state),
             "reset_reload_resume_frame_match": True,
             "checkpoint_path": str(output_dir / "stable_retro_core.state"),
@@ -220,6 +268,9 @@ def main() -> int:
             runtime = report["runtime"]
             report_text.append(f"Native core reset/reload/resume frame match: {runtime.get('reset_reload_resume_frame_match', False)}")
             report_text.append("Party creation and battery-save loading are not covered by this short smoke.")
+            if runtime.get("party_setup_trace_csv"):
+                report_text.append(f"Party macro trace: {runtime['party_setup_trace_csv']} ({runtime.get('party_setup_trace_rows', 0)} screenshots/rows; inspect each input in order).")
+                report_text.append("A successful reset/reload frame match proves state serialization only; party creation/playability remains visually unverified.")
         (output_dir / "run_report.txt").write_text("\n".join(report_text) + "\n", encoding="utf-8")
         print(f"GBA feasibility report: {output_dir / 'run_report.txt'}")
         print(f"Metrics: {output_dir / 'metrics.json'}")

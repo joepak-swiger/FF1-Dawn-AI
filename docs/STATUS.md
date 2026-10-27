@@ -201,6 +201,50 @@ The NES launcher fix is pushed to `main` as `ec7c86e`. Real WSL invocation was
 denied from this Codex environment, so the launcher still needs a one-time
 double-click check on the project PC before a new NES capture.
 
+## 2026-10-27 — Independent NES scene review and GBA runtime status
+
+- The local checkout was synchronized to merged PR #3 (`adb1fe2`); prior
+  uncommitted work was preserved in a local stash before the fast-forward.
+- Inspected `videos/gba_feasibility`: that runtime output directory does not
+  exist in this checkout. The latest available GBA output is static artifact
+  inspection only (`runtime_requested: false`), listing two PNG-container mGBA
+  savestates, a 397,312-byte Stable-Retro state, and a 32,768-byte battery
+  save. Thus no current boot, party-creation, input, or native reload/resume
+  result can be confirmed here. Older state-import probe screenshots show the
+  Square Enix logo, not a playable post-party scene.
+- Updated the GBA probe to save a boot-idle image and a pressed/released image
+  for each macro input, plus a flushed CSV with step/button and changed-pixel
+  fraction. This should pinpoint the first incorrect party-setup transition
+  on the next owner-PC run. No runtime was launched here, so it remains
+  untested against Stable-Retro.
+- Added a RAM-independent targeted NES visual audit and compact evidence under
+  `docs/experiments/nes_state_audit/20261027_070449_19924_934/`. It reviewed 44
+  transition-near frames from all three sessions. Session 1 step 1680 is a
+  title/New Game screen mislabeled battle-like; session 2 step 1360 is a second
+  Continue/New Game title screen also mislabeled battle-like. Session 2 step
+  1760 has an ambiguous party-panel-only layout. Session 3 steps 1360 and 1440
+  show character name entry, which the old classifier also needs to separate
+  from active battles.
+- These observations further disqualify the pixel proxy as independent truth
+  and reinforce that `0x0014`/`0x03CD` are not verified battle flags. The
+  visual families in the audit are cautious layout candidates only; victory,
+  defeat, escape, game-over, HP, EXP, and location remain unverified. See
+  `docs/nes_state_verification.md` for method and next checks.
+- No PPO reward, model, training run, ROM, or save-state was modified. The
+  GBA go/no-go remains **no-go for training** until the one-click runtime run
+  demonstrates repeatable controls, an independently confirmed playable
+  post-party checkpoint, and successful native reset/reload/resume.
+
+### Immediate next decision
+
+Run the existing `run_gba_feasibility.cmd` once from the project PC. Its new
+per-input trace should identify whether the candidate party macro reaches a
+playable scene; inspect that screenshot alongside the native state resume
+result. For NES, collect transition-near independent screenshots through a
+real battle outcome and field return, then validate candidate HP/EXP/location
+signals against those observations. Do not promote RAM candidates or alter
+rewards before that evidence exists.
+
 
 ## 2026-10-27 — Sanitized NES evidence publication and GBA launcher
 

@@ -71,5 +71,7 @@ observed results from hypotheses.
 
 - Preserve NES v0.7 as the trusted baseline; keep RAM signals provisional and do not use them as rewards before independent game-state validation.
 - Use `run_gba_feasibility.cmd` (or `--dry-run`) for the parallel GBA track. Do not ask the owner to enter WSL or activate the environment. Keep this feasibility work isolated; party setup requires visual confirmation before training.
+- For the GBA party macro, inspect `party_setup_trace.csv` and its per-input `party_trace_*.png` sequence to identify the exact first failing transition. Runtime traces, screenshots, native states, ROMs, and saves remain local and ignored.
+- For NES scene verification, use `scripts/nes_scene_audit.py` to select saved frames around pixel-proxy transitions and a few independently reviewed visual anchors. Its layout cues are triage only; they cannot distinguish battle results from active battle or confirm victory, defeat, escape, HP, EXP, location, or game-over state.
 - After each completed NES RAM analysis, publish only the sanitized package under `docs/experiments/nes_ram/<run-id>/` using `scripts/package_nes_ram_evidence.py`. Review it before staging. Exclude raw RAM, full analysis CSVs, ROMs, saves, models, videos, full-size captures, and private paths.
 - Keep both tracks exploratory until their relevant gameplay-state checks are validated; no unverified RAM reward changes or major training runs.
