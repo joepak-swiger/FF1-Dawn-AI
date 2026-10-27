@@ -77,57 +77,70 @@ def capture_episode(env, model, session_dir, steps, frame_every, deterministic, 
     total_reward = 0.0
     previous_visual = None
     visual_transitions = []
-    for step in range(steps + 1):
-        rgb = env.render()
-        ram = read_ram(env)
-        features = pixel_scene_features(rgb)
-        visual_labels.append(features["battle_like"])
-        ram_rows.append(ram.copy())
-        if previous_visual is not None and features["battle_like"] != previous_visual:
-            visual_transitions.append({
+    failure = None
+    try:
+        for step in range(steps + 1):
+            rgb = env.render()
+            ram = read_ram(env)
+            features = pixel_scene_features(rgb)
+            visual_labels.append(features["battle_like"])
+            ram_rows.append(ram.copy())
+            if previous_visual is not None and features["battle_like"] != previous_visual:
+                visual_transitions.append({
+                    "step": step,
+                    "from": "battle_like" if previous_visual else "field_like",
+                    "to": "battle_like" if features["battle_like"] else "field_like",
+                })
+            previous_visual = features["battle_like"]
+            event_rows.append({
                 "step": step,
-                "from": "battle_like" if previous_visual else "field_like",
-                "to": "battle_like" if features["battle_like"] else "field_like",
+                "prev_action": prev_action,
+                "total_reward": round(total_reward, 4),
+                "screen_hash": screen_hash(rgb),
+                "battle_like": features["battle_like"],
+                "label_source": "visual_heuristic_v0_9_pixels_only",
+                **{key: value for key, value in features.items() if key != "battle_like"},
             })
-        previous_visual = features["battle_like"]
-        event_rows.append({
-            "step": step,
-            "prev_action": prev_action,
+            if step and step % 100 == 0:
+                print(f"{session_dir.name}: captured {step}/{steps} decisions", flush=True)
+            if step % frame_every == 0:
+                Image.fromarray(rgb).save(session_dir / "frames" / f"frame_{step:05d}_{event_rows[-1]['screen_hash']}.png")
+            if step == steps:
+                break
+            action, _ = model.predict(policy_observation(model, obs), deterministic=deterministic)
+            action = int(np.asarray(action).item())
+            obs, reward, terminated, truncated, info = env.step(action)
+            total_reward += float(reward)
+            prev_action = info.get("button", ACTION_NAMES[action])
+            if terminated or truncated:
+                break
+    except Exception as exc:
+        failure = f"{type(exc).__name__}: {exc}"
+    finally:
+        np.savez_compressed(
+            session_dir / "ram_samples.npz",
+            rams=np.asarray(ram_rows, dtype=np.uint8),
+            battle_like=np.asarray(visual_labels, dtype=bool),
+        )
+        write_csv(session_dir / "probe_events.csv", event_rows)
+        metrics = {
+            "session_id": session_dir.name,
+            "status": "complete" if failure is None else "partial",
+            "steps_recorded": len(event_rows),
+            "requested_steps": steps + 1,
+            "ram_size": int(ram_rows[0].size) if ram_rows else 0,
+            "visual_battle_like_samples": int(sum(visual_labels)),
+            "visual_field_like_samples": int(len(visual_labels) - sum(visual_labels)),
             "total_reward": round(total_reward, 4),
-            "screen_hash": screen_hash(rgb),
-            "battle_like": features["battle_like"],
-            "label_source": "visual_heuristic_v0_9_pixels_only",
-            **{key: value for key, value in features.items() if key != "battle_like"},
-        })
-        if step % frame_every == 0:
-            Image.fromarray(rgb).save(session_dir / "frames" / f"frame_{step:05d}_{event_rows[-1]['screen_hash']}.png")
-        if step == steps:
-            break
-        action, _ = model.predict(policy_observation(model, obs), deterministic=deterministic)
-        action = int(np.asarray(action).item())
-        obs, reward, terminated, truncated, info = env.step(action)
-        total_reward += float(reward)
-        prev_action = info.get("button", ACTION_NAMES[action])
-        if terminated or truncated:
-            break
-    np.savez_compressed(
-        session_dir / "ram_samples.npz",
-        rams=np.asarray(ram_rows, dtype=np.uint8),
-        battle_like=np.asarray(visual_labels, dtype=bool),
-    )
-    write_csv(session_dir / "probe_events.csv", event_rows)
-    metrics = {
-        "session_id": session_dir.name,
-        "steps_recorded": len(event_rows),
-        "ram_size": int(ram_rows[0].size) if ram_rows else 0,
-        "visual_battle_like_samples": int(sum(visual_labels)),
-        "visual_field_like_samples": int(len(visual_labels) - sum(visual_labels)),
-        "total_reward": round(total_reward, 4),
-        "visual_transitions": visual_transitions,
-        "label_source": "independent frame-pixel heuristic; not a verified game-state label",
-        "model_is_unmodified": True,
-    }
-    (session_dir / "metrics.json").write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")
+            "visual_transitions": visual_transitions,
+            "label_source": "independent frame-pixel heuristic; not a verified game-state label",
+            "model_is_unmodified": True,
+        }
+        if failure:
+            metrics["failure"] = failure
+        (session_dir / "metrics.json").write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")
+    if failure:
+        raise RuntimeError(f"{session_dir.name} failed after {len(event_rows)} samples: {failure}")
     return metrics
 
 
@@ -140,6 +153,7 @@ def main():
     parser.add_argument("--seed", type=int, default=777)
     parser.add_argument("--deterministic", action="store_true", help="Use the policy's deterministic action")
     parser.add_argument("--run-id")
+    parser.add_argument("--dry-run", action="store_true", help="Validate runtime assets without loading the model or starting the emulator")
     args = parser.parse_args()
     if args.episodes < 1 or args.steps < 1 or args.frame_every < 1:
         parser.error("--episodes, --steps, and --frame-every must be positive")
@@ -147,16 +161,29 @@ def main():
         args.model = PROJECT_ROOT / args.model
     if not args.model.exists():
         parser.error(f"Model not found: {args.model}")
+    rom = PROJECT_ROOT / "custom_integrations" / "FinalFantasy-Nes" / "rom.nes"
+    state = PROJECT_ROOT / "states" / "ff1_nes_cornelia_start.state"
+    if not rom.is_file():
+        parser.error(f"NES ROM is missing from local integration: {rom}")
+    if not state.is_file():
+        parser.error(f"Cornelia start state is missing: {state}")
+    if args.dry_run:
+        print("Dry run passed: capture dependencies imported, v0.7 model/ROM/state exist.")
+        print(f"Model: {args.model}")
+        print(f"Capture plan: {args.episodes} independent resets x {args.steps} decisions")
+        print("No emulator was started and no capture output was created.")
+        return 0
     run_id = args.run_id or (datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + uuid4().hex[:8])
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,79}", run_id):
         parser.error("--run-id must be 1-80 letters, digits, dots, underscores, or hyphens")
     run_dir = OUTPUT_ROOT / run_id
     run_dir.mkdir(parents=True, exist_ok=False)
-    model = PPO.load(args.model, device="cpu")
-    set_random_seed(args.seed)
-    env = FF1NesEnv(project_root=PROJECT_ROOT, max_steps=args.steps + 1, action_freq=16, print_buttons=False)
     sessions = []
+    failure = None
     try:
+        model = PPO.load(args.model, device="cpu")
+        set_random_seed(args.seed)
+        env = FF1NesEnv(project_root=PROJECT_ROOT, max_steps=args.steps + 1, action_freq=16, print_buttons=False)
         for index in range(args.episodes):
             session_dir = run_dir / f"session_{index + 1:02d}"
             (session_dir / "frames").mkdir(parents=True)
@@ -166,19 +193,27 @@ def main():
             )
             sessions.append(result)
             print(f"{session_dir.name}: {result['steps_recorded']} steps, visual battles={result['visual_battle_like_samples']}")
+    except Exception as exc:
+        failure = f"{type(exc).__name__}: {exc}"
+        print(f"Capture failed: {failure}", file=sys.stderr)
     finally:
-        env.close()
+        if "env" in locals():
+            env.close()
     summary = {
         "run_id": run_id,
+        "status": "complete" if failure is None and len(sessions) == args.episodes else "failed",
         "created_at": datetime.now().isoformat(timespec="seconds"),
         "model_path": str(args.model),
         "model_sha256": hashlib.sha256(args.model.read_bytes()).hexdigest(),
         "model_is_unmodified": True,
         "episodes": sessions,
+        "requested_episodes": args.episodes,
+        "requested_steps_per_episode": args.steps + 1,
+        "failure": failure,
         "interpretation": "Pixel-only scene labels are proxies; inspect saved proof frames before treating transitions as ground truth.",
     }
     (run_dir / "metrics.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-    report = ["Automated NES RAM capture", "=========================", f"Run ID: {run_id}",
+    report = ["Automated NES RAM capture", "=========================", f"Run ID: {run_id}", f"Status: {summary['status']}",
               f"Model: {args.model.name}", f"Independent resets: {len(sessions)}", ""]
     for item in sessions:
         report.append(
@@ -188,7 +223,8 @@ def main():
     report.extend(["", "Labels come from the screen-pixel heuristic only and require independent visual review."])
     (run_dir / "run_report.txt").write_text("\n".join(report) + "\n", encoding="utf-8")
     print(f"Automated capture written to {run_dir}")
+    return 0 if summary["status"] == "complete" else 1
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

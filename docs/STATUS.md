@@ -87,3 +87,35 @@ v0.7 baseline, then analyze the resulting session tree and compare whether
 conflicting during field, town/menu, and result screens. Review only frames
 around candidate/visual transitions. Do not use `0x0014` in rewards or launch a
 new training run yet.
+
+## 2026-10-27 — WSL one-click capture and three-session result
+
+- Found and analyzed local automated capture `20261027_003906_8f01341e`:
+  three independent resets, 1,801 RAM samples each (5,403 total), 10,240 RAM
+  bytes per sample, and 30 pixel-heuristic transitions. The run metadata records
+  the trusted v0.7 model checksum and says it was not modified.
+- Combined offline analysis of v0.9, manual v1.0, and the three automated
+  sessions covered 8,091 samples in five recorded sessions. With a pooled
+  modal-value classifier, `0x0014` was 23 for 1,527/1,982 field-labeled
+  samples and 0 for 6,058/6,060 battle-labeled samples; its aggregate balanced
+  accuracy was 0.953. The new auto-capture alone gave 23 for 1,280/1,312 field
+  proxy samples and 0 for 4,089/4,091 battle proxy samples. These labels are
+  screen-pixel heuristics, not independently confirmed battle states. Across
+  the combined sources the same `0x0014` mode pair did not hold across all
+  sessions, and the manual recording included 49 unlabeled samples. It remains
+  provisional and must not drive rewards or state decisions.
+- In the combined proxy-labeled set, `0x0270` used modes 248 (field) and 240
+  (battle), with 0.927 balanced accuracy; `0x00D2` used 73 and 201, with
+  0.926. Their false-negative counts were 387 and 450 respectively under the
+  pooled modal rule. They remain candidates only; pixel label errors can
+  account for some apparent disagreements.
+- Added `run_nes_ram_capture.cmd` and its WSL runner. The default action checks
+  installed dependencies and local model/ROM/state, runs three 1,800-decision
+  resets, verifies capture completeness, then analyzes only that new run.
+  Logs and a concise summary are saved under a unique ID. `--dry-run` validates
+  setup without launching the emulator. Capture failures preserve partial
+  evidence and skip analysis; the v0.7 model and reward code are untouched.
+- Current offline workspace could not reach WSL (`Wsl/E_ACCESSDENIED`), so the
+  new WSL dry-run and live capture were not executed here. The existing local
+  three-session capture was analyzed successfully; Python/synthetic validation
+  tests are run as part of this change.

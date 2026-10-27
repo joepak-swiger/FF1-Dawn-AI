@@ -86,15 +86,32 @@ ground-truth score.
 ## Automated headless capture
 
 Use the local trusted v0.7 checkpoint to record independent resets without
-modifying its weights or starting training:
+modifying its weights or starting training. On Windows, double-click
+`run_nes_ram_capture.cmd`; it enters the existing WSL checkout, uses `.venv`,
+checks the installed dependencies and local v0.7 model/ROM/state, captures
+three independent resets, validates the complete files, and only then runs the
+offline analyzer. It does not install packages. Each run has a unique ID;
+execution logs and a short summary are saved under
+`videos/nes_ram_auto_capture/logs/<run-id>/`.
+
+To validate the WSL runtime and build the command plan without starting the
+emulator, run `run_nes_ram_capture.cmd --dry-run` from a terminal. Normal use
+requires only the double-click; do not ask the project owner to activate WSL
+or enter several commands manually.
+
+The equivalent WSL commands, useful when debugging the launcher, are:
 
 ```bash
-python scripts/nes_ram_capture.py --episodes 3 --steps 1800
-python scripts/analyze_nes_ram.py videos/nes_ram_auto_capture
+source .venv/bin/activate
+bash scripts/run_nes_ram_experiment.sh --dry-run
+bash scripts/run_nes_ram_experiment.sh
 ```
 
 The capture script writes a separate run directory with one raw RAM bundle,
-pixel-only labels, and a small frame sample per reset. The existing baseline
-model and local ROM/state are required. Pixel classifications are an
-independent signal from the RAM under study, but remain imperfect; review the
-saved transition frames when a label is ambiguous.
+pixel-only labels, and a small frame sample per reset. `validate_ram_capture.py`
+checks all three session metrics, paired RAM/event row counts, and proof frames;
+analysis is skipped if validation fails. Captures and reports are never
+overwritten. Pixel classifications are independent of the RAM bytes under
+study but remain imperfect; review saved transition frames when labels are
+ambiguous. The analyzer reports candidate associations, not verified game
+semantics, and these measurements must not be used as rewards yet.
