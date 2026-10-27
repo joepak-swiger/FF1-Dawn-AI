@@ -373,6 +373,15 @@ def _render_report(metrics: dict) -> str:
         f"| {s['session_id']} | {s['samples']} | {s['field_like_proxy_samples']} | {s['battle_like_proxy_samples']} | {s['proxy_transitions']} |"
         for s in metrics["sessions"]
     )
+    watch_addresses = {"0x0014", "0x00D2", "0x0270", "0x03CD", "0x03D2"}
+    per_session_rows = "\n".join(
+        f"| {item['address']} | {session['session_id']} "
+        f"| {session['field_mode']} ({session['field_mode_fraction']:.3f}) "
+        f"| {session['battle_mode']} ({session['battle_mode_fraction']:.3f}) "
+        f"| {session['field_samples_predicted_battle']} | {session['battle_samples_predicted_field']} |"
+        for item in metrics["candidate_comparison"] if item["address"] in watch_addresses
+        for session in item["per_session"]
+    )
     return f"""# NES RAM candidate analysis — {metrics['run_id']}
 
 ## Run record
@@ -381,6 +390,7 @@ def _render_report(metrics: dict) -> str:
 - Pixel-proxy labels: {metrics['label_counts']['field_overworld']} field-like and {metrics['label_counts']['battle']} battle-like.
 - PPO baseline: {metrics['baseline']['model']}; unchanged during capture: {metrics['baseline']['unmodified']}.
 - The analyzed scenes are proxy labels, not independently verified game states. Candidate agreement is not evidence that an address semantically means “battle.”
+- Historical v0.9 data had 901 observations (718 battle-like and 183 field-like by the same pixel-heuristic family). At `0x0014`, field samples were 23 in 99.45% of observations and battle-like samples were 0 throughout; the two recorded edges were 23→0 and 0→23. This supports repeatability of the association, but both runs rely on visual proxy labels and do not establish a battle flag.
 
 | Session | Samples | Field-like proxy | Battle-like proxy | Proxy transitions |
 |---|---:|---:|---:|---:|
@@ -396,6 +406,15 @@ the analyzer marked as conflicting with those labels.
 | Address | Field mode (fraction) | Battle mode (fraction) | FP | FN | BA vs proxy | Mode pair repeats | Conflicting edges |
 |---|---:|---:|---:|---:|---:|:---:|---:|
 {chr(10).join(rows)}
+
+### Session-level watch-list values
+
+Per-session modal values and proxy disagreements for the main candidates are
+shown below; all counts remain comparisons against the pixel heuristic.
+
+| Address | Session | Field mode (fraction) | Battle mode (fraction) | FP | FN |
+|---|---|---:|---:|---:|---:|
+{per_session_rows}
 
 ## Interpretation
 

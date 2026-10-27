@@ -6,6 +6,7 @@
 - Pixel-proxy labels: 1312 field-like and 4091 battle-like.
 - PPO baseline: v0.7 trusted baseline; unchanged during capture: True.
 - The analyzed scenes are proxy labels, not independently verified game states. Candidate agreement is not evidence that an address semantically means “battle.”
+- Historical v0.9 data had 901 observations (718 battle-like and 183 field-like by the same pixel-heuristic family). At `0x0014`, field samples were 23 in 99.45% of observations and battle-like samples were 0 throughout; the two recorded edges were 23→0 and 0→23. This supports repeatability of the association, but both runs rely on visual proxy labels and do not establish a battle flag.
 
 | Session | Samples | Field-like proxy | Battle-like proxy | Proxy transitions |
 |---|---:|---:|---:|---:|
@@ -44,6 +45,29 @@ the analyzer marked as conflicting with those labels.
 | 0x0273 | 248 (0.985) | 240 (0.905) | 20 | 387 | 0.945 | True | 14 |
 | 0x0274 | 248 (0.985) | 240 (0.905) | 20 | 387 | 0.945 | True | 14 |
 | 0x0275 | 248 (0.985) | 240 (0.905) | 20 | 387 | 0.945 | True | 14 |
+
+### Session-level watch-list values
+
+Per-session modal values and proxy disagreements for the main candidates are
+shown below; all counts remain comparisons against the pixel heuristic.
+
+| Address | Session | Field mode (fraction) | Battle mode (fraction) | FP | FN |
+|---|---|---:|---:|---:|---:|
+| 0x0014 | session_01 | 23 (0.985) | 0 (1.000) | 6 | 0 |
+| 0x0014 | session_02 | 23 (0.955) | 0 (0.999) | 6 | 1 |
+| 0x0014 | session_03 | 23 (0.985) | 0 (0.999) | 4 | 1 |
+| 0x03CD | session_01 | 26 (0.985) | 0 (1.000) | 6 | 0 |
+| 0x03CD | session_02 | 26 (0.983) | 0 (0.999) | 6 | 1 |
+| 0x03CD | session_03 | 26 (0.993) | 0 (0.999) | 4 | 1 |
+| 0x03D2 | session_01 | 39 (0.574) | 24 (1.000) | 6 | 0 |
+| 0x03D2 | session_02 | 48 (0.508) | 24 (0.999) | 6 | 1 |
+| 0x03D2 | session_03 | 22 (0.593) | 24 (0.999) | 4 | 1 |
+| 0x00D2 | session_01 | 73 (0.993) | 201 (0.903) | 3 | 136 |
+| 0x00D2 | session_02 | 73 (0.986) | 201 (0.906) | 2 | 136 |
+| 0x00D2 | session_03 | 73 (0.991) | 201 (0.886) | 2 | 143 |
+| 0x0270 | session_01 | 248 (0.980) | 240 (0.909) | 8 | 127 |
+| 0x0270 | session_02 | 248 (0.983) | 240 (0.913) | 6 | 126 |
+| 0x0270 | session_03 | 248 (0.989) | 240 (0.893) | 6 | 134 |
 
 ## Interpretation
 
