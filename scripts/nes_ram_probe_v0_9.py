@@ -16,6 +16,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from stable_baselines3 import PPO
 
 from ff1_dawn_ai.nes_env import FF1NesEnv
+from ff1_dawn_ai.ram_analysis import pixel_scene_features
 
 
 OUT_DIR = PROJECT_ROOT / "videos" / "nes_ram_probe_v0_9"
@@ -96,36 +97,7 @@ def battle_features(rgb):
     This is only used as a temporary label for finding RAM candidates.
     The whole point of v0.9 is to move beyond trusting this heuristic.
     """
-    arr = np.asarray(rgb).astype(np.int16)
-    gray = arr[:, :, :3].mean(axis=2)
-
-    h, w = gray.shape
-    bottom = gray[int(h * 0.55):, :]
-
-    r = arr[:, :, 0]
-    g = arr[:, :, 1]
-    b = arr[:, :, 2]
-
-    dark_fraction = float(np.mean(gray < 40))
-    bright_fraction = float(np.mean(gray > 185))
-    bottom_bright_fraction = float(np.mean(bottom > 185))
-
-    green_pixels = (g > r + 18) & (g > b + 18) & (g > 65)
-    green_fraction = float(np.mean(green_pixels))
-
-    battle_like = (
-        (dark_fraction > 0.28 and bottom_bright_fraction > 0.025 and green_fraction < 0.22)
-        or
-        (dark_fraction > 0.45 and bright_fraction > 0.018 and green_fraction < 0.28)
-    )
-
-    return {
-        "battle_like": bool(battle_like),
-        "dark_fraction": round(dark_fraction, 4),
-        "bright_fraction": round(bright_fraction, 4),
-        "bottom_bright_fraction": round(bottom_bright_fraction, 4),
-        "green_fraction": round(green_fraction, 4),
-    }
+    return pixel_scene_features(rgb)
 
 
 def screen_hash(rgb):

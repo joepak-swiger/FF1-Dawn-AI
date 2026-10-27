@@ -3,6 +3,9 @@
 `scripts/nes_ram_probe_v0_9.py` ranks RAM bytes correlated with a visual
 classifier. Its results are hypotheses. `scripts/nes_ram_verify_v1_0.py`
 collects manually labeled gameplay samples to check those hypotheses.
+`scripts/analyze_nes_ram.py` compares both formats offline. The optional
+`scripts/nes_ram_capture.py` uses a saved PPO model to make new headless capture
+sessions without training.
 
 ## Run
 
@@ -11,6 +14,12 @@ From the WSL project directory with the existing virtual environment active:
 ```bash
 python scripts/nes_ram_verify_v1_0.py
 ```
+
+Every run is saved under a new timestamped directory beneath
+`videos/nes_ram_verify_v1_0/`; pass `--run-id my_label` to choose a readable
+unique name. An existing directory causes the run to stop instead of
+overwriting it. The original root-level v1.0 recording remains readable by the
+analyzer.
 
 The local NES ROM integration and `states/ff1_nes_cornelia_start.state` must
 already be available. The script uses the existing `FF1NesEnv`, but does not
@@ -56,3 +65,36 @@ and repeated samples in one epoch are correlated. Before using a byte in an
 environment reward or state detector, confirm it across multiple verifier
 runs and check field, battle, menu/town, post-battle, and game-over states.
 This milestone intentionally does not change PPO rewards or start training.
+
+## Offline multi-session analysis
+
+Analyze both historical v0.9 and v1.0 recordings (or pass any number of
+session directories):
+
+```bash
+python scripts/analyze_nes_ram.py videos/nes_ram_probe_v0_9 videos/nes_ram_verify_v1_0
+```
+
+The analyzer writes `run_report.txt`, `metrics.json`, `candidate_summary.csv`,
+and `transitions.csv` to a new timestamped directory in
+`videos/nes_ram_analysis/`. It records per-source and per-session distributions,
+modal classification disagreements, candidate-value edges, and ambiguous
+samples. v0.9 labels come from the pixel heuristic; v1 labels can remain stale
+until manually changed, so disagreements are evidence to review rather than a
+ground-truth score.
+
+## Automated headless capture
+
+Use the local trusted v0.7 checkpoint to record independent resets without
+modifying its weights or starting training:
+
+```bash
+python scripts/nes_ram_capture.py --episodes 3 --steps 1800
+python scripts/analyze_nes_ram.py videos/nes_ram_auto_capture
+```
+
+The capture script writes a separate run directory with one raw RAM bundle,
+pixel-only labels, and a small frame sample per reset. The existing baseline
+model and local ROM/state are required. Pixel classifications are an
+independent signal from the RAM under study, but remain imperfect; review the
+saved transition frames when a label is ambiguous.

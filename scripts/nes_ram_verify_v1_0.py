@@ -1,9 +1,12 @@
 from pathlib import Path
+import argparse
 import csv
 import json
+import re
 import sys
 from collections import Counter, defaultdict
 from datetime import datetime
+from uuid import uuid4
 
 import numpy as np
 from PIL import Image
@@ -15,11 +18,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from ff1_dawn_ai.nes_env import FF1NesEnv
 
 
-OUT_DIR = PROJECT_ROOT / "videos" / "nes_ram_verify_v1_0"
-FRAME_DIR = OUT_DIR / "frames"
-
-OUT_DIR.mkdir(parents=True, exist_ok=True)
-FRAME_DIR.mkdir(parents=True, exist_ok=True)
+OUTPUT_ROOT = PROJECT_ROOT / "videos" / "nes_ram_verify_v1_0"
 
 CANDIDATE_ADDRESSES = [
     0x0014,
@@ -89,8 +88,8 @@ def read_ram(env):
     raise RuntimeError("Could not read RAM from environment.")
 
 
-def save_frame(rgb, step, label, reason):
-    path = FRAME_DIR / f"step_{step:05d}_{label}_{reason}.png"
+def save_frame(rgb, step, label, reason, frame_dir):
+    path = frame_dir / f"step_{step:05d}_{label}_{reason}.png"
     Image.fromarray(rgb).save(path)
     return path
 
@@ -230,6 +229,20 @@ def draw_overlay(surface, font, step, label, action_name, ram):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Interactively record manually labeled NES RAM states.")
+    parser.add_argument(
+        "--run-id",
+        help="Optional unique folder name. Defaults to a timestamp plus random suffix; existing folders are never overwritten.",
+    )
+    args = parser.parse_args()
+    run_id = args.run_id or (datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + uuid4().hex[:8])
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,79}", run_id):
+        parser.error("--run-id must be 1-80 letters, digits, dots, underscores, or hyphens")
+    out_dir = OUTPUT_ROOT / run_id
+    frame_dir = out_dir / "frames"
+    out_dir.mkdir(parents=True, exist_ok=False)
+    frame_dir.mkdir()
+
     created_at = datetime.now().isoformat(timespec="seconds")
 
     env = make_env()
@@ -284,7 +297,7 @@ def main():
                 elif event.key in LABEL_KEYS:
                     current_label = LABEL_KEYS[event.key]
                     label_epoch += 1
-                    path = save_frame(rgb, step_count, current_label, "label")
+                    path = save_frame(rgb, step_count, current_label, "label", frame_dir)
                     snapshots.append(str(path))
                     row = {
                         "step": step_count,
@@ -306,7 +319,7 @@ def main():
                     print(f"Label cleared; new epoch {label_epoch}.")
 
                 elif event.key == pygame.K_F5:
-                    path = save_frame(rgb, step_count, current_label, "snapshot")
+                    path = save_frame(rgb, step_count, current_label, "snapshot", frame_dir)
                     snapshots.append(str(path))
                     print(f"Saved snapshot: {path}")
 
@@ -335,7 +348,7 @@ def main():
             rows.append(row)
 
             if step_count % 20 == 0:
-                path = save_frame(env.render(), step_count, current_label, "auto")
+                path = save_frame(env.render(), step_count, current_label, "auto", frame_dir)
                 snapshots.append(str(path))
 
             if terminated or truncated:
@@ -356,10 +369,10 @@ def main():
     pygame.quit()
     env.close()
 
-    events_path = OUT_DIR / "manual_ram_events.csv"
-    summary_path = OUT_DIR / "candidate_address_label_summary.csv"
-    metrics_path = OUT_DIR / "metrics.json"
-    report_path = OUT_DIR / "run_report.txt"
+    events_path = out_dir / "manual_ram_events.csv"
+    summary_path = out_dir / "candidate_address_label_summary.csv"
+    metrics_path = out_dir / "metrics.json"
+    report_path = out_dir / "run_report.txt"
 
     write_csv(events_path, rows)
     summary = analyze(rows)
@@ -373,6 +386,7 @@ def main():
 
     metrics = {
         "created_at": created_at,
+        "session_id": run_id,
         "ram_method": ram_method,
         "ram_size": int(ram.size),
         "steps_recorded": len(rows),
@@ -385,7 +399,7 @@ def main():
             "manual_events_csv": str(events_path),
             "candidate_summary_csv": str(summary_path),
             "run_report": str(report_path),
-            "frames_folder": str(FRAME_DIR),
+            "frames_folder": str(frame_dir),
         },
     }
 
@@ -428,7 +442,7 @@ def main():
         f"metrics: {metrics_path}",
         f"manual_events_csv: {events_path}",
         f"candidate_summary_csv: {summary_path}",
-        f"frames_folder: {FRAME_DIR}",
+        f"frames_folder: {frame_dir}",
         "",
         "Next likely step",
         "----------------",
@@ -444,7 +458,7 @@ def main():
     print(f"Run report: {report_path}")
     print(f"Metrics: {metrics_path}")
     print(f"Candidate summary: {summary_path}")
-    print(f"Output folder: {OUT_DIR}")
+    print(f"Output folder: {out_dir}")
 
 
 if __name__ == "__main__":
