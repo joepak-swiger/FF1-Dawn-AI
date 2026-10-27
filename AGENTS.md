@@ -43,6 +43,23 @@ performed or tested here.
 - Do not start a major PPO training run until game-state signals are reliable.
 - Update `docs/STATUS.md` with implementation and evidence status.
 
+## Two-track development
+
+- Track A is NES FF1. Preserve v0.7 as the trusted baseline. Keep RAM signals
+  provisional until independently checked; do not add unverified RAM rewards
+  or start large training runs.
+- Track B is GBA Dawn of Souls feasibility. Keep exploratory code and findings
+  on a dedicated `codex/gba-*` branch until reviewed. Do not disturb the NES
+  environment, model, ROM, recordings, or save states.
+- Prefer making save states directly through the active Stable-Retro core and
+  verifying reset/reload/resume. Do not repeat speculative mGBA savestate
+  conversion or copy guessed battery-save filenames into the real integration.
+  Test battery-save loading only in an isolated copy and report whether the
+  frontend actually persists libretro save RAM.
+- Before GBA training, confirm repeatable boot, mapped controls, a visually
+  verified playable post-party checkpoint, and native state save/reset/reload/
+  resume. Never commit ROMs, saves, native states, or raw captures.
+
 ## Reporting
 
 Report changed files, tests actually run, findings, limitations, the commit or

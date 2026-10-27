@@ -150,3 +150,53 @@ new training run yet.
   denied with `Wsl/E_ACCESSDENIED`. No live NES smoke, capture, or analysis was
   run. The project owner's prior recording and all model/ROM/state assets were
   preserved.
+
+## 2026-10-27 — Two-track plan and GBA feasibility spike
+
+- Project scope now has two tracks: continue the NES FF1 pipeline with v0.7
+  protected as the trusted baseline, and investigate Dawn of Souls GBA on the
+  isolated `codex/gba-feasibility` branch. Neither track has started training.
+- Read GitHub Issue #1 and reviewed the local integration, historical scripts,
+  and available state artifacts. The old battery probe copied a save under
+  several guessed filenames into the integration directory, so it is not
+  treated as reliable proof of battery-save support.
+- A new read-only format inspector examined the local artifacts: both mGBA
+  `.ss0` samples are PNG containers with `gbAs`/`gbAx` chunks; the Stable-Retro
+  `.state` sample is 397,312 bytes with a different binary header; the battery
+  save is 32,768 bytes. The old external-state screenshots show the Square
+  Enix boot logo after import. This establishes an observed format mismatch
+  and failed import result, but not the exact technical cause.
+- Added `scripts/gba_feasibility_probe.py`. Its optional runtime path boots the
+  registered integration, exercises START/A, can replay the previously tried
+  party-setup macro, creates a checkpoint using the active Stable-Retro core,
+  resets, reloads, and checks deterministic resumed frames. It writes to a
+  unique ignored `videos/gba_feasibility/` run directory and never edits the
+  integration. `--automate-party-setup` produces a candidate screenshot/state;
+  visual review is still required before calling it playable.
+- Upstream Stable-Retro's current `emulator.cpp` handles system RAM and native
+  serialization but contains no `GET_SAVE_DIRECTORY` or `SAVE_RAM` handling;
+  upstream mGBA documentation expects battery saves in the frontend's save
+  directory. This points to a frontend persistence gap as a likely reason
+  guessed files did not load, but the installed Stable-Retro binary and local
+  battery-load behavior were not run here.
+- Offline unit tests pass (14 total), Python syntax compilation passes, and the
+  static inspector completed against four local artifacts. WSL still returns
+  `Wsl/E_ACCESSDENIED`, so GBA boot, the new native-core round trip, party
+  setup, and battery-save loading remain unverified. No ROM/save/state/model
+  assets were staged or changed.
+
+### GBA assessment and next gate
+
+**No-go for GBA training yet.** Native-core state generation and deterministic
+resume are the most promising next experiment because they avoid cross-emulator
+state conversion. Battery-save persistence remains unresolved. Run
+`python scripts/gba_feasibility_probe.py --runtime --automate-party-setup` in
+the existing WSL environment once, then inspect only the generated candidate
+screen and report. Require a visually confirmed party/overworld screen and a
+passing reset/reload/resume check before approving the checkpoint. Test
+battery loading later in a copied integration under the unique output folder;
+never copy candidate files into the working integration.
+
+The NES launcher fix is pushed to `main` as `ec7c86e`. Real WSL invocation was
+denied from this Codex environment, so the launcher still needs a one-time
+double-click check on the project PC before a new NES capture.

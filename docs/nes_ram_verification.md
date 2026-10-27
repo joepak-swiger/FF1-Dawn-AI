@@ -93,9 +93,12 @@ three independent resets, validates the complete files, and only then runs the
 offline analyzer. It does not install packages. Each run has a unique ID;
 execution logs and a short summary are saved under
 `videos/nes_ram_auto_capture/logs/<run-id>/`.
-The CMD file forwards Bash and the runner script as separate WSL arguments;
-it does not compose a Bash command string. On launcher changes, run the
-Windows forwarding regression check with
+The CMD entrypoint delegates to PowerShell, which forwards `--exec`, `bash`,
+the runner path, and mode as separate native arguments (without CMD `call` or
+a composed Bash command string). A normal run first smoke-tests the existing
+NES core, A-button mapping, RAM access, and in-memory native state restore; a
+failure stops capture and leaves a short report. On launcher changes, run the
+Windows argument-boundary regression check with
 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/test_windows_ram_launcher.ps1`.
 
 To validate the WSL runtime and build the command plan without starting the
@@ -110,6 +113,9 @@ source .venv/bin/activate
 bash scripts/run_nes_ram_experiment.sh --dry-run
 bash scripts/run_nes_ram_experiment.sh
 ```
+
+Routine use should remain the double-click launcher; the owner should not need
+to activate WSL or type these commands.
 
 The capture script writes a separate run directory with one raw RAM bundle,
 pixel-only labels, and a small frame sample per reset. `validate_ram_capture.py`
