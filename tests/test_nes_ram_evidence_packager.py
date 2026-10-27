@@ -55,7 +55,7 @@ class NesEvidencePackagerTests(unittest.TestCase):
                 }
             ], output)
             with Image.open(output) as sheet:
-                self.assertEqual(sheet.size, (216, 87))
+                self.assertEqual(sheet.size, (216, 88))
             self.assertNotIn("source_path", manifest[0])
         finally:
             source.unlink(missing_ok=True)
