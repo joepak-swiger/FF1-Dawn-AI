@@ -79,8 +79,28 @@ docs/experiments/gba_feasibility/20261027_224615_320655Z/. Both sessions
 verified party submission, Cornelia, native save/reset/reload, and all four
 directions beyond idle controls.
 
-Battery-save loading has not been tested. Next build a reward-neutral
-Gymnasium adapter and short gameplay smoke against the corrected checkpoint.
+The reward-neutral Gymnasium adapter in ff1_dawn_ai/gba_env.py loads a native
+checkpoint on each reset, returns 84x84 grayscale frame stacks, exposes
+NOOP/directions/A/B/START/SELECT/L/R, forwards core termination, and truncates
+at its configured step limit. Run python scripts/gba_gym_smoke.py in the
+activated WSL environment. The script discovers a local checkpoint only when
+its saved metrics verify the exact Mustard/Mustar roster and all gameplay
+milestones; it writes unique local run artifacts and a sanitized GitHub-ready
+report/proof package. Two live smokes from the same checkpoint are published
+at docs/experiments/gba_gymnasium/20261027_225340_868798Z/ and
+docs/experiments/gba_gymnasium/20261027_225600_738614Z/.
+
+The live 12-step smoke from the second corrected checkpoint passed with
+repeatable reset observations, 0.0 rewards, truncation at step 12, and an
+unchanged checkpoint. The frames show the party responding to directional
+controls, but the smoke does not infer map coordinates or story progress.
+Because the GBA core's first framebuffer after a restore differed, the
+environment performs two identical native restores with two neutral settling
+frames each; the resulting reset observation is deterministic.
+
+Battery-save loading has not been tested. Next build a short-episode
+evaluation harness and independently validate movement, battle outcomes, and
+party survival before training.
 
 ## Offline format inspection
 

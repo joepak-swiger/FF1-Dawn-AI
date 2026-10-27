@@ -214,6 +214,9 @@ class GbaStateFormatTests(unittest.TestCase):
         self.assertIn("observed unknown", result["failure"])
 
     def test_custom_party_profiles_and_keyboard_navigation_are_exact(self):
+        self.assertEqual([m.canonical_name for m in GBA_CUSTOM_PARTY], [
+            "Sif", "Myth", "Milo", "Mustard",
+        ])
         self.assertEqual([(m.display_name, m.job) for m in GBA_CUSTOM_PARTY], [
             ("Sif", "Warrior"), ("Myth", "Thief"),
             ("Milo", "Monk"), ("Mustar", "Red Mage"),

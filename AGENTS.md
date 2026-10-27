@@ -63,6 +63,9 @@ performed or tested here.
   branch until reviewed. Do not disturb the NES environment, model, ROM,
   recordings, or save states.
 - Prefer making save states directly through the active Stable-Retro core and
+- The GBA Gymnasium adapter loads only a verified, run-specific native
+  checkpoint and uses neutral rewards until progress signals are validated.
+- Prefer making save states directly through the active Stable-Retro core and
   verifying reset/reload/resume. Do not repeat speculative mGBA savestate
   conversion or copy guessed battery-save filenames into the real integration.
   Test battery-save loading only in an isolated copy and report whether the

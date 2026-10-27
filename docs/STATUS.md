@@ -4,8 +4,10 @@
 **Current milestone:** GBA Dawn of Souls is the primary development target.
 Two fresh independent runs verified the official Sif/Warrior, Myth/Thief,
 Milo/Monk, Mustard/Red Mage party (GBA alias Mustar), Cornelia, native
-checkpoint restoration, and four-direction movement. NES remains secondary;
-v0.7 stays trusted, and RAM signals remain provisional.
+checkpoint restoration, and four-direction movement. A reward-neutral
+Gymnasium adapter and 12-step real gameplay smoke also passed; reset
+observations matched and the episode truncated as configured. NES remains
+secondary; v0.7 stays trusted, and RAM signals remain provisional.
 
 ## What the recordings show
 
@@ -327,10 +329,32 @@ rewards before that evidence exists.
   Evidence: docs/experiments/gba_feasibility/20261027_224615_320655Z/.
   Native checkpoints remain local and ignored.
 
+## 2026-10-27 — Reward-neutral GBA Gymnasium environment
+
+- Added FF1GbaEnv with a verified native checkpoint loaded at every reset,
+  discrete NOOP/direction/A/B/START/SELECT/L/R controls, 84x84 grayscale frame
+  stacks, neutral rewards, core termination forwarding, and step-limit
+  truncation.
+- Full WSL unittest suite passed (42 tests). Gymnasium's check_env also passed
+  against the actual Stable-Retro core and corrected native checkpoint.
+- Two 12-step smokes from the same corrected checkpoint passed with
+  deterministic reset observations, zero rewards, truncation at step 12, and
+  an unchanged checkpoint hash. Each recorded local traces/metrics/GIFs and
+  contact sheets. Sanitized summaries are published at
+  docs/experiments/gba_gymnasium/20261027_225340_868798Z/ and
+  docs/experiments/gba_gymnasium/20261027_225600_738614Z/.
+- Repeatable first-reset output required two identical native state restores,
+  each followed by two neutral settling frames; this behavior is encapsulated
+  in FF1GbaEnv.reset().
+- The smoke verifies control response and Gymnasium mechanics. It does not
+  infer coordinates, battle completion, survival, or story progress. No PPO
+  training or NES model/reward changes were made.
+
 ### Next GBA milestone
 
-Build a reward-neutral Gymnasium adapter and short gameplay smoke for the
-corrected custom-party checkpoint. Keep NES v0.7 untouched.
+Build a short-episode evaluation harness, then validate field movement,
+battle outcomes, and party survival against independent evidence before any
+training. Keep NES v0.7 untouched.
 
 
 ## 2026-10-27 — Sanitized NES evidence publication and GBA launcher
