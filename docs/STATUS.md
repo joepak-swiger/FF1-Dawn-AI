@@ -200,3 +200,13 @@ never copy candidate files into the working integration.
 The NES launcher fix is pushed to `main` as `ec7c86e`. Real WSL invocation was
 denied from this Codex environment, so the launcher still needs a one-time
 double-click check on the project PC before a new NES capture.
+
+
+## 2026-10-27 — Sanitized NES evidence publication and GBA launcher
+
+- Published the successful run `20261027_070449_19924_934` under `docs/experiments/nes_ram/20261027_070449_19924_934/`. It contains a human-readable report, concise metrics JSON, candidate CSV, and a small 11 KB downscaled scene sheet. Raw RAM bundles, full analyzer output, ROMs, save states, model weights, and videos are excluded.
+- Across three 1,801-sample sessions, `0x0014` had modal values 23 (field proxy) and 0 (battle proxy) in each session; pooled proxy confusion was 16 false positives and 2 false negatives (balanced accuracy 0.994). All 18 disagreements were within one sample of a pixel-proxy boundary. These are proxy comparisons, not ground truth.
+- `0x03CD`-neighbor candidates tied `0x0014`; `0x03D2`'s field mode was inconsistent by session. `0x00D2` had modes 73/201, 7 false positives and 415 false negatives (BA 0.947); `0x0270` had modes 248/240, 20 false positives and 387 false negatives (BA 0.945). Session-level details are in the published JSON.
+- Visual review of session 1 step 1680 identified a title/new-game menu mislabeled as battle-like by the pixel classifier; at that frame `0x0014` and `0x03CD` had the purported battle mode. This is evidence against interpreting the pixel labels as truth and keeps every candidate provisional.
+- Future successful NES capture pipelines now prepare a whitelisted evidence package automatically. GBA now has a Windows one-click runtime probe launcher with dry-run, WSL argument forwarding, unique logs and summaries; party creation still requires visual review. No training or reward logic changed.
+- **Decision:** `0x0014` remains provisional. Next independently review battle-entry, battle-result, field-return, title/menu, and game-over scenes, then compare candidate RAM values with those manual labels. Preserve v0.7 and do not start new training.

@@ -1,0 +1,2114 @@
+{
+  "run_id": "20261027_070449_19924_934",
+  "capture_status": "complete",
+  "analysis_sessions": 3,
+  "samples": 5403,
+  "labels_from_pixel_heuristic": {
+    "visual_heuristic_v0_9_pixels_only": 5403
+  },
+  "label_counts": {
+    "field_overworld": 1312,
+    "battle": 4091
+  },
+  "baseline": {
+    "model": "v0.7 trusted baseline",
+    "unmodified": true
+  },
+  "sessions": [
+    {
+      "session_id": "session_01",
+      "samples": 1801,
+      "field_like_proxy_samples": 406,
+      "battle_like_proxy_samples": 1395,
+      "proxy_transitions": 9
+    },
+    {
+      "session_id": "session_02",
+      "samples": 1801,
+      "field_like_proxy_samples": 358,
+      "battle_like_proxy_samples": 1443,
+      "proxy_transitions": 11
+    },
+    {
+      "session_id": "session_03",
+      "samples": 1801,
+      "field_like_proxy_samples": 548,
+      "battle_like_proxy_samples": 1253,
+      "proxy_transitions": 10
+    }
+  ],
+  "candidate_values_are_associations_not_semantic_flags": true,
+  "candidate_comparison": [
+    {
+      "address": "0x0014",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 23,
+        "mode_fraction": 0.977134
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 0,
+        "mode_fraction": 0.999511
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 16,
+        "battle_samples_predicted_field": 2,
+        "balanced_accuracy_against_pixel_proxy": 0.993658
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 6,
+          "within_transition_tolerance_samples": 6,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 7,
+          "within_transition_tolerance_samples": 7,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 5,
+          "within_transition_tolerance_samples": 5,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 9,
+        "edges_conflicting_with_pixel_proxy": 11,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 3
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 23,
+          "field_mode_fraction": 0.985222,
+          "battle_mode": 0,
+          "battle_mode_fraction": 1.0,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 0
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 23,
+          "field_mode_fraction": 0.955307,
+          "battle_mode": 0,
+          "battle_mode_fraction": 0.999307,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 1
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 23,
+          "field_mode_fraction": 0.985401,
+          "battle_mode": 0,
+          "battle_mode_fraction": 0.999202,
+          "field_samples_predicted_battle": 4,
+          "battle_samples_predicted_field": 1
+        }
+      ]
+    },
+    {
+      "address": "0x03CD",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 26,
+        "mode_fraction": 0.987805
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 0,
+        "mode_fraction": 0.999511
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 16,
+        "battle_samples_predicted_field": 2,
+        "balanced_accuracy_against_pixel_proxy": 0.993658
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 6,
+          "within_transition_tolerance_samples": 6,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 7,
+          "within_transition_tolerance_samples": 7,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 5,
+          "within_transition_tolerance_samples": 5,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 9,
+        "edges_conflicting_with_pixel_proxy": 11,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 3
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 26,
+          "field_mode_fraction": 0.985222,
+          "battle_mode": 0,
+          "battle_mode_fraction": 1.0,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 0
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 26,
+          "field_mode_fraction": 0.98324,
+          "battle_mode": 0,
+          "battle_mode_fraction": 0.999307,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 1
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 26,
+          "field_mode_fraction": 0.992701,
+          "battle_mode": 0,
+          "battle_mode_fraction": 0.999202,
+          "field_samples_predicted_battle": 4,
+          "battle_samples_predicted_field": 1
+        }
+      ]
+    },
+    {
+      "address": "0x03CF",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 25,
+        "mode_fraction": 0.987805
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 48,
+        "mode_fraction": 0.999511
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 16,
+        "battle_samples_predicted_field": 2,
+        "balanced_accuracy_against_pixel_proxy": 0.993658
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 6,
+          "within_transition_tolerance_samples": 6,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 7,
+          "within_transition_tolerance_samples": 7,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 5,
+          "within_transition_tolerance_samples": 5,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 9,
+        "edges_conflicting_with_pixel_proxy": 11,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 3
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 25,
+          "field_mode_fraction": 0.985222,
+          "battle_mode": 48,
+          "battle_mode_fraction": 1.0,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 0
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 25,
+          "field_mode_fraction": 0.98324,
+          "battle_mode": 48,
+          "battle_mode_fraction": 0.999307,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 1
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 25,
+          "field_mode_fraction": 0.992701,
+          "battle_mode": 48,
+          "battle_mode_fraction": 0.999202,
+          "field_samples_predicted_battle": 4,
+          "battle_samples_predicted_field": 1
+        }
+      ]
+    },
+    {
+      "address": "0x03D1",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 15,
+        "mode_fraction": 0.987805
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 40,
+        "mode_fraction": 0.999511
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 16,
+        "battle_samples_predicted_field": 2,
+        "balanced_accuracy_against_pixel_proxy": 0.993658
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 6,
+          "within_transition_tolerance_samples": 6,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 7,
+          "within_transition_tolerance_samples": 7,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 5,
+          "within_transition_tolerance_samples": 5,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 9,
+        "edges_conflicting_with_pixel_proxy": 11,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 3
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 15,
+          "field_mode_fraction": 0.985222,
+          "battle_mode": 40,
+          "battle_mode_fraction": 1.0,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 0
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 15,
+          "field_mode_fraction": 0.98324,
+          "battle_mode": 40,
+          "battle_mode_fraction": 0.999307,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 1
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 15,
+          "field_mode_fraction": 0.992701,
+          "battle_mode": 40,
+          "battle_mode_fraction": 0.999202,
+          "field_samples_predicted_battle": 4,
+          "battle_samples_predicted_field": 1
+        }
+      ]
+    },
+    {
+      "address": "0x03D2",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 22,
+        "mode_fraction": 0.377287
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 24,
+        "mode_fraction": 0.999511
+      },
+      "mode_pair_repeats_across_sessions": false,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 16,
+        "battle_samples_predicted_field": 2,
+        "balanced_accuracy_against_pixel_proxy": 0.993658
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 6,
+          "within_transition_tolerance_samples": 6,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 7,
+          "within_transition_tolerance_samples": 7,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 5,
+          "within_transition_tolerance_samples": 5,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 9,
+        "edges_conflicting_with_pixel_proxy": 11,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 3
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 39,
+          "field_mode_fraction": 0.573892,
+          "battle_mode": 24,
+          "battle_mode_fraction": 1.0,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 0
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 48,
+          "field_mode_fraction": 0.50838,
+          "battle_mode": 24,
+          "battle_mode_fraction": 0.999307,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 1
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 22,
+          "field_mode_fraction": 0.593066,
+          "battle_mode": 24,
+          "battle_mode_fraction": 0.999202,
+          "field_samples_predicted_battle": 4,
+          "battle_samples_predicted_field": 1
+        }
+      ]
+    },
+    {
+      "address": "0x03D3",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 54,
+        "mode_fraction": 0.987805
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 33,
+        "mode_fraction": 0.999511
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 16,
+        "battle_samples_predicted_field": 2,
+        "balanced_accuracy_against_pixel_proxy": 0.993658
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 6,
+          "within_transition_tolerance_samples": 6,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 7,
+          "within_transition_tolerance_samples": 7,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 5,
+          "within_transition_tolerance_samples": 5,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 9,
+        "edges_conflicting_with_pixel_proxy": 11,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 3
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 54,
+          "field_mode_fraction": 0.985222,
+          "battle_mode": 33,
+          "battle_mode_fraction": 1.0,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 0
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 54,
+          "field_mode_fraction": 0.98324,
+          "battle_mode": 33,
+          "battle_mode_fraction": 0.999307,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 1
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 54,
+          "field_mode_fraction": 0.992701,
+          "battle_mode": 33,
+          "battle_mode_fraction": 0.999202,
+          "field_samples_predicted_battle": 4,
+          "battle_samples_predicted_field": 1
+        }
+      ]
+    },
+    {
+      "address": "0x03D5",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 15,
+        "mode_fraction": 0.987805
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 22,
+        "mode_fraction": 0.999511
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 16,
+        "battle_samples_predicted_field": 2,
+        "balanced_accuracy_against_pixel_proxy": 0.993658
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 6,
+          "within_transition_tolerance_samples": 6,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 7,
+          "within_transition_tolerance_samples": 7,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 5,
+          "within_transition_tolerance_samples": 5,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 9,
+        "edges_conflicting_with_pixel_proxy": 11,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 3
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 15,
+          "field_mode_fraction": 0.985222,
+          "battle_mode": 22,
+          "battle_mode_fraction": 1.0,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 0
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 15,
+          "field_mode_fraction": 0.98324,
+          "battle_mode": 22,
+          "battle_mode_fraction": 0.999307,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 1
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 15,
+          "field_mode_fraction": 0.992701,
+          "battle_mode": 22,
+          "battle_mode_fraction": 0.999202,
+          "field_samples_predicted_battle": 4,
+          "battle_samples_predicted_field": 1
+        }
+      ]
+    },
+    {
+      "address": "0x03D9",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 15,
+        "mode_fraction": 0.987805
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 48,
+        "mode_fraction": 0.999511
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 16,
+        "battle_samples_predicted_field": 2,
+        "balanced_accuracy_against_pixel_proxy": 0.993658
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 6,
+          "within_transition_tolerance_samples": 6,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 7,
+          "within_transition_tolerance_samples": 7,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 5,
+          "within_transition_tolerance_samples": 5,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 9,
+        "edges_conflicting_with_pixel_proxy": 11,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 3
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 15,
+          "field_mode_fraction": 0.985222,
+          "battle_mode": 48,
+          "battle_mode_fraction": 1.0,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 0
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 15,
+          "field_mode_fraction": 0.98324,
+          "battle_mode": 48,
+          "battle_mode_fraction": 0.999307,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 1
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 15,
+          "field_mode_fraction": 0.992701,
+          "battle_mode": 48,
+          "battle_mode_fraction": 0.999202,
+          "field_samples_predicted_battle": 4,
+          "battle_samples_predicted_field": 1
+        }
+      ]
+    },
+    {
+      "address": "0x03DA",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 39,
+        "mode_fraction": 0.987805
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 34,
+        "mode_fraction": 0.999511
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 16,
+        "battle_samples_predicted_field": 2,
+        "balanced_accuracy_against_pixel_proxy": 0.993658
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 6,
+          "within_transition_tolerance_samples": 6,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 7,
+          "within_transition_tolerance_samples": 7,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 5,
+          "within_transition_tolerance_samples": 5,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 9,
+        "edges_conflicting_with_pixel_proxy": 11,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 3
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 39,
+          "field_mode_fraction": 0.985222,
+          "battle_mode": 34,
+          "battle_mode_fraction": 1.0,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 0
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 39,
+          "field_mode_fraction": 0.98324,
+          "battle_mode": 34,
+          "battle_mode_fraction": 0.999307,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 1
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 39,
+          "field_mode_fraction": 0.992701,
+          "battle_mode": 34,
+          "battle_mode_fraction": 0.999202,
+          "field_samples_predicted_battle": 4,
+          "battle_samples_predicted_field": 1
+        }
+      ]
+    },
+    {
+      "address": "0x03DB",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 48,
+        "mode_fraction": 0.987805
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 18,
+        "mode_fraction": 0.999511
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 16,
+        "battle_samples_predicted_field": 2,
+        "balanced_accuracy_against_pixel_proxy": 0.993658
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 6,
+          "within_transition_tolerance_samples": 6,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 7,
+          "within_transition_tolerance_samples": 7,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 5,
+          "within_transition_tolerance_samples": 5,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 9,
+        "edges_conflicting_with_pixel_proxy": 11,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 3
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 48,
+          "field_mode_fraction": 0.985222,
+          "battle_mode": 18,
+          "battle_mode_fraction": 1.0,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 0
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 48,
+          "field_mode_fraction": 0.98324,
+          "battle_mode": 18,
+          "battle_mode_fraction": 0.999307,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 1
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 48,
+          "field_mode_fraction": 0.992701,
+          "battle_mode": 18,
+          "battle_mode_fraction": 0.999202,
+          "field_samples_predicted_battle": 4,
+          "battle_samples_predicted_field": 1
+        }
+      ]
+    },
+    {
+      "address": "0x03DD",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 15,
+        "mode_fraction": 0.987805
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 48,
+        "mode_fraction": 0.999511
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 16,
+        "battle_samples_predicted_field": 2,
+        "balanced_accuracy_against_pixel_proxy": 0.993658
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 6,
+          "within_transition_tolerance_samples": 6,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 7,
+          "within_transition_tolerance_samples": 7,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 5,
+          "within_transition_tolerance_samples": 5,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 9,
+        "edges_conflicting_with_pixel_proxy": 11,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 3
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 15,
+          "field_mode_fraction": 0.985222,
+          "battle_mode": 48,
+          "battle_mode_fraction": 1.0,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 0
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 15,
+          "field_mode_fraction": 0.98324,
+          "battle_mode": 48,
+          "battle_mode_fraction": 0.999307,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 1
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 15,
+          "field_mode_fraction": 0.992701,
+          "battle_mode": 48,
+          "battle_mode_fraction": 0.999202,
+          "field_samples_predicted_battle": 4,
+          "battle_samples_predicted_field": 1
+        }
+      ]
+    },
+    {
+      "address": "0x03DE",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 48,
+        "mode_fraction": 0.987805
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 16,
+        "mode_fraction": 0.999511
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 16,
+        "battle_samples_predicted_field": 2,
+        "balanced_accuracy_against_pixel_proxy": 0.993658
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 6,
+          "within_transition_tolerance_samples": 6,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 7,
+          "within_transition_tolerance_samples": 7,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 5,
+          "within_transition_tolerance_samples": 5,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 9,
+        "edges_conflicting_with_pixel_proxy": 11,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 3
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 48,
+          "field_mode_fraction": 0.985222,
+          "battle_mode": 16,
+          "battle_mode_fraction": 1.0,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 0
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 48,
+          "field_mode_fraction": 0.98324,
+          "battle_mode": 16,
+          "battle_mode_fraction": 0.999307,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 1
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 48,
+          "field_mode_fraction": 0.992701,
+          "battle_mode": 16,
+          "battle_mode_fraction": 0.999202,
+          "field_samples_predicted_battle": 4,
+          "battle_samples_predicted_field": 1
+        }
+      ]
+    },
+    {
+      "address": "0x03DF",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 26,
+        "mode_fraction": 0.987805
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 0,
+        "mode_fraction": 0.999511
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 16,
+        "battle_samples_predicted_field": 2,
+        "balanced_accuracy_against_pixel_proxy": 0.993658
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 6,
+          "within_transition_tolerance_samples": 6,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 7,
+          "within_transition_tolerance_samples": 7,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 5,
+          "within_transition_tolerance_samples": 5,
+          "away_from_transition_samples": 0,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 9,
+        "edges_conflicting_with_pixel_proxy": 11,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 3
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 26,
+          "field_mode_fraction": 0.985222,
+          "battle_mode": 0,
+          "battle_mode_fraction": 1.0,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 0
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 26,
+          "field_mode_fraction": 0.98324,
+          "battle_mode": 0,
+          "battle_mode_fraction": 0.999307,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 1
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 26,
+          "field_mode_fraction": 0.992701,
+          "battle_mode": 0,
+          "battle_mode_fraction": 0.999202,
+          "field_samples_predicted_battle": 4,
+          "battle_samples_predicted_field": 1
+        }
+      ]
+    },
+    {
+      "address": "0x03CE",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 41,
+        "mode_fraction": 0.987805
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 15,
+        "mode_fraction": 0.905402
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 14,
+        "battle_samples_predicted_field": 387,
+        "balanced_accuracy_against_pixel_proxy": 0.947366
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 133,
+          "within_transition_tolerance_samples": 8,
+          "away_from_transition_samples": 125,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 131,
+          "within_transition_tolerance_samples": 9,
+          "away_from_transition_samples": 122,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 137,
+          "within_transition_tolerance_samples": 7,
+          "away_from_transition_samples": 130,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 10,
+        "edges_conflicting_with_pixel_proxy": 12,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 4,
+            "edges_conflicting_with_pixel_proxy": 5
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 3
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 41,
+          "field_mode_fraction": 0.985222,
+          "battle_mode": 15,
+          "battle_mode_fraction": 0.908961,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 127
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 41,
+          "field_mode_fraction": 0.98324,
+          "battle_mode": 15,
+          "battle_mode_fraction": 0.912682,
+          "field_samples_predicted_battle": 5,
+          "battle_samples_predicted_field": 126
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 41,
+          "field_mode_fraction": 0.992701,
+          "battle_mode": 15,
+          "battle_mode_fraction": 0.893057,
+          "field_samples_predicted_battle": 3,
+          "battle_samples_predicted_field": 134
+        }
+      ]
+    },
+    {
+      "address": "0x00D2",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 73,
+        "mode_fraction": 0.990091
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 201,
+        "mode_fraction": 0.898558
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 7,
+        "battle_samples_predicted_field": 415,
+        "balanced_accuracy_against_pixel_proxy": 0.946611
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 139,
+          "within_transition_tolerance_samples": 6,
+          "away_from_transition_samples": 133,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 138,
+          "within_transition_tolerance_samples": 7,
+          "away_from_transition_samples": 131,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 145,
+          "within_transition_tolerance_samples": 7,
+          "away_from_transition_samples": 138,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 10,
+        "edges_conflicting_with_pixel_proxy": 3,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 4,
+            "edges_conflicting_with_pixel_proxy": 1
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 1
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 1
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 73,
+          "field_mode_fraction": 0.992611,
+          "battle_mode": 201,
+          "battle_mode_fraction": 0.902509,
+          "field_samples_predicted_battle": 3,
+          "battle_samples_predicted_field": 136
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 73,
+          "field_mode_fraction": 0.986034,
+          "battle_mode": 201,
+          "battle_mode_fraction": 0.905752,
+          "field_samples_predicted_battle": 2,
+          "battle_samples_predicted_field": 136
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 73,
+          "field_mode_fraction": 0.990876,
+          "battle_mode": 201,
+          "battle_mode_fraction": 0.885874,
+          "field_samples_predicted_battle": 2,
+          "battle_samples_predicted_field": 143
+        }
+      ]
+    },
+    {
+      "address": "0x00D3",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 181,
+        "mode_fraction": 0.990091
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 179,
+        "mode_fraction": 0.898558
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 7,
+        "battle_samples_predicted_field": 415,
+        "balanced_accuracy_against_pixel_proxy": 0.946611
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 139,
+          "within_transition_tolerance_samples": 6,
+          "away_from_transition_samples": 133,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 138,
+          "within_transition_tolerance_samples": 7,
+          "away_from_transition_samples": 131,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 145,
+          "within_transition_tolerance_samples": 7,
+          "away_from_transition_samples": 138,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 10,
+        "edges_conflicting_with_pixel_proxy": 3,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 4,
+            "edges_conflicting_with_pixel_proxy": 1
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 1
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 1
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 181,
+          "field_mode_fraction": 0.992611,
+          "battle_mode": 179,
+          "battle_mode_fraction": 0.902509,
+          "field_samples_predicted_battle": 3,
+          "battle_samples_predicted_field": 136
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 181,
+          "field_mode_fraction": 0.986034,
+          "battle_mode": 179,
+          "battle_mode_fraction": 0.905752,
+          "field_samples_predicted_battle": 2,
+          "battle_samples_predicted_field": 136
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 181,
+          "field_mode_fraction": 0.990876,
+          "battle_mode": 179,
+          "battle_mode_fraction": 0.885874,
+          "field_samples_predicted_battle": 2,
+          "battle_samples_predicted_field": 143
+        }
+      ]
+    },
+    {
+      "address": "0x0270",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 248,
+        "mode_fraction": 0.984756
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 240,
+        "mode_fraction": 0.905402
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 20,
+        "battle_samples_predicted_field": 387,
+        "balanced_accuracy_against_pixel_proxy": 0.945079
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 135,
+          "within_transition_tolerance_samples": 10,
+          "away_from_transition_samples": 125,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 132,
+          "within_transition_tolerance_samples": 10,
+          "away_from_transition_samples": 122,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 140,
+          "within_transition_tolerance_samples": 10,
+          "away_from_transition_samples": 130,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 10,
+        "edges_conflicting_with_pixel_proxy": 14,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 4,
+            "edges_conflicting_with_pixel_proxy": 5
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 5
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 248,
+          "field_mode_fraction": 0.980296,
+          "battle_mode": 240,
+          "battle_mode_fraction": 0.908961,
+          "field_samples_predicted_battle": 8,
+          "battle_samples_predicted_field": 127
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 248,
+          "field_mode_fraction": 0.98324,
+          "battle_mode": 240,
+          "battle_mode_fraction": 0.912682,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 126
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 248,
+          "field_mode_fraction": 0.989051,
+          "battle_mode": 240,
+          "battle_mode_fraction": 0.893057,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 134
+        }
+      ]
+    },
+    {
+      "address": "0x0271",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 248,
+        "mode_fraction": 0.984756
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 240,
+        "mode_fraction": 0.905402
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 20,
+        "battle_samples_predicted_field": 387,
+        "balanced_accuracy_against_pixel_proxy": 0.945079
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 135,
+          "within_transition_tolerance_samples": 10,
+          "away_from_transition_samples": 125,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 132,
+          "within_transition_tolerance_samples": 10,
+          "away_from_transition_samples": 122,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 140,
+          "within_transition_tolerance_samples": 10,
+          "away_from_transition_samples": 130,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 10,
+        "edges_conflicting_with_pixel_proxy": 14,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 4,
+            "edges_conflicting_with_pixel_proxy": 5
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 5
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 248,
+          "field_mode_fraction": 0.980296,
+          "battle_mode": 240,
+          "battle_mode_fraction": 0.908961,
+          "field_samples_predicted_battle": 8,
+          "battle_samples_predicted_field": 127
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 248,
+          "field_mode_fraction": 0.98324,
+          "battle_mode": 240,
+          "battle_mode_fraction": 0.912682,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 126
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 248,
+          "field_mode_fraction": 0.989051,
+          "battle_mode": 240,
+          "battle_mode_fraction": 0.893057,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 134
+        }
+      ]
+    },
+    {
+      "address": "0x0272",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 248,
+        "mode_fraction": 0.984756
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 240,
+        "mode_fraction": 0.905402
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 20,
+        "battle_samples_predicted_field": 387,
+        "balanced_accuracy_against_pixel_proxy": 0.945079
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 135,
+          "within_transition_tolerance_samples": 10,
+          "away_from_transition_samples": 125,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 132,
+          "within_transition_tolerance_samples": 10,
+          "away_from_transition_samples": 122,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 140,
+          "within_transition_tolerance_samples": 10,
+          "away_from_transition_samples": 130,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 10,
+        "edges_conflicting_with_pixel_proxy": 14,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 4,
+            "edges_conflicting_with_pixel_proxy": 5
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 5
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 248,
+          "field_mode_fraction": 0.980296,
+          "battle_mode": 240,
+          "battle_mode_fraction": 0.908961,
+          "field_samples_predicted_battle": 8,
+          "battle_samples_predicted_field": 127
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 248,
+          "field_mode_fraction": 0.98324,
+          "battle_mode": 240,
+          "battle_mode_fraction": 0.912682,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 126
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 248,
+          "field_mode_fraction": 0.989051,
+          "battle_mode": 240,
+          "battle_mode_fraction": 0.893057,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 134
+        }
+      ]
+    },
+    {
+      "address": "0x0273",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 248,
+        "mode_fraction": 0.984756
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 240,
+        "mode_fraction": 0.905402
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 20,
+        "battle_samples_predicted_field": 387,
+        "balanced_accuracy_against_pixel_proxy": 0.945079
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 135,
+          "within_transition_tolerance_samples": 10,
+          "away_from_transition_samples": 125,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 132,
+          "within_transition_tolerance_samples": 10,
+          "away_from_transition_samples": 122,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 140,
+          "within_transition_tolerance_samples": 10,
+          "away_from_transition_samples": 130,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 10,
+        "edges_conflicting_with_pixel_proxy": 14,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 4,
+            "edges_conflicting_with_pixel_proxy": 5
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 5
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 248,
+          "field_mode_fraction": 0.980296,
+          "battle_mode": 240,
+          "battle_mode_fraction": 0.908961,
+          "field_samples_predicted_battle": 8,
+          "battle_samples_predicted_field": 127
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 248,
+          "field_mode_fraction": 0.98324,
+          "battle_mode": 240,
+          "battle_mode_fraction": 0.912682,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 126
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 248,
+          "field_mode_fraction": 0.989051,
+          "battle_mode": 240,
+          "battle_mode_fraction": 0.893057,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 134
+        }
+      ]
+    },
+    {
+      "address": "0x0274",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 248,
+        "mode_fraction": 0.984756
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 240,
+        "mode_fraction": 0.905402
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 20,
+        "battle_samples_predicted_field": 387,
+        "balanced_accuracy_against_pixel_proxy": 0.945079
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 135,
+          "within_transition_tolerance_samples": 10,
+          "away_from_transition_samples": 125,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 132,
+          "within_transition_tolerance_samples": 10,
+          "away_from_transition_samples": 122,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 140,
+          "within_transition_tolerance_samples": 10,
+          "away_from_transition_samples": 130,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 10,
+        "edges_conflicting_with_pixel_proxy": 14,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 4,
+            "edges_conflicting_with_pixel_proxy": 5
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 5
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 248,
+          "field_mode_fraction": 0.980296,
+          "battle_mode": 240,
+          "battle_mode_fraction": 0.908961,
+          "field_samples_predicted_battle": 8,
+          "battle_samples_predicted_field": 127
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 248,
+          "field_mode_fraction": 0.98324,
+          "battle_mode": 240,
+          "battle_mode_fraction": 0.912682,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 126
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 248,
+          "field_mode_fraction": 0.989051,
+          "battle_mode": 240,
+          "battle_mode_fraction": 0.893057,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 134
+        }
+      ]
+    },
+    {
+      "address": "0x0275",
+      "field_proxy": {
+        "samples": 1312,
+        "mode": 248,
+        "mode_fraction": 0.984756
+      },
+      "battle_proxy": {
+        "samples": 4091,
+        "mode": 240,
+        "mode_fraction": 0.905402
+      },
+      "mode_pair_repeats_across_sessions": true,
+      "mode_separable": true,
+      "proxy_disagreement": {
+        "field_samples_predicted_battle": 20,
+        "battle_samples_predicted_field": 387,
+        "balanced_accuracy_against_pixel_proxy": 0.945079
+      },
+      "disagreement_timing_by_session": {
+        "session_01": {
+          "disagreement_samples": 135,
+          "within_transition_tolerance_samples": 10,
+          "away_from_transition_samples": 125,
+          "transition_tolerance_samples": 1
+        },
+        "session_02": {
+          "disagreement_samples": 132,
+          "within_transition_tolerance_samples": 10,
+          "away_from_transition_samples": 122,
+          "transition_tolerance_samples": 1
+        },
+        "session_03": {
+          "disagreement_samples": 140,
+          "within_transition_tolerance_samples": 10,
+          "away_from_transition_samples": 130,
+          "transition_tolerance_samples": 1
+        }
+      },
+      "transitions": {
+        "entry_edges": 11,
+        "exit_edges": 10,
+        "edges_conflicting_with_pixel_proxy": 14,
+        "per_session": {
+          "session_01": {
+            "entry_edges": 4,
+            "exit_edges": 4,
+            "edges_conflicting_with_pixel_proxy": 5
+          },
+          "session_02": {
+            "entry_edges": 4,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 5
+          },
+          "session_03": {
+            "entry_edges": 3,
+            "exit_edges": 3,
+            "edges_conflicting_with_pixel_proxy": 4
+          }
+        }
+      },
+      "per_session": [
+        {
+          "session_id": "session_01",
+          "field_mode": 248,
+          "field_mode_fraction": 0.980296,
+          "battle_mode": 240,
+          "battle_mode_fraction": 0.908961,
+          "field_samples_predicted_battle": 8,
+          "battle_samples_predicted_field": 127
+        },
+        {
+          "session_id": "session_02",
+          "field_mode": 248,
+          "field_mode_fraction": 0.98324,
+          "battle_mode": 240,
+          "battle_mode_fraction": 0.912682,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 126
+        },
+        {
+          "session_id": "session_03",
+          "field_mode": 248,
+          "field_mode_fraction": 0.989051,
+          "battle_mode": 240,
+          "battle_mode_fraction": 0.893057,
+          "field_samples_predicted_battle": 6,
+          "battle_samples_predicted_field": 134
+        }
+      ]
+    }
+  ],
+  "evidence_frames": [
+    {
+      "session_id": "session_01",
+      "transition_label": "first battle-like entry",
+      "transition_step": 93,
+      "saved_frame_step": 80,
+      "pixel_proxy_transition": true
+    },
+    {
+      "session_id": "session_01",
+      "transition_label": "first field-like return",
+      "transition_step": 250,
+      "saved_frame_step": 240,
+      "pixel_proxy_transition": true
+    },
+    {
+      "session_id": "session_01",
+      "transition_label": "rapid proxy transition",
+      "transition_step": 1674,
+      "saved_frame_step": 1680,
+      "pixel_proxy_transition": true
+    },
+    {
+      "session_id": "session_02",
+      "transition_label": "first battle-like entry",
+      "transition_step": 89,
+      "saved_frame_step": 80,
+      "pixel_proxy_transition": true
+    },
+    {
+      "session_id": "session_02",
+      "transition_label": "first field-like return",
+      "transition_step": 706,
+      "saved_frame_step": 720,
+      "pixel_proxy_transition": true
+    },
+    {
+      "session_id": "session_02",
+      "transition_label": "rapid proxy transition",
+      "transition_step": 1358,
+      "saved_frame_step": 1360,
+      "pixel_proxy_transition": true
+    },
+    {
+      "session_id": "session_03",
+      "transition_label": "first battle-like entry",
+      "transition_step": 82,
+      "saved_frame_step": 80,
+      "pixel_proxy_transition": true
+    },
+    {
+      "session_id": "session_03",
+      "transition_label": "first field-like return",
+      "transition_step": 426,
+      "saved_frame_step": 440,
+      "pixel_proxy_transition": true
+    },
+    {
+      "session_id": "session_03",
+      "transition_label": "rapid proxy transition",
+      "transition_step": 1342,
+      "saved_frame_step": 1360,
+      "pixel_proxy_transition": true
+    }
+  ],
+  "review_notes": [
+    "Session 1 step 1680: title/new-game menu by visual inspection, while the pixel heuristic labels it battle-like. At that sample, 0x0014=0, 0x03CD=0, 0x00D2=73, and 0x0270=248."
+  ],
+  "raw_data_included": false
+}

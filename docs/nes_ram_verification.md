@@ -125,3 +125,8 @@ overwritten. Pixel classifications are independent of the RAM bytes under
 study but remain imperfect; review saved transition frames when labels are
 ambiguous. The analyzer reports candidate associations, not verified game
 semantics, and these measurements must not be used as rewards yet.
+
+
+## Publishing future analyses
+
+After a successful completed run, `scripts/run_nes_ram_experiment.sh` automatically creates a review package under `docs/experiments/nes_ram/<run-id>/`. Inspect its report, metrics, candidate CSV, and small contact sheet. Commit only that sanitized folder with the code and status note. Never stage the raw capture or full analyzer directory.
