@@ -93,6 +93,10 @@ three independent resets, validates the complete files, and only then runs the
 offline analyzer. It does not install packages. Each run has a unique ID;
 execution logs and a short summary are saved under
 `videos/nes_ram_auto_capture/logs/<run-id>/`.
+The CMD file forwards Bash and the runner script as separate WSL arguments;
+it does not compose a Bash command string. On launcher changes, run the
+Windows forwarding regression check with
+`powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/test_windows_ram_launcher.ps1`.
 
 To validate the WSL runtime and build the command plan without starting the
 emulator, run `run_nes_ram_capture.cmd --dry-run` from a terminal. Normal use

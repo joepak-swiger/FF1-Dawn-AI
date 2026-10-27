@@ -10,19 +10,21 @@ if "%~1"=="" (
     goto :usage
 )
 
-for /f "usebackq delims=" %%P in (`wsl.exe --exec wslpath -a "%~dp0"`) do set "WSL_PROJECT=%%P"
+if not defined FF1_WSL_EXE set "FF1_WSL_EXE=wsl.exe"
+for /f "usebackq delims=" %%P in (`call "%FF1_WSL_EXE%" --exec wslpath -a "%~dp0"`) do set "WSL_PROJECT=%%P"
 if not defined WSL_PROJECT (
-    echo ERROR: Could not locate the project path inside WSL. Check that WSL is installed and available.
+    echo ERROR: WSL could not resolve this project path. Review the WSL error above and confirm the project's drive is mounted.
     pause
     exit /b 2
 )
 
 echo Running NES RAM capture through the project's WSL virtual environment...
-wsl.exe --exec bash -lc "cd '%WSL_PROJECT%' && exec bash scripts/run_nes_ram_experiment.sh %MODE%"
+call "%FF1_WSL_EXE%" --exec bash "%WSL_PROJECT%/scripts/run_nes_ram_experiment.sh" %MODE%
 set "RESULT=%ERRORLEVEL%"
 if not "%RESULT%"=="0" (
     echo.
-    echo ERROR: Experiment launcher failed with exit code %RESULT%. See videos/nes_ram_auto_capture/logs for details.
+    echo ERROR: WSL runner failed with exit code %RESULT%. Review the WSL or runner error printed above.
+    echo A run log exists only if the Bash runner started; its exact path is printed by that runner.
     pause
     exit /b %RESULT%
 )

@@ -45,6 +45,8 @@ fail() {
     echo "Log: $LOG_FILE"
     [[ -d "$CAPTURE_DIR" ]] && echo "Partial capture: $CAPTURE_DIR"
   } > "$SUMMARY_FILE"
+  echo "Execution summary: $SUMMARY_FILE"
+  echo "Execution log: $LOG_FILE"
   exit 1
 }
 

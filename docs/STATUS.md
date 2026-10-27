@@ -119,3 +119,17 @@ new training run yet.
   new WSL dry-run and live capture were not executed here. The existing local
   three-session capture was analyzed successfully; Python/synthetic validation
   tests are run as part of this change.
+
+## 2026-10-27 — Windows launcher forwarding fix
+
+- Fixed the CMD-to-WSL call to invoke `bash` with the runner script as a
+  separate argument, removing the `bash -lc` command string that led Windows
+  to interpret `exec` as a CMD command. The default `run` and explicit
+  `--dry-run` arguments are forwarded unchanged.
+- Added a Windows PowerShell regression test with a mock `wsl.exe` wrapper. It
+  checks WSL path conversion, both modes, invalid arguments, and preservation
+  of the runner's exit code. The mock verifies command construction without
+  starting WSL or the emulator.
+- No capture or analysis was run for this fix. A live WSL invocation still
+  needs confirmation on the project PC; the test here covers Windows argument
+  handling through the simulated WSL boundary.
