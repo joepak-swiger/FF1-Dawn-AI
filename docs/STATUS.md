@@ -133,3 +133,20 @@ new training run yet.
 - No capture or analysis was run for this fix. A live WSL invocation still
   needs confirmation on the project PC; the test here covers Windows argument
   handling through the simulated WSL boundary.
+
+## 2026-10-27 — Launcher process-boundary fix and runtime gate
+
+- Replaced the CMD-to-WSL argument handoff with a PowerShell entrypoint that
+  passes `--exec`, `bash`, the Linux runner path, and `run`/`--dry-run` as
+  distinct native arguments. The CMD file no longer uses `call` for WSL.
+- The normal run now performs a short NES core, input, RAM, and in-memory
+  native-state round-trip smoke before it starts the longer capture. A smoke
+  failure stops capture and leaves a diagnostic JSON report under that run's
+  unique log directory. Dry-run remains emulator-free.
+- Windows `cmd.exe` regression test passed for default mode, dry-run, invalid
+  arguments, and WSL exit-code propagation. It records the argument vector
+  received by a simulated WSL wrapper; it is not an end-to-end WSL test.
+- A real `wsl.exe --exec bash -c ...` check from this Codex environment was
+  denied with `Wsl/E_ACCESSDENIED`. No live NES smoke, capture, or analysis was
+  run. The project owner's prior recording and all model/ROM/state assets were
+  preserved.

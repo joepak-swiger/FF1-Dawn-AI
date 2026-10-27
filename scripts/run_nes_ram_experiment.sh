@@ -74,6 +74,10 @@ if [[ "$MODE" == "--dry-run" ]]; then
   exit 0
 fi
 
+if ! "$PYTHON" scripts/nes_runtime_smoke.py --output-dir "$LOG_ROOT/$RUN_ID/nes_runtime_smoke"; then
+  fail "NES core smoke test failed. The full capture was not started."
+fi
+
 if ! "$PYTHON" scripts/nes_ram_capture.py --episodes 3 --steps 1800 --run-id "$RUN_ID"; then
   fail "Capture process failed. Partial outputs, if any, were preserved; analysis was skipped."
 fi

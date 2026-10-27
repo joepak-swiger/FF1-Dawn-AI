@@ -17,11 +17,16 @@ performed or tested here.
   double-click `run_nes_ram_capture.cmd`; do not require them to open WSL,
   activate `.venv`, or copy a sequence of commands. `--dry-run` validates the
   configured runtime and assets without starting the emulator.
-- The Windows launcher calls `scripts/run_nes_ram_experiment.sh` through WSL.
-  It logs every run, validates completed capture outputs before analysis, and
-  uses distinct output directories. If WSL cannot be reached from this
-  execution environment, test the offline Python pieces and report that the
-  live launcher check was unavailable; do not change or recreate `.venv`.
+- The Windows `run_nes_ram_capture.cmd` entrypoint delegates argument
+  forwarding to `scripts/run_nes_ram_capture.ps1`, which invokes WSL with
+  separate native arguments (no `call`, shell command string, or Bash `-c`).
+  Default mode runs a quick NES runtime smoke before capture; `--dry-run`
+  validates dependencies and assets without starting the emulator. Bash logs
+  each run under a unique ID, validates capture completeness before analysis,
+  and preserves partial output. If WSL cannot be reached from this execution
+  environment, test Windows argument forwarding and offline Python pieces, and
+  report that the real WSL smoke is unavailable; do not change or recreate
+  `.venv`.
 - If WSL is unavailable, use safe Windows/offline alternatives, write tests
   that can run in WSL, report checks accurately, and continue other useful
   work. Never compromise the working environment to bypass an access limit.

@@ -12,10 +12,6 @@ try {
     @'
 @echo off
 >>"%FF1_MOCK_WSL_LOG%" echo %~1^|%~2^|%~3^|%~4^|%~5
-if /I "%~2"=="wslpath" (
-  echo /mnt/e/JOEPAK/FF1-Dawn-AI
-  exit /b 0
-)
 exit /b %FF1_MOCK_WSL_EXIT%
 '@ | Set-Content -LiteralPath $mockWsl -Encoding Ascii
 
@@ -33,6 +29,7 @@ exit /b %FF1_MOCK_WSL_EXIT%
         $psi.EnvironmentVariables['FF1_WSL_EXE'] = $mockWsl
         $psi.EnvironmentVariables['FF1_MOCK_WSL_LOG'] = $logPath
         $psi.EnvironmentVariables['FF1_MOCK_WSL_EXIT'] = [string]$MockExit
+        $psi.EnvironmentVariables['FF1_NO_PAUSE'] = '1'
         $process = [System.Diagnostics.Process]::Start($psi)
         $stdout = $process.StandardOutput.ReadToEnd()
         $stderr = $process.StandardError.ReadToEnd()
@@ -41,11 +38,11 @@ exit /b %FF1_MOCK_WSL_EXIT%
     }
 
     $default = Invoke-Launcher '' 0
-    if ($default.ExitCode -ne 0 -or $default.Output -notmatch 'Experiment and analysis completed') {
+    if ($default.ExitCode -ne 0 -or $default.Output -notmatch 'Launcher finished successfully') {
         throw "Default launcher path failed in mock WSL (exit $($default.ExitCode)): $($default.Output)"
     }
     $dryRun = Invoke-Launcher '--dry-run' 0
-    if ($dryRun.ExitCode -ne 0 -or $dryRun.Output -notmatch 'Experiment and analysis completed') {
+    if ($dryRun.ExitCode -ne 0 -or $dryRun.Output -notmatch 'Launcher finished successfully') {
         throw "Dry-run launcher path failed in mock WSL (exit $($dryRun.ExitCode)): $($dryRun.Output)"
     }
     $failed = Invoke-Launcher '--dry-run' 47
@@ -73,7 +70,7 @@ exit /b %FF1_MOCK_WSL_EXIT%
         throw 'Invalid arguments should be rejected before invoking WSL.'
     }
 
-    Write-Output 'PASS: mocked WSL path resolution, default run, --dry-run, and exit-code propagation.'
+    Write-Output 'PASS: simulated WSL argv, default run, --dry-run, invalid arguments, and exit-code propagation.'
 }
 finally {
     $resolvedTestRoot = (Resolve-Path $testRoot).Path
