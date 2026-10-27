@@ -33,6 +33,22 @@ The `party_setup_trace.csv` is flushed after every captured input so an
 interrupted run retains the diagnostic prefix. The screenshots and trace stay
 in the ignored local run directory and must not be committed.
 
+Each trace record also has a `screen_id` based on exact screenshot bytes. The
+probe writes `party_setup_trace_summary.json` and compact contact sheet(s) of
+the boot image and post-release frames, with action names and per-action pixel
+change. Repeated IDs indicate identical saved pixels only; animation timing,
+transitions, and gameplay meaning still require interpretation. The probe does
+not automatically call a frame a title, name-entry, or playable screen.
+
+The metrics and report separate these milestones: integration boot, input
+control evidence, party creation, reaching a playable scene, native state
+serialization, state restoration after reset, and correct gameplay resume.
+Button mapping/action calls can be partially verified without proving that
+the character moves or menu selection advances. A deterministic frame match
+proves native serialization/replay only. `gameplay_resumes_correctly` stays
+unverified until a playable checkpoint is visually confirmed and an in-game
+action succeeds after reload.
+
 For an offline report of available state formats, use the existing Python
 probe with no options from the active environment:
 
