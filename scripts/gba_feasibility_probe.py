@@ -181,6 +181,8 @@ def main() -> int:
     parser.add_argument("--output-dir", type=Path, help="new empty report directory; default is a unique videos/gba_feasibility/<UTC-id>")
     parser.add_argument("--files", nargs="*", type=Path, help="state/save artifacts for read-only format inspection")
     args = parser.parse_args()
+    if args.automate_party_setup and not args.runtime:
+        parser.error("--automate-party-setup requires --runtime")
 
     output_dir = None
     report = {
