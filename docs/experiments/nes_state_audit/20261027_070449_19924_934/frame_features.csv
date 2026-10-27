@@ -1,0 +1,45 @@
+session_id,frame_step,pixel_proxy_battle_like,nearest_proxy_transition_step,selection_reasons,manual_visual_anchor,visual_layout_family,screen_sha256_prefix,green_fraction,dark_fraction,bright_fraction,right_party_panel_edge_brightness,center_menu_region_brightness
+session_01,80,False,93,closest frame at/before proxy transition,,overworld_map_layout_candidate,adc4bb5bf4104424,0.371,0.1246,0.261,0.3405,0.2195
+session_01,120,True,93,closest frame at/after proxy transition; manual visual reference anchor,active_battle_screen,battle_party_panel_layout_candidate,40f8465fcc74b548,0.031,0.7461,0.0767,0.1694,0.0545
+session_01,240,True,250,closest frame at/before proxy transition,,battle_party_panel_layout_candidate,da93070cb870ad78,0.031,0.7403,0.077,0.1634,0.0545
+session_01,280,False,250,closest frame at/after proxy transition; manual visual reference anchor,overworld_map,overworld_map_layout_candidate,c2f50186e3078ff5,0.2863,0.0955,0.2986,0.3679,0.2002
+session_01,320,False,326,closest frame at/before proxy transition,,overworld_map_layout_candidate,1666b1ae32e0b469,0.3325,0.1246,0.2721,0.3679,0.2169
+session_01,360,True,326,closest frame at/after proxy transition,,battle_party_panel_layout_candidate,31c3797010eba6d8,0.031,0.7709,0.0672,0.1546,0.0494
+session_01,640,True,644,closest frame at/before proxy transition,,battle_party_panel_layout_candidate,4eb094aac8ec3513,0.031,0.7992,0.0564,0.1524,0.0499
+session_01,680,False,644,closest frame at/after proxy transition,,overworld_map_layout_candidate,44f3a1830c754437,0.2132,0.0676,0.3074,0.3712,0.2325
+session_01,760,False,796,closest frame at/before proxy transition,,overworld_map_layout_candidate,c05d47fbf5217d0f,0.2206,0.0813,0.3013,0.3712,0.2263
+session_01,800,True,796,closest frame at/after proxy transition,,battle_party_panel_layout_candidate,0c1dd1d794bfba30,0.031,0.7459,0.0805,0.1667,0.0747
+session_01,1240,True,1256,closest frame at/before proxy transition,,battle_party_panel_layout_candidate,23ed9e785d411d9a,0.031,0.7744,0.0646,0.148,0.0595
+session_01,1280,False,1256,closest frame at/after proxy transition,,overworld_map_layout_candidate,86fd295771f2dd63,0.2652,0.105,0.2784,0.3712,0.2025
+session_01,1320,False,1340,closest frame at/before proxy transition,,overworld_map_layout_candidate,07f80c96531820b8,0.3403,0.1057,0.2751,0.3679,0.1862
+session_01,1360,True,1340,closest frame at/after proxy transition,,battle_party_panel_layout_candidate,5b5ad98edaec05f6,0.031,0.7456,0.0744,0.1393,0.0613
+session_01,1640,True,1673,closest frame at/before proxy transition,,battle_party_panel_layout_candidate,1883f30968599f2d,0.031,0.7643,0.0657,0.1393,0.0613
+session_01,1680,True,1673,closest frame at/after proxy transition; manual visual reference anchor,title_new_game_menu,dark_menu_or_transition_layout_candidate,d30eec5d555acfa7,0.0,0.8145,0.042,0.0,0.071
+session_02,80,False,89,closest frame at/before proxy transition,,overworld_map_layout_candidate,bff188de5ecdf29a,0.2473,0.093,0.292,0.3405,0.211
+session_02,120,True,89,closest frame at/after proxy transition,,battle_party_panel_layout_candidate,0c5a007f72be44a2,0.0363,0.7072,0.1219,0.1694,0.0545
+session_02,680,True,706,closest frame at/before proxy transition,,battle_party_panel_layout_candidate,7e0fef4ffd0d0a67,0.0363,0.736,0.1108,0.1502,0.0553
+session_02,720,False,706,closest frame at/after proxy transition,,overworld_map_layout_candidate,22623e80b58c2fa3,0.2319,0.078,0.3086,0.3717,0.2228
+session_02,800,False,801,closest frame at/before proxy transition,,dark_menu_or_transition_layout_candidate,d3d87492714ae325,0.0,1.0,0.0,0.0,0.0
+session_02,840,True,801,closest frame at/after proxy transition,,battle_party_panel_layout_candidate,cc5461822b52e2b6,0.031,0.7393,0.0832,0.1502,0.0768
+session_02,1320,True,1357,closest frame at/before proxy transition,,battle_party_panel_layout_candidate,114c772f0f91449e,0.031,0.7709,0.064,0.1305,0.0585
+session_02,1360,True,1357,closest frame at/after proxy transition; manual visual reference anchor,title_continue_new_game,dark_menu_or_transition_layout_candidate,332974f613731f56,0.0,0.8145,0.0421,0.0,0.071
+session_02,1480,True,1483,closest frame at/before proxy transition,,unclassified_layout,81108e90ef39007a,0.0,0.4482,0.051,0.0,0.0899
+session_02,1520,False,1483,closest frame at/after proxy transition,,overworld_map_layout_candidate,c0f52e0ef5e23fd7,0.2208,0.0813,0.3009,0.3712,0.2251
+session_02,1560,False,1594,closest frame at/before proxy transition,,overworld_map_layout_candidate,3b49a42f22d79c75,0.2461,0.0862,0.304,0.3679,0.2086
+session_02,1600,True,1594,closest frame at/after proxy transition,,battle_party_panel_layout_candidate,7f471c14a120889f,0.031,0.7514,0.0739,0.1634,0.0544
+session_02,1680,True,1697,closest frame at/before proxy transition,,battle_party_panel_layout_candidate,f9a18b0f4c880ac8,0.031,0.7536,0.0722,0.1634,0.0488
+session_02,1720,False,1697,closest frame at/after proxy transition,,overworld_map_layout_candidate,6f107367658bd606,0.3104,0.1092,0.2847,0.3679,0.1987
+session_02,1760,True,1760,closest frame at/before proxy transition; closest frame at/after proxy transition; manual visual reference anchor,ambiguous_party_panel_screen,dark_menu_or_transition_layout_candidate,66ff2c4e5a2b9902,0.031,0.8038,0.0397,0.0263,0.0388
+session_03,80,False,82,closest frame at/before proxy transition,,overworld_map_layout_candidate,bf89d2bf792cd9a4,0.3446,0.1661,0.014,0.0,0.0074
+session_03,120,True,82,closest frame at/after proxy transition,,battle_party_panel_layout_candidate,964e00d718f7be18,0.031,0.7694,0.0663,0.1689,0.0502
+session_03,400,True,426,closest frame at/before proxy transition,,battle_party_panel_layout_candidate,dc0b2b198cbc5300,0.031,0.7656,0.0688,0.1573,0.0542
+session_03,440,False,426,closest frame at/after proxy transition,,overworld_map_layout_candidate,174b4ab55f7808d8,0.3734,0.105,0.2579,0.3602,0.1647
+session_03,480,False,491,closest frame at/before proxy transition,,overworld_map_layout_candidate,0f353e96dc5255ae,0.268,0.0997,0.293,0.3602,0.2093
+session_03,520,True,491,closest frame at/after proxy transition,,battle_party_panel_layout_candidate,5a37e367c587ff95,0.031,0.7447,0.0814,0.1541,0.075
+session_03,1040,False,1040,closest frame at/before proxy transition; closest frame at/after proxy transition,,dark_menu_or_transition_layout_candidate,d3d87492714ae325,0.0,1.0,0.0,0.0,0.0
+session_03,1080,False,1115,closest frame at/before proxy transition,,overworld_map_layout_candidate,2e0338e3b75ba4c5,0.2206,0.0812,0.301,0.3712,0.2254
+session_03,1120,True,1115,closest frame at/after proxy transition,,battle_party_panel_layout_candidate,ac12d9b47a036e07,0.031,0.7397,0.0821,0.1491,0.0825
+session_03,1320,True,1341,closest frame at/before proxy transition,,battle_party_panel_layout_candidate,6861dde11d8b3d8f,0.031,0.7698,0.0626,0.1305,0.0495
+session_03,1360,True,1341,closest frame at/after proxy transition; manual visual reference anchor,character_name_entry,unclassified_layout,d8d25bfd18d44678,0.0,0.4484,0.0505,0.0,0.0935
+session_03,1440,True,1475,closest frame at/before proxy transition; manual visual reference anchor,character_name_entry,unclassified_layout,9a490881c1edd54c,0.0,0.4484,0.0519,0.0,0.0899
+session_03,1480,False,1475,closest frame at/after proxy transition,,overworld_map_layout_candidate,63fecc9bd945cdfa,0.4613,0.1341,0.2174,0.3805,0.1218

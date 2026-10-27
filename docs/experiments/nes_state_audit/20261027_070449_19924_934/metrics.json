@@ -1,0 +1,94 @@
+{
+  "run_id": "20261027_070449_19924_934",
+  "capture_sessions": 3,
+  "capture_samples": 5403,
+  "selected_review_frames": 44,
+  "layout_family_counts": {
+    "battle_party_panel_layout_candidate": 19,
+    "dark_menu_or_transition_layout_candidate": 5,
+    "overworld_map_layout_candidate": 17,
+    "unclassified_layout": 3
+  },
+  "dark_menu_or_transition_proxy_battle_frames": [
+    {
+      "session_id": "session_01",
+      "frame_step": 1680
+    },
+    {
+      "session_id": "session_02",
+      "frame_step": 1360
+    },
+    {
+      "session_id": "session_02",
+      "frame_step": 1760
+    }
+  ],
+  "manual_visual_anchors": [
+    {
+      "session_id": "session_01",
+      "frame_step": 120,
+      "label": "active_battle_screen",
+      "layout_family": "battle_party_panel_layout_candidate"
+    },
+    {
+      "session_id": "session_01",
+      "frame_step": 280,
+      "label": "overworld_map",
+      "layout_family": "overworld_map_layout_candidate"
+    },
+    {
+      "session_id": "session_01",
+      "frame_step": 1680,
+      "label": "title_new_game_menu",
+      "layout_family": "dark_menu_or_transition_layout_candidate"
+    },
+    {
+      "session_id": "session_02",
+      "frame_step": 1360,
+      "label": "title_continue_new_game",
+      "layout_family": "dark_menu_or_transition_layout_candidate"
+    },
+    {
+      "session_id": "session_02",
+      "frame_step": 1760,
+      "label": "ambiguous_party_panel_screen",
+      "layout_family": "dark_menu_or_transition_layout_candidate"
+    },
+    {
+      "session_id": "session_03",
+      "frame_step": 1360,
+      "label": "character_name_entry",
+      "layout_family": "unclassified_layout"
+    },
+    {
+      "session_id": "session_03",
+      "frame_step": 1440,
+      "label": "character_name_entry",
+      "layout_family": "unclassified_layout"
+    }
+  ],
+  "uses_ram": false,
+  "labels_are_ground_truth": false,
+  "evidence_sheets": [
+    {
+      "file": "transition_scenes_01.png",
+      "frames": 12,
+      "bytes": 24507
+    },
+    {
+      "file": "transition_scenes_02.png",
+      "frames": 12,
+      "bytes": 22268
+    },
+    {
+      "file": "transition_scenes_03.png",
+      "frames": 12,
+      "bytes": 24548
+    },
+    {
+      "file": "transition_scenes_04.png",
+      "frames": 8,
+      "bytes": 14932
+    }
+  ]
+}

@@ -2,9 +2,12 @@ import struct
 import unittest
 import uuid
 import zlib
+import tempfile
 from pathlib import Path
 
+import numpy as np
 from ff1_dawn_ai.gba_feasibility import inspect_file, png_chunks
+from scripts.gba_feasibility_probe import _save_trace_frame
 
 
 def make_chunk(name: bytes, payload: bytes) -> bytes:
@@ -13,6 +16,19 @@ def make_chunk(name: bytes, payload: bytes) -> bytes:
 
 
 class GbaStateFormatTests(unittest.TestCase):
+    def test_party_trace_saves_input_frame_and_changed_pixel_fraction(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parent) as temp:
+            output = Path(temp)
+            before = np.zeros((8, 8, 3), dtype=np.uint8)
+            after = before.copy()
+            after[0, 0] = 255
+            rows = []
+            _save_trace_frame(output, rows, 0, "A", "released", after, before)
+            self.assertEqual(rows[0]["changed_pixel_fraction"], "0.015625")
+            self.assertTrue((output / rows[0]["screenshot"]).is_file())
+            trace = (output / "party_setup_trace.csv").read_text(encoding="utf-8")
+            self.assertIn("A,released,0.015625", trace)
+
     def test_reads_png_chunk_inventory_without_decoding_payloads(self):
         sample = (
             b"\x89PNG\r\n\x1a\n"

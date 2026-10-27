@@ -15,14 +15,23 @@ text report, native checkpoint, and small screenshots. The launcher prints the
 exact report paths. Failed or incomplete work is preserved for diagnosis and
 does not overwrite prior runs.
 
-The fixed START/A/SELECT/DOWN macro is only a candidate party-setup route. A
-successful state serialization and deterministic resume do not prove that
-party creation succeeded. Review `gba_candidate_party_state.png` visually,
-then record whether it shows the expected playable scene. The probe's
+The fixed START/A/SELECT/DOWN macro is only a candidate party-setup route. In
+runtime mode, the probe now writes `party_setup_trace.csv` and a small
+`party_trace_*.png` after each pressed and released input, including the boot
+idle image and per-step changed-pixel fraction. Use the ordered trace to find
+the first input where the screen stops progressing or reaches the wrong menu;
+do not repeat the macro blindly. A successful state serialization and
+deterministic resume do not prove that party creation succeeded. Review
+`gba_candidate_party_state.png` visually, then record whether it shows the
+expected playable scene. The probe's
 `party_creation_verified` and `battery_save_verified` fields remain false until
 separately established. Do not train on GBA until repeatable controls, a
 visually confirmed post-party checkpoint, reset/reload/resume, and save-state
 behavior are confirmed.
+
+The `party_setup_trace.csv` is flushed after every captured input so an
+interrupted run retains the diagnostic prefix. The screenshots and trace stay
+in the ignored local run directory and must not be committed.
 
 For an offline report of available state formats, use the existing Python
 probe with no options from the active environment:
