@@ -45,7 +45,7 @@ fail() {
 [[ -f "$PROJECT_ROOT/scripts/gba_feasibility_probe.py" ]] || fail "GBA feasibility probe is missing."
 [[ -f "$ROM" ]] || fail "Local GBA ROM is missing: $ROM"
 source "$PROJECT_ROOT/.venv/bin/activate"
-"$PYTHON" -c 'import numpy, PIL, stable_retro; import sys; stable_retro.data.Integrations.add_custom_path(sys.argv[1]); assert sys.argv[2] in stable_retro.list_games(), "custom GBA integration was not discovered"' "$PROJECT_ROOT/custom_integrations" "$GAME" || fail "Existing Stable-Retro runtime or GBA integration validation failed; no packages were installed."
+"$PYTHON" -c 'import numpy, PIL, stable_retro; import sys; stable_retro.data.Integrations.add_custom_path(sys.argv[1]); assert sys.argv[2] in stable_retro.data.list_games(stable_retro.data.Integrations.ALL), "custom GBA integration was not discovered"' "$PROJECT_ROOT/custom_integrations" "$GAME" || fail "Existing Stable-Retro runtime or GBA integration validation failed; no packages were installed."
 echo "Existing Python runtime, Stable-Retro, GBA integration, and local ROM validated."
 
 if [[ "$MODE" == "--dry-run" ]]; then
