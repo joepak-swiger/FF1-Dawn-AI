@@ -15,6 +15,7 @@ ROM="$PROJECT_ROOT/custom_integrations/FinalFantasy-Nes/rom.nes"
 STATE="$PROJECT_ROOT/states/ff1_nes_cornelia_start.state"
 CAPTURE_ROOT="$PROJECT_ROOT/videos/nes_ram_auto_capture"
 ANALYSIS_ROOT="$PROJECT_ROOT/videos/nes_ram_analysis"
+EVIDENCE_ROOT="$PROJECT_ROOT/docs/experiments/nes_ram"
 LOG_ROOT="$CAPTURE_ROOT/logs"
 
 mkdir -p "$LOG_ROOT"
@@ -29,6 +30,7 @@ exec > >(tee -a "$LOG_FILE") 2>&1
 
 CAPTURE_DIR="$CAPTURE_ROOT/$RUN_ID"
 ANALYSIS_DIR="$ANALYSIS_ROOT/$RUN_ID"
+EVIDENCE_DIR="$EVIDENCE_ROOT/$RUN_ID"
 echo "FF1-Dawn-AI automated RAM experiment"
 echo "Run ID: $RUN_ID"
 echo "Project: $PROJECT_ROOT"
@@ -52,7 +54,7 @@ fail() {
 
 [[ -f "$PROJECT_ROOT/.venv/bin/activate" && -x "$PYTHON" ]] || fail "Existing WSL virtual environment is missing or incomplete: $PROJECT_ROOT/.venv"
 source "$PROJECT_ROOT/.venv/bin/activate"
-for required in "$MODEL" "$ROM" "$STATE" "$PROJECT_ROOT/scripts/nes_ram_capture.py" "$PROJECT_ROOT/scripts/analyze_nes_ram.py"; do
+for required in "$MODEL" "$ROM" "$STATE" "$PROJECT_ROOT/scripts/nes_ram_capture.py" "$PROJECT_ROOT/scripts/analyze_nes_ram.py" "$PROJECT_ROOT/scripts/package_nes_ram_evidence.py"; do
   [[ -f "$required" ]] || fail "Required project file is missing: $required"
 done
 "$PYTHON" -c 'import sys, zipfile; archive = zipfile.ZipFile(sys.argv[1]); bad = archive.testzip(); archive.close(); assert bad is None, f"corrupt model member: {bad}"' "$MODEL" || fail "The local v0.7 model archive is invalid."
@@ -62,8 +64,10 @@ echo "Runtime dependencies and local v0.7 model, ROM, and state are present."
 if [[ "$MODE" == "--dry-run" ]]; then
   "$PYTHON" scripts/nes_ram_capture.py --episodes 3 --steps 1800 --run-id "$RUN_ID" --dry-run
   "$PYTHON" scripts/analyze_nes_ram.py --help >/dev/null || fail "Analyzer CLI validation failed"
+  "$PYTHON" scripts/package_nes_ram_evidence.py --help >/dev/null || fail "Evidence packager CLI validation failed"
   echo "Planned capture: $PYTHON scripts/nes_ram_capture.py --episodes 3 --steps 1800 --run-id $RUN_ID"
   echo "Planned analysis: $PYTHON scripts/analyze_nes_ram.py $CAPTURE_DIR --output-dir $ANALYSIS_DIR"
+  echo "Planned sanitized evidence package: $EVIDENCE_DIR"
   {
     echo "Run ID: $RUN_ID"
     echo "Status: dry-run passed"
@@ -88,6 +92,10 @@ if ! "$PYTHON" scripts/analyze_nes_ram.py "$CAPTURE_DIR" --output-dir "$ANALYSIS
   fail "Offline analysis failed. Complete capture data was preserved."
 fi
 [[ -f "$ANALYSIS_DIR/run_report.txt" && -f "$ANALYSIS_DIR/metrics.json" ]] || fail "Analyzer did not write its expected report files."
+if ! "$PYTHON" scripts/package_nes_ram_evidence.py "$CAPTURE_DIR" "$ANALYSIS_DIR" --output-root "$EVIDENCE_ROOT"; then
+  fail "Sanitized evidence packaging failed. Capture and full analysis were preserved."
+fi
+[[ -f "$EVIDENCE_DIR/report.md" && -f "$EVIDENCE_DIR/metrics.json" && -f "$EVIDENCE_DIR/candidate_comparison.csv" ]] || fail "Evidence packager did not write its expected summary files."
 {
   echo "Run ID: $RUN_ID"
   echo "Status: complete"
@@ -95,9 +103,11 @@ fi
   echo "Capture data: $CAPTURE_DIR"
   echo "Analysis report: $ANALYSIS_DIR/run_report.txt"
   echo "Analysis metrics: $ANALYSIS_DIR/metrics.json"
+  echo "GitHub-safe evidence: $EVIDENCE_DIR"
   echo "Log: $LOG_FILE"
   echo "Labels are pixel heuristics and remain unverified proxies; this run does not validate RAM semantics."
 } > "$SUMMARY_FILE"
 echo "Experiment summary: $SUMMARY_FILE"
 echo "Capture: $CAPTURE_DIR"
 echo "Analysis: $ANALYSIS_DIR/run_report.txt"
+echo "GitHub-safe evidence: $EVIDENCE_DIR/report.md"

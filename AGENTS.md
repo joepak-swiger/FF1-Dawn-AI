@@ -65,3 +65,11 @@ performed or tested here.
 Report changed files, tests actually run, findings, limitations, the commit or
 PR link, and the next technical step. Keep reports concise and distinguish
 observed results from hypotheses.
+
+
+## Current two-track and evidence workflow
+
+- Preserve NES v0.7 as the trusted baseline; keep RAM signals provisional and do not use them as rewards before independent game-state validation.
+- Use `run_gba_feasibility.cmd` (or `--dry-run`) for the parallel GBA track. Do not ask the owner to enter WSL or activate the environment. Keep this feasibility work isolated; party setup requires visual confirmation before training.
+- After each completed NES RAM analysis, publish only the sanitized package under `docs/experiments/nes_ram/<run-id>/` using `scripts/package_nes_ram_evidence.py`. Review it before staging. Exclude raw RAM, full analysis CSVs, ROMs, saves, models, videos, full-size captures, and private paths.
+- Keep both tracks exploratory until their relevant gameplay-state checks are validated; no unverified RAM reward changes or major training runs.

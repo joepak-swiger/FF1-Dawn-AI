@@ -162,7 +162,7 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
             "reset_reload_resume_frame_match": True,
             "checkpoint_path": str(output_dir / "stable_retro_core.state"),
             "screenshots": [
-                str(output_dir / "gba_before_checkpoint.png"),
+                str(checkpoint_image),
                 str(output_dir / "gba_after_reload_resume.png"),
             ],
             "party_creation_verified": False,
