@@ -1,11 +1,15 @@
 # GBA runtime trace review — 2026-10-27
 
-## Decision
+## Decision and correction after full-size trace review
 
-This run did **not** create a verified playable checkpoint. The game reached
-the FF1 party name/class setup menus, including a “Select a class” dialog. The
-candidate checkpoint and the post-reload frame both remain in party setup; no
-overworld movement or other playable gameplay was demonstrated.
+This run did **not** create a verified playable checkpoint. Full-size review of
+the final input screenshots corrects the earlier contact-sheet-only reading:
+the SELECT/DOWN sequence did auto-name all four roster rows (`Zeza`, `Sarisa`,
+`Sherko`, `Topapa`) while retaining the default Warrior, Thief, White Mage,
+and Black Mage classes. The sequence never pressed the party editor's visible
+START = Done control, so the candidate checkpoint remained in the editor. The
+after-reload screenshot entered the class-selection dialog after the replayed
+A input. No overworld movement or playable gameplay was demonstrated.
 
 Native Stable-Retro state serialization and deterministic reset/reload replay
 did pass. That verifies the core's state round trip at the captured menu. It
@@ -17,15 +21,16 @@ does not verify a party, a playable scene, or gameplay resuming after reload.
 |---|---|---|
 | Boot idle, step 0 | Crystal/logo animation | The core produced the expected game artwork, not a blank frame. |
 | Early START/A inputs, steps 1–8 | Dawn of Souls title and game-selection screens | START/A advanced through the splash/title sequence into game setup. |
-| Steps 15–18 | Party roster and “Select a class” dialog | The macro entered character setup. The screenshot is still a menu. |
-| Candidate checkpoint | “New Game” and character name/class assignment panel | The party setup flow is incomplete; no overworld is present. |
+| Steps 15–18 | Party roster and “Select a class” dialog | The roster editor is reached; A opens the class picker. |
+| Steps 41–47 | Four roster name areas change to `Zeza`, `Sarisa`, `Sherko`, and `Topapa` | All four rows were auto-named; default classes remain visible. |
+| Candidate checkpoint | Party editor with all four names and default classes | The party was configured but not submitted with START = Done; no overworld is present. |
 | After native reload and replayed A | “Select a class” dialog | Restored state continued deterministically into the same menu flow. |
 
-The first run executed 20 START/A pairs followed by SELECT/DOWN taps. Contact
-sheets show the macro cycling among roster/class-selection panels. The seven
-final SELECT/DOWN taps produced no clear visible screen progression in their
-saved released frames. Exact-frame repeats are evidence of repeated pixels,
-not semantic proof that an input was ignored or that the game was stalled.
+The first run executed 20 START/A pairs followed by SELECT/DOWN taps. The
+repeated START/A phase cycled among roster/class-selection panels. The final
+SELECT/DOWN frames do show name changes in all four rows; the previous
+contact-sheet-only conclusion that these inputs made no visible progress was
+incorrect. Exact-frame repeats indicate identical saved pixels only.
 
 ## Independently checked milestones
 
@@ -33,7 +38,7 @@ not semantic proof that an input was ignored or that the game was stalled.
 |---|---|---|
 | Emulator boot | Partially verified | Captured trace visibly shows the GBA logo/title and game setup screens. |
 | Input response | Partially verified | START/A visibly advance the boot and menu flow. Direction/SELECT effects in the later route are unclear. |
-| Party creation | Not verified | Captured images remain on name/class assignment menus. |
+| Party creation | Partially verified | Four names are visible in the roster editor, but the Done action was not sent. |
 | Playable overworld | Not reached | No world map or controllable field scene appears in the candidate or resumed screenshots. |
 | Native state serialized | Passed | The core wrote 397,312 bytes; the saved state matched the in-memory bytes. |
 | State restored after reset | Passed | Replaying the same A/idle continuation after reset and native state load matched the pre-reset RGB frame exactly. |

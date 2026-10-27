@@ -1,63 +1,66 @@
 # Dawn of Souls GBA feasibility runbook
 
 The GBA experiment is separate from NES training and does not modify the NES
-environment or v0.7 model. The default Windows entrypoint is
-`run_gba_feasibility.cmd`; double-click it to use the existing WSL virtual
-environment, validate the local integration, ROM, and dependencies, then try
-the Stable-Retro boot, party-setup macro, and native-core state round trip.
-Use `run_gba_feasibility.cmd --dry-run` to validate command forwarding and the
-existing GBA runtime without starting the emulator. No packages are installed.
+environment or v0.7 model. Double-click `run_gba_feasibility.cmd` to use the
+existing WSL virtual environment. `run_gba_feasibility.cmd --dry-run` validates
+the runtime and command path without starting the emulator or installing
+packages.
 
 Each invocation writes a unique wrapper log and summary under
 `videos/gba_feasibility/logs/<run-id>/`. The Python probe writes its own unique
 report directory under `videos/gba_feasibility/<utc-id>/`, including JSON,
-text report, native checkpoint, and small screenshots. The launcher prints the
-exact report paths. Failed or incomplete work is preserved for diagnosis and
-does not overwrite prior runs.
+text report, native checkpoint, and small screenshots. Failed or incomplete
+work is preserved and prior runs are not overwritten.
 
-The START/A/SELECT/DOWN sequence is only a candidate party-setup route. In
-runtime mode, the probe writes `party_setup_trace.csv` and a small
-`party_trace_*.png` after each pressed and released input, including the boot
-idle image and per-step changed-pixel fraction. The bounded START/A phase now
-stops if a completed pair returns an exact frame seen at an earlier pair
-boundary. This is a conservative cycle guard, not a screen classifier or proof
-of a stall. A successful state serialization and deterministic resume do not
-prove that party creation succeeded. Review
-`gba_candidate_party_state.png` visually, then record whether it shows the
-expected playable scene. The probe's
-`party_creation_verified` and `battery_save_verified` fields remain false until
-separately established. Do not train on GBA until repeatable controls, a
-visually confirmed post-party checkpoint, reset/reload/resume, and save-state
-behavior are confirmed.
+## Party setup and playable checkpoint
 
-The `party_setup_trace.csv` is flushed after every captured input so an
-interrupted run retains the diagnostic prefix. The screenshots and trace stay
-in the ignored local run directory and must not be committed.
+Runtime party creation uses `ff1_dawn_ai/gba_party_setup.py` and a bounded
+screen-state route. It matches locally observed title, game-selection,
+new-game, party-editor, class-picker, and party-confirmation anchors. Unknown
+menu states stop the route instead of guessing. Stable-Retro must use
+`Actions.ALL`: the custom integration has no valid-action list and default
+`FILTERED` mode drops START, which is the party editor's Done input. The route
+auto-names each roster row, verifies its name pixels changed, selects Warrior,
+Monk, White Mage, and Black Mage by observed picker state, submits with START,
+and accepts the preselected Yes prompt with A.
 
-Each trace record also has a `screen_id` based on exact screenshot bytes. The
-probe writes `party_setup_trace_summary.json` and compact contact sheet(s) of
-the boot image and post-release frames, with action names and per-action pixel
-change. Repeated IDs indicate identical saved pixels only; animation timing,
-transitions, and gameplay meaning still require interpretation. The probe does
-not automatically call a frame a title, name-entry, or playable screen.
+After submission, story advancement uses bounded A taps and only treats a
+colorful map as a candidate. The probe saves a native Stable-Retro checkpoint,
+reloads it for two equal-length idle controls, then restores it again and
+tests UP. A field is called playable only when the movement frame differs
+broadly from idle controls. This is direct movement evidence plus visual field
+review; it is not a general-purpose screen classifier. Battery-save loading
+remains a separate, unverified question.
 
-The top-level metrics, nested runtime metrics, and text report use the same
-runtime milestones. `status: completed` means the probe finished its checks;
-`gameplay_readiness: not_verified` means it did not establish a playable game.
-The metrics and report separate these milestones: integration boot, input
-control evidence, party creation, reaching a playable scene, native state
-serialization, state restoration after reset, and correct gameplay resume.
-Button mapping/action calls can be partially verified without proving that
-the character moves or menu selection advances. A deterministic frame match
-proves native serialization/replay only. `gameplay_resumes_correctly` stays
-unverified until a playable checkpoint is visually confirmed and an in-game
-action succeeds after reload.
+The probe writes `party_setup_trace.csv`, `party_state_machine_trace.json`, and
+small `party_trace_*.png` images after every pressed/released input. Those
+diagnostics identify a failed transition. `gameplay_readiness` is derived from
+separately passed four-character, playable-field, native-restore, and
+post-restore-movement milestones. A completed probe only means execution
+finished. The WSL wrapper reads the same metrics and reports unverified
+gameplay milestones accurately.
 
-For an offline report of available state formats, use the existing Python
-probe with no options from the active environment:
+Screenshots, traces, native states, ROMs, and saves remain in ignored local
+directories; do not commit them. Publish only reviewed, sanitized summaries
+under `docs/experiments/gba_feasibility/<run-id>/`.
+
+## Current result and next check
+
+The automated party route and Cornelia movement test passed in WSL on
+2026-10-27. Sanitized evidence is published under
+`docs/experiments/gba_feasibility/20261027_212818_932279Z/`. Native checkpoint
+restore and post-restore movement passed. Battery-save loading has not been
+tested. Repeat the clean-reset route and validate several movement directions
+before large-scale training.
+
+## Offline format inspection
+
+With the active Python environment, the probe can inspect local save-state
+container metadata without running the emulator:
 
 ```bash
 python scripts/gba_feasibility_probe.py
 ```
 
-Routine Windows use should not require entering WSL or activating `.venv`.
+Routine Windows operation should not require entering WSL or activating
+`.venv`.

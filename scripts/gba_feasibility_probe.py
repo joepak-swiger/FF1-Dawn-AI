@@ -18,6 +18,15 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from ff1_dawn_ai.gba_feasibility import inspect_file  # noqa: E402
+from ff1_dawn_ai.gba_party_setup import (  # noqa: E402
+    BOOT_ROUTE,
+    Screen,
+    class_picker_choice,
+    classify_screen,
+    looks_like_cornelia_field,
+    meaningful_field_movement,
+    name_changed,
+)
 
 GAME = "FinalFantasyDawnOfSouls-GbAdvance"
 DEFAULT_FILES = (
@@ -157,12 +166,242 @@ def _initial_milestones() -> dict:
     return {
         "rom_integration_boots": {"status": "not_run", "evidence": "No runtime launched."},
         "input_controls_function": {"status": "not_verified", "evidence": "Mapped buttons and accepted action calls do not alone prove in-game control."},
+        "party_setup_started": {"status": "not_verified", "evidence": "The party editor has not been reached."},
+        "four_characters_confirmed": {"status": "not_verified", "evidence": "No four-row roster evidence is available."},
+        "party_setup_completed": {"status": "not_verified", "evidence": "The game has not accepted the party with its Done action."},
+        "playable_field_reached": {"status": "not_verified", "evidence": "No playable field scene has been identified."},
+        "native_checkpoint_saved": {"status": "not_run", "evidence": "No playable checkpoint was saved."},
+        "native_checkpoint_restored": {"status": "not_run", "evidence": "No playable checkpoint was restored."},
+        "field_movement_after_restore": {"status": "not_verified", "evidence": "No post-restore field movement was tested."},
         "party_creation_works": {"status": "not_verified", "evidence": "Requires visual confirmation of the resulting party screen."},
         "playable_scene_reached": {"status": "not_verified", "evidence": "A title, logo, or character-selection frame is not a playable checkpoint."},
         "native_state_serialized": {"status": "not_run", "evidence": "No runtime state created."},
         "state_restored_after_reset": {"status": "not_run", "evidence": "No reset/reload attempt run."},
         "gameplay_resumes_correctly": {"status": "not_verified", "evidence": "Requires a confirmed playable scene and a verified resumed game action."},
     }
+
+
+def _verify_reloaded_field_movement(env, indices: dict[str, int], output_dir: Path, candidate: np.ndarray) -> dict:
+    """Save a colorful map candidate and require movement beyond idle variation."""
+    state = env.em.get_state()
+    if not state:
+        return {"passed": False, "reason": "empty native state"}
+    Image.fromarray(candidate[:, :, :3].astype(np.uint8)).save(output_dir / "gba_field_candidate.png")
+
+    def restore_idle() -> np.ndarray:
+        env.reset()
+        env.em.set_state(state)
+        return _run(env, None, 42)
+
+    idle_a = restore_idle()
+    Image.fromarray(idle_a[:, :, :3].astype(np.uint8)).save(output_dir / "gba_field_idle_control_a.png")
+    idle_b = restore_idle()
+    Image.fromarray(idle_b[:, :, :3].astype(np.uint8)).save(output_dir / "gba_field_idle_control_b.png")
+    env.reset()
+    env.em.set_state(state)
+    moved = _run(env, indices["UP"], 12)
+    moved = _run(env, None, 30)
+    Image.fromarray(moved[:, :, :3].astype(np.uint8)).save(output_dir / "gba_field_after_reload_up.png")
+    evidence = meaningful_field_movement(idle_a, idle_b, moved)
+    evidence.update({
+        "checkpoint_source": "native state captured at colorful Cornelia field-map candidate",
+        "checkpoint_state_bytes": len(state),
+        "movement_action": "UP held 12 frames, then 30 frames idle after env.reset/set_state",
+    })
+    if evidence["passed"]:
+        state_path = output_dir / "stable_retro_core.state"
+        state_path.write_bytes(state)
+        if state_path.read_bytes() != state:
+            evidence["passed"] = False
+            evidence["reason"] = "native checkpoint file did not match candidate state"
+    else:
+        env.reset()
+        env.em.set_state(state)
+        _run(env, None, 1)
+    return evidence
+
+
+def _state_machine_setup(env, indices: dict[str, int], tap, idle, obs: np.ndarray, output_dir: Path) -> tuple[np.ndarray, dict]:
+    """Follow the observed menu route, stopping safely on an unknown state."""
+    trace: list[dict] = []
+    current = classify_screen(obs)
+    result = {
+        "status": "failed",
+        "initial_screen": current.value,
+        "completed_stages": [],
+        "actions": trace,
+        "characters_named": 0,
+        "classes": ["Warrior", "Thief", "White Mage", "Black Mage"],
+        "party_setup_started": False,
+        "party_completed": False,
+        "failure": None,
+    }
+
+    def record(stage: str, action: str, before: Screen, after: Screen, passed: bool, detail: str) -> None:
+        trace.append({"stage": stage, "action": action, "before": before.value, "after": after.value,
+                      "passed": passed, "detail": detail})
+
+    if current != Screen.BOOT:
+        result["failure"] = f"Expected observed boot-logo anchor; got {current.value}. No menu action sent."
+        return obs, result
+
+    for transition in BOOT_ROUTE:
+        if transition.button not in indices:
+            result["failure"] = f"Integration does not expose required button {transition.button}."
+            return obs, result
+        before = classify_screen(obs)
+        if before == Screen.UNKNOWN:
+            result["failure"] = f"Unrecognized screen before stage {transition.stage}; stopped without guessing."
+            return obs, result
+        obs = tap(transition.button)
+        after = classify_screen(obs)
+        waited = 0
+        while after != transition.expected and waited < 20:
+            obs = idle(30)
+            waited += 1
+            after = classify_screen(obs)
+        passed = after == transition.expected
+        record(transition.stage, transition.button, before, after, passed,
+               "matched saved-screen anchor" if passed else f"expected {transition.expected.value}; idle waits={waited}")
+        if not passed:
+            result["failure"] = f"Stage {transition.stage}: expected {transition.expected.value}, observed {after.value}; stopped safely."
+            result["last_screen"] = after.value
+            return obs, result
+        if transition.expected == Screen.PARTY_SETUP:
+            result["completed_stages"].append("party_editor")
+            break
+    else:
+        result["failure"] = "Observed menu route ended without reaching party setup."
+        return obs, result
+
+    result["party_setup_started"] = True
+    # SELECT is explicitly labeled Auto-Name on the observed party editor.
+    # DOWN advances the roster row. Compare the selected row's glyph box before
+    # and after the action, then verify the invariant party panel remains.
+    from ff1_dawn_ai.gba_party_setup import name_box_signature  # local import for trace evidence
+    for row in range(4):
+        if classify_screen(obs) != Screen.PARTY_SETUP:
+            result["failure"] = f"Party editor lost before auto-naming row {row + 1}."
+            return obs, result
+        before = obs.copy()
+        obs = tap("SELECT")
+        after_screen = classify_screen(obs)
+        changed = after_screen == Screen.PARTY_SETUP and name_changed(before, obs, row)
+        record(f"auto-name-row-{row + 1}", "SELECT", Screen.PARTY_SETUP, after_screen, changed,
+               f"name glyph changed={changed}; before={name_box_signature(before, row)[:12]}; after={name_box_signature(obs, row)[:12]}")
+        if not changed:
+            result["failure"] = f"Auto-Name did not verify a change in roster row {row + 1}; stopped safely."
+            return obs, result
+        result["characters_named"] = row + 1
+        # Keep the observed default classes except for row 2, where the
+        # evidence-backed one-DOWN picker movement selects Monk from Warrior.
+        # Never confirm the picker default accidentally (that changed every
+        # class to Warrior in an earlier diagnostic run).
+        if row == 1:
+            obs = tap("A")
+            class_screen = classify_screen(obs)
+            choice = class_picker_choice(obs)
+            opened = class_screen == Screen.CLASS_SELECT and choice == "Warrior"
+            record("open-class-row-2", "A", Screen.PARTY_SETUP, class_screen, opened,
+                   f"class menu opened with verified initial selection {choice}")
+            if not opened:
+                result["failure"] = "Row 2 class picker did not match its verified Warrior initial selection."
+                return obs, result
+            obs = tap("DOWN")
+            choice = class_picker_choice(obs)
+            moved = classify_screen(obs) == Screen.CLASS_SELECT and choice == "Monk"
+            record("choose-monk-row-2", "DOWN", Screen.CLASS_SELECT, classify_screen(obs), moved,
+                   f"verified picker selection={choice}")
+            if not moved:
+                result["failure"] = "One DOWN did not produce the verified Monk picker anchor; stopped before confirmation."
+                return obs, result
+            obs = tap("A")
+            returned = classify_screen(obs)
+            confirmed = returned == Screen.PARTY_SETUP
+            record("confirm-monk-row-2", "A", Screen.CLASS_SELECT, returned, confirmed,
+                   "Monk selected and picker returned to roster")
+            if not confirmed:
+                result["failure"] = "Monk confirmation did not return to roster."
+                return obs, result
+            result["classes"] = ["Warrior", "Monk", "White Mage", "Black Mage"]
+        if row < 3:
+            before_down = classify_screen(obs)
+            obs = tap("DOWN")
+            after_down = classify_screen(obs)
+            moved = after_down == Screen.PARTY_SETUP
+            record(f"select-roster-row-{row + 2}", "DOWN", before_down, after_down, moved,
+                   "party editor anchor retained; next row name will be checked")
+            if not moved:
+                result["failure"] = f"Roster navigation failed after row {row + 1}; stopped safely."
+                return obs, result
+
+    result["completed_stages"].append("four_named_roster_rows")
+    # START is labeled Done in the captured UI. Do not send it unless each of
+    # the four target name boxes has changed and the party editor is still open.
+    if classify_screen(obs) != Screen.PARTY_SETUP:
+        result["failure"] = "Party editor anchor missing before Done action."
+        return obs, result
+    before = classify_screen(obs)
+    obs = tap("START")
+    after = classify_screen(obs)
+    for _ in range(20):
+        if after == Screen.PARTY_CONFIRM:
+            break
+        if after in {Screen.PARTY_SETUP, Screen.UNKNOWN, Screen.TRANSITION}:
+            obs = idle(30)
+            after = classify_screen(obs)
+        else:
+            break
+    confirm_visible = after == Screen.PARTY_CONFIRM
+    record("party-done", "START", before, after, confirm_visible,
+           "Begin game confirmation prompt matched; Yes is preselected" if confirm_visible else "expected Begin game with this party prompt")
+    result["party_menu_dismissed"] = after != Screen.PARTY_SETUP
+    if not confirm_visible:
+        result["failure"] = f"Party Done did not reach the recognized confirmation prompt (observed {after.value})."
+        result["last_screen"] = after.value
+        return obs, result
+
+    obs = tap("A")  # Captured prompt shows Yes preselected and A=Confirm.
+    after = classify_screen(obs)
+    for _ in range(20):
+        if after != Screen.PARTY_CONFIRM:
+            break
+        obs = idle(30)
+        after = classify_screen(obs)
+    if after == Screen.PARTY_CONFIRM:
+        record("confirm-party-yes", "A", Screen.PARTY_CONFIRM, after, False, "confirmation prompt remained open")
+        result["failure"] = "A did not confirm the preselected Yes option."
+        return obs, result
+    record("confirm-party-yes", "A", Screen.PARTY_CONFIRM, after, True,
+           "preselected Yes dismissed the party confirmation prompt")
+    result["party_completed"] = True
+    result["completed_stages"].append("party_submitted")
+
+    # Advance the introductory story in bounded, separately recorded taps.
+    # A color/layout cue only proposes a map candidate; a reset/reload UP test
+    # must prove movement beyond repeated idle-frame variation before stopping.
+    result["status"] = "advancing_opening_story"
+    obs = idle(600)
+    for story_step in range(1, 33):
+        if looks_like_cornelia_field(obs):
+            evidence = _verify_reloaded_field_movement(env, indices, output_dir, obs)
+            result["movement_verification"] = evidence
+            record(f"field-candidate-{story_step}", "UP_AFTER_RELOAD", Screen.UNKNOWN,
+                   classify_screen(obs), bool(evidence.get("passed")), evidence.get("reason", ""))
+            if evidence.get("passed"):
+                result["playable_field_reached"] = True
+                result["completed_stages"].append("cornelia_field_movement_after_reload")
+                result["status"] = "playable_checkpoint_verified"
+                result["failure"] = None
+                return _run(env, None, 1), result
+        obs = tap("A")
+        obs = idle(300)
+        result["opening_story_advances"] = story_step
+
+    result["failure"] = "Opening story advanced through 32 bounded steps without a field movement verification."
+    result["status"] = "failed"
+    result["last_screen"] = classify_screen(obs).value
+    return obs, result
 
 
 def _repeated_pair_boundary_frame(obs: np.ndarray, seen: dict[str, int], pair_index: int) -> tuple[bool, str]:
@@ -185,11 +424,18 @@ def _merge_runtime_results(report: dict, runtime: dict) -> None:
     report["runtime"] = runtime
     report["status"] = runtime.get("status", "failed")
     report["milestones"] = runtime.get("milestones", report.get("milestones", _initial_milestones()))
-    gameplay_milestones = ("party_creation_works", "playable_scene_reached", "gameplay_resumes_correctly")
+    gameplay_milestones = (
+        "four_characters_confirmed", "playable_field_reached", "native_checkpoint_restored",
+        "field_movement_after_restore",
+    )
     if all(report["milestones"].get(key, {}).get("status") == "passed" for key in gameplay_milestones):
         report["gameplay_readiness"] = "verified"
     else:
         report["gameplay_readiness"] = "not_verified"
+    # This field is duplicated for convenient access by downstream tools.
+    # Keep it synchronized so a successful state machine cannot coexist with
+    # a stale nested "not_verified" value.
+    runtime["gameplay_readiness"] = report["gameplay_readiness"]
 
 
 def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
@@ -209,6 +455,10 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
         game=GAME,
         state=stable_retro.State.NONE,
         inttype=stable_retro.data.Integrations.ALL,
+        # FILTERED drops START for this custom GBA integration because its
+        # scenario has no explicit valid-action list. Keep the raw physical
+        # controls so the party editor's documented START=Done works.
+        use_restricted_actions=stable_retro.Actions.ALL,
         render_mode="rgb_array",
     )
     report = {
@@ -222,6 +472,7 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
     trace_rows: list[dict] = []
     trace_previous: np.ndarray | None = None
     trace_step = 0
+    machine_result = None
     if automate_party_setup:
         report["party_setup_trace_csv"] = str(output_dir / "party_setup_trace.csv")
     try:
@@ -240,6 +491,12 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
         if missing:
             raise RuntimeError(f"Stable-Retro integration does not expose buttons: {missing}")
         report["button_mapping"] = {name: indices[name] for name in indices}
+        report["action_filter_mode"] = "ALL"
+        retro_env = getattr(env, "unwrapped", env)
+        if hasattr(retro_env, "action_to_array"):
+            start_action = np.zeros(env.action_space.shape, dtype=np.int8)
+            start_action[indices["START"]] = 1
+            report["start_action_decode"] = retro_env.action_to_array(start_action)[0].astype(int).tolist()
         report["milestones"]["input_controls_function"] = {
             "status": "partially_verified",
             "evidence": "Required A/START (and route buttons when requested) are mapped and action calls returned observations; in-game navigation effect is not independently confirmed.",
@@ -258,6 +515,15 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
                 trace_step += 1
             return released
 
+        def idle(frames: int) -> np.ndarray:
+            nonlocal trace_previous, trace_step
+            released = _run(env, None, frames)
+            if automate_party_setup:
+                _save_trace_frame(output_dir, trace_rows, trace_step, "NONE", "wait", released, trace_previous)
+                trace_previous = released
+                trace_step += 1
+            return released
+
         # Deterministic boot/menu input. The optional setup macro reuses the
         # previously explored route, but its screenshot still needs visual
         # confirmation before it can be called a playable post-party state.
@@ -267,34 +533,69 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
             trace_previous = obs
             trace_step += 1
         if automate_party_setup:
-            seen_pair_frames: dict[str, int] = {}
-            loop_detected = False
-            loop_reason = ""
-            pairs_completed = 0
-            for pair_index in range(1, 21):
-                tap("START")
-                obs = tap("A")
-                pairs_completed += 1
-                loop_detected, loop_reason = _repeated_pair_boundary_frame(obs, seen_pair_frames, pair_index)
-                if loop_detected:
-                    break
-            if not loop_detected:
-                for name in ("SELECT", "DOWN", "SELECT", "DOWN", "SELECT", "DOWN", "SELECT"):
-                    if name not in indices:
-                        raise RuntimeError(f"Party setup route requires button not exposed by core: {name}")
-                    obs = tap(name)
-            obs = _run(env, None, 60)
+            required = sorted({action.button for action in BOOT_ROUTE} | {"SELECT", "DOWN"})
+            missing_route = [name for name in required if name not in indices]
+            if missing_route:
+                raise RuntimeError(f"Party setup state machine requires buttons not exposed by core: {missing_route}")
+            obs, machine_result = _state_machine_setup(env, indices, tap, idle, obs, output_dir)
+            (output_dir / "party_state_machine_trace.json").write_text(
+                json.dumps(machine_result, indent=2) + "\n", encoding="utf-8"
+            )
+            report["party_state_machine"] = machine_result
+            report["party_setup_stop_reason"] = machine_result.get("failure") or "party submit action completed"
+            report["party_setup_loop_detected"] = False
+            report["party_setup_pairs_completed"] = 0
+            report["party_setup_started"] = bool(machine_result.get("party_setup_started"))
+            if machine_result.get("party_setup_started"):
+                report["milestones"]["party_setup_started"] = {
+                    "status": "passed", "evidence": "The state machine matched the recorded invariant party-editor panel anchor."
+                }
+            if machine_result.get("characters_named") == 4:
+                report["milestones"]["four_characters_confirmed"] = {
+                    "status": "passed", "evidence": "Each of four roster name-glyph boxes changed after its Auto-Name action while the party-editor panel remained visible. See candidate screenshot and per-action trace."
+                }
+                report["milestones"]["party_creation_works"] = {
+                    "status": "partially_verified", "evidence": "Four roster name regions changed from their placeholder glyphs; the explicit party confirmation and playable field checks are reported separately."
+                }
+            if machine_result.get("party_completed"):
+                report["milestones"]["party_setup_completed"] = {
+                    "status": "passed", "evidence": "START opened the Begin game confirmation, then A accepted the preselected Yes option after all four roster rows were named."
+                }
+            elif machine_result.get("party_menu_dismissed"):
+                report["milestones"]["party_setup_completed"] = {
+                    "status": "partially_verified", "evidence": "START dismissed the party editor, but the resulting screen was unclassified; see saved screenshot and trace."
+                }
+            if machine_result.get("party_completed"):
+                report["milestones"]["party_creation_works"] = {
+                    "status": "passed", "evidence": "Four roster rows were named, row 2 was changed to Monk, and the preselected Yes confirmation was accepted."
+                }
+            if machine_result.get("playable_field_reached"):
+                report["milestones"]["playable_field_reached"] = {
+                    "status": "passed", "evidence": "A colorful field-map candidate passed an independent post-reset UP movement trial against two no-input controls."
+                }
+                report["milestones"]["playable_scene_reached"] = {
+                    "status": "passed", "evidence": "Field scene qualified by movement beyond idle pixel variation after native reset/reload."
+                }
+                report["milestones"]["field_movement_after_restore"] = {
+                    "status": "passed", "evidence": json.dumps(machine_result["movement_verification"], sort_keys=True)
+                }
+                report["milestones"]["gameplay_resumes_correctly"] = {
+                    "status": "passed", "evidence": "UP moved the game scene after reset and native checkpoint restoration."
+                }
+            if machine_result.get("failure") is None:
+                obs = idle(300)
             checkpoint_image = output_dir / "gba_candidate_party_state.png"
-            report["party_setup_pairs_completed"] = pairs_completed
-            report["party_setup_loop_detected"] = loop_detected
-            report["party_setup_stop_reason"] = loop_reason or "configured route completed"
         else:
             obs = tap("START")
             obs = tap("A")
             checkpoint_image = output_dir / "gba_before_checkpoint.png"
         Image.fromarray(obs[:, :, :3].astype(np.uint8)).save(checkpoint_image)
 
-        state = env.em.get_state()
+        checkpoint_state_path = output_dir / "stable_retro_core.state"
+        if automate_party_setup and machine_result and machine_result.get("playable_field_reached") and checkpoint_state_path.is_file():
+            state = checkpoint_state_path.read_bytes()
+        else:
+            state = env.em.get_state()
         if not state:
             raise RuntimeError("Stable-Retro returned an empty native emulator state")
         state_path = output_dir / "stable_retro_core.state"
@@ -305,32 +606,62 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
             "status": "passed",
             "evidence": f"Active Stable-Retro core serialized {len(state)} bytes and the local file matched byte-for-byte.",
         }
-
-        # Continue from the generated checkpoint, reset the same emulator,
-        # reload it, and replay identical inputs. Matching frames establish a
-        # real native-core round trip without importing an mGBA savestate.
-        expected = _run(env, indices["A"], 8)
-        expected = _run(env, None, 24)
-        report["milestones"]["state_restored_after_reset"] = {
-            "status": "in_progress",
-            "evidence": "Reset and native state reload started; deterministic continuation is being checked.",
+        report["milestones"]["native_checkpoint_saved"] = {
+            "status": "passed", "evidence": f"Native state saved from the current checkpoint candidate ({len(state)} bytes); playability is assessed separately."
         }
-        try:
-            env.reset()
-            env.em.set_state(state)
-            actual = _run(env, indices["A"], 8)
-            actual = _run(env, None, 24)
-        except Exception as restore_error:
+
+        field_verified = bool(
+            automate_party_setup and machine_result
+            and machine_result.get("movement_verification", {}).get("passed")
+        )
+        if field_verified:
+            # The field verifier already restored this exact checkpoint three
+            # times: two equal-length idle controls matched exactly, and the
+            # third restoration moved the party with UP. Do not substitute an
+            # unrelated A action from a different, already-moved state.
+            matched = True
+            Image.open(output_dir / "gba_field_after_reload_up.png").save(output_dir / "gba_after_reload_resume.png")
             report["milestones"]["state_restored_after_reset"] = {
-                "status": "failed",
-                "evidence": f"Reset/reload/replay raised {type(restore_error).__name__}: {restore_error}",
+                "status": "passed",
+                "evidence": "The saved field checkpoint was loaded after reset for two matching 42-frame idle controls and a third reset/reload UP movement trial.",
             }
-            raise
-        matched = expected.shape == actual.shape and np.array_equal(expected, actual)
-        Image.fromarray(actual[:, :, :3].astype(np.uint8)).save(output_dir / "gba_after_reload_resume.png")
-        report["milestones"]["state_restored_after_reset"] = {
+        else:
+            expected = _run(env, indices["A"], 8)
+            expected = _run(env, None, 24)
+            report["milestones"]["state_restored_after_reset"] = {
+                "status": "in_progress",
+                "evidence": "Reset and native state reload started; deterministic continuation is being checked.",
+            }
+            try:
+                env.reset()
+                env.em.set_state(state)
+                actual = _run(env, indices["A"], 8)
+                actual = _run(env, None, 24)
+            except Exception as restore_error:
+                report["milestones"]["state_restored_after_reset"] = {
+                    "status": "failed",
+                    "evidence": f"Reset/reload/replay raised {type(restore_error).__name__}: {restore_error}",
+                }
+                raise
+            matched = expected.shape == actual.shape and np.array_equal(expected, actual)
+            Image.fromarray(actual[:, :, :3].astype(np.uint8)).save(output_dir / "gba_after_reload_resume.png")
+            if not matched:
+                Image.fromarray(expected[:, :, :3].astype(np.uint8)).save(output_dir / "gba_before_reload_expected.png")
+                delta = np.abs(expected.astype(np.int16) - actual.astype(np.int16))
+                report["reset_reload_pixel_difference"] = {
+                    "changed_pixel_fraction": float(np.mean(np.any(delta != 0, axis=2))),
+                    "mean_absolute_channel_difference": float(np.mean(delta)),
+                    "max_channel_difference": int(np.max(delta)),
+                    "expected_screenshot": "gba_before_reload_expected.png",
+                    "actual_screenshot": "gba_after_reload_resume.png",
+                }
+            report["milestones"]["state_restored_after_reset"] = {
+                "status": "passed" if matched else "failed",
+                "evidence": "After env.reset and native set_state, replayed A/idle frames were compared byte-for-byte with the pre-reset continuation.",
+            }
+        report["milestones"]["native_checkpoint_restored"] = {
             "status": "passed" if matched else "failed",
-            "evidence": "After env.reset and native set_state, replayed A/idle frames were compared byte-for-byte with the pre-reset continuation.",
+            "evidence": "Reset/reload continuation matched byte-for-byte; this establishes serialization only, not checkpoint playability." if matched else "Reset/reload continuation did not match."
         }
         if not matched:
             raise RuntimeError("Native Stable-Retro state failed deterministic reset/reload/resume comparison")
@@ -338,11 +669,11 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
         trace_analysis = _summarize_party_trace(output_dir, trace_rows) if automate_party_setup else None
         report.update({
             "status": "completed",
-            "gameplay_readiness": "not_verified",
+            "gameplay_readiness": "verified" if field_verified and machine_result.get("party_completed") else "not_verified",
             "observation_shape": list(obs.shape),
             "action_space_shape": list(env.action_space.shape),
             "button_names": button_names,
-            "tested_inputs": ["START", "A"],
+            "tested_inputs": ["START", "A", "SELECT", "DOWN", "UP"],
             "party_setup_macro_attempted": bool(automate_party_setup),
             "party_setup_pairs_completed": report.get("party_setup_pairs_completed", 0),
             "party_setup_loop_detected": report.get("party_setup_loop_detected", False),
@@ -360,12 +691,30 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
                 str(checkpoint_image),
                 str(output_dir / "gba_after_reload_resume.png"),
             ],
-            "party_creation_verified": False,
+            "party_creation_verified": bool(machine_result and machine_result.get("party_completed")),
+            "four_characters_named": bool(machine_result and machine_result.get("characters_named") == 4),
+            "party_menu_dismissed": bool(machine_result and machine_result.get("party_menu_dismissed")),
+            "party_setup_completed": bool(machine_result and machine_result.get("party_completed")),
             "candidate_party_screenshot": str(checkpoint_image) if automate_party_setup else None,
             "battery_save_verified": False,
         })
+        report["gameplay_readiness"] = "verified" if all(
+            report["milestones"].get(name, {}).get("status") == "passed"
+            for name in (
+                "four_characters_confirmed", "playable_field_reached",
+                "native_checkpoint_restored", "field_movement_after_restore",
+            )
+        ) else "not_verified"
+        # runtime_progress.json is a separate checkpoint/status stream. Keep
+        # its summary aligned with the final, explicit milestone evaluation.
+        runtime_progress = dict(report)
+        runtime_progress["runtime"] = None
+        (output_dir / "runtime_progress.json").write_text(
+            json.dumps(runtime_progress, indent=2) + "\n", encoding="utf-8"
+        )
         return report
     except Exception as exc:
+        report["status"] = "failed"
         report["failure"] = f"{type(exc).__name__}: {exc}"
         raise
     finally:
@@ -431,20 +780,37 @@ def main() -> int:
             report_text.append(f"Native core reset/reload/resume frame match: {runtime.get('reset_reload_resume_frame_match', False)}")
             report_text.append(f"Party creation/playability: {report.get('gameplay_readiness', 'not_verified')}.")
             if runtime.get("party_setup_macro_attempted"):
-                report_text.append(f"Party macro: {runtime.get('party_setup_pairs_completed', 0)} START/A pairs; loop detected={runtime.get('party_setup_loop_detected', False)}; stop reason={runtime.get('party_setup_stop_reason')}.")
-            report_text.append("Battery-save loading is not verified by this probe.")
+                machine = runtime.get("party_state_machine") or {}
+                report_text.append(
+                    f"Party state machine: {len(machine.get('actions', []))} checked actions; "
+                    f"named rows={machine.get('characters_named', 0)}/4; "
+                    f"party confirmed={runtime.get('party_creation_verified', False)}; "
+                    f"playable field={runtime.get('gameplay_readiness') == 'verified'}."
+                )
+                if machine.get("failure"):
+                    report_text.append(f"State-machine stop: {machine['failure']}")
+                report_text.append(
+                    "Party milestones: "
+                    f"started={runtime.get('party_setup_started', False)}; "
+                    f"four characters confirmed={runtime.get('four_characters_named', False)}; "
+                    f"party confirmed={runtime.get('party_creation_verified', False)}; "
+                    f"playable field={runtime.get('gameplay_readiness') == 'verified'}; "
+                    f"native restore={runtime.get('reset_reload_resume_frame_match', False)}."
+                )
+                report_text.append("Battery-save loading is not verified by this probe.")
             if runtime.get("party_setup_trace_csv"):
                 report_text.append(f"Party macro trace: {runtime['party_setup_trace_csv']} ({runtime.get('party_setup_trace_rows', 0)} screenshots/rows; inspect each input in order).")
                 report_text.append(f"Party macro contact sheets: {', '.join(runtime.get('party_setup_contact_sheets', [])) or 'not generated'}.")
         report_text.extend(["", "Milestones:"])
         for name, item in report.get("milestones", {}).items():
             report_text.append(f"- {name}: {item['status']} — {item['evidence']}")
-        report_text.append("- gameplay_resumes_correctly is not established by a frame match unless the checkpoint is separately confirmed playable.")
+        report_text.append("A completed probe means its requested checks finished; consult the individual milestone rows for gameplay evidence.")
         (output_dir / "run_report.txt").write_text("\n".join(report_text) + "\n", encoding="utf-8")
         print(f"GBA feasibility report: {output_dir / 'run_report.txt'}")
         print(f"Metrics: {output_dir / 'metrics.json'}")
         return 0 if report["status"] == "completed" else 1
     except Exception as exc:
+        report["status"] = "failed"
         report["failure"] = f"{type(exc).__name__}: {exc}"
         if output_dir is not None:
             progress_path = output_dir / "runtime_progress.json"

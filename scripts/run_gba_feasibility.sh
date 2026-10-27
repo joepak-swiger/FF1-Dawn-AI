@@ -69,12 +69,20 @@ REPORT_LINE="$(grep -E '^GBA feasibility report:' "$LOG_FILE" | tail -n 1 || tru
 REPORT_PATH="${REPORT_LINE#GBA feasibility report: }"
 REPORT_DIR="$(dirname "$REPORT_PATH")"
 [[ -f "$REPORT_DIR/run_report.txt" && -f "$REPORT_DIR/metrics.json" ]] || fail "Probe did not create both report files at $REPORT_DIR."
+READINESS="$($PYTHON -c 'import json,sys; m=json.load(open(sys.argv[1], encoding="utf-8")); print(m.get("gameplay_readiness", "not_verified"))' "$REPORT_DIR/metrics.json")" || fail "Could not read gameplay readiness from probe metrics."
+PARTY="$($PYTHON -c 'import json,sys; m=json.load(open(sys.argv[1], encoding="utf-8")); r=m.get("runtime", {}); print(str(bool(r.get("party_creation_verified", m.get("party_creation_verified", False)))).lower())' "$REPORT_DIR/metrics.json")" || fail "Could not read party confirmation from probe metrics."
+if [[ "$READINESS" == "verified" && "$PARTY" == "true" ]]; then
+  RESULT="playable checkpoint verified"
+else
+  RESULT="probe completed; gameplay milestone(s) remain unverified"
+fi
 {
   echo "Run ID: $RUN_ID"
-  echo "Status: probe completed; visual checkpoint review required"
+  echo "Status: $RESULT"
+  echo "Gameplay readiness: $READINESS"
+  echo "Four-character party confirmed: $PARTY"
   echo "Probe report: $REPORT_DIR/run_report.txt"
   echo "Probe metrics: $REPORT_DIR/metrics.json"
   echo "Log: $LOG_FILE"
-  echo "Party creation is not automatically verified; inspect the candidate screenshot."
 } > "$SUMMARY_FILE"
 echo "Execution summary: $SUMMARY_FILE"

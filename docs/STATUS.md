@@ -1,9 +1,10 @@
 # FF1-Dawn-AI status
 
 **Updated:** 2026-10-27
-**Current milestone:** GBA runtime trace review and conservative party-menu
-loop detection; NES RAM signals remain provisional and no PPO reward changes
-or new training run are authorized.
+**Current milestone:** The bounded GBA party state machine now completes the
+four-character setup and verifies Cornelia field movement after native reload.
+NES RAM signals remain provisional; no PPO reward changes or training run are
+authorized.
 
 ## What the recordings show
 
@@ -339,3 +340,39 @@ unrecognized screens, and reach the Cornelia overworld before saving the
 candidate checkpoint. After reset/reload, demonstrate an actual field movement.
 Keep GBA training disabled; preserve the v0.7 NES baseline and all provisional
 NES RAM findings.
+
+## 2026-10-27 — Automated GBA party and Cornelia checkpoint
+
+- The bounded state machine completed a real Stable-Retro run
+  (`20261027_213047_28057_328`; report directory
+  `20261027_213053_263767Z`). It matched locally observed anchors for Dawn of
+  Souls title, game selection, FF1 title, new-game prompt, party editor, and
+  party confirmation. It advanced the opening story with bounded taps rather
+  than repeating a blind setup macro.
+- Stable-Retro's default `FILTERED` action mode discarded START because the
+  custom integration has no valid-action list. The probe now requests
+  `Actions.ALL`; START reached the game's Begin Game confirmation and A
+  accepted its preselected Yes option.
+- All four roster name regions changed after Auto-Name. The resulting party
+  classes were Warrior, Monk, White Mage, and Black Mage. The captured screen
+  showed the Cornelia world map/field.
+- The probe serialized a 397,312-byte native checkpoint. After reset and
+  restore, two equal-length idle observations matched. UP held for 12 frames
+  plus 30 frames idle changed 60.4% of pixels, versus 0% between idle
+  controls (3% minimum movement threshold). The after-UP screenshot shows the
+  map; movement is empirical evidence, while field-screen semantics remain
+  based on screenshot review and the movement control comparison.
+- Corrected stale readiness fields in JSON, milestones, report, and WSL
+  wrapper summary. The fresh run now reports party confirmation and verified
+  gameplay readiness consistently. Battery-save loading remains unverified.
+- WSL unittest suite: 33 tests passed. The fresh emulator run completed. A
+  sanitized result is published under
+  `docs/experiments/gba_feasibility/20261027_213053_263767Z/`; full screenshots,
+  trace, native state, ROM, and saves remain local and ignored.
+
+### Next GBA step
+
+Repeat this clean-reset route and compare the milestone summary and movement
+proof, then expose the checkpoint as a reproducible evaluation start state and
+test multiple field directions. Do not begin large-scale GBA training yet.
+NES v0.7 remains untouched.
