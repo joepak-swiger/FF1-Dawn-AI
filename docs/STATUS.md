@@ -1,8 +1,9 @@
 # FF1-Dawn-AI status
 
 **Updated:** 2026-10-27
-**Current milestone:** Offline analysis of NES RAM captures; no PPO reward changes
-or new training run.
+**Current milestone:** GBA runtime trace review and conservative party-menu
+loop detection; NES RAM signals remain provisional and no PPO reward changes
+or new training run are authorized.
 
 ## What the recordings show
 
@@ -302,3 +303,39 @@ rewards before that evidence exists.
 - Visual review of session 1 step 1680 identified a title/new-game menu mislabeled as battle-like by the pixel classifier; at that frame `0x0014` and `0x03CD` had the purported battle mode. This is evidence against interpreting the pixel labels as truth and keeps every candidate provisional.
 - Future successful NES capture pipelines now prepare a whitelisted evidence package automatically. GBA now has a Windows one-click runtime probe launcher with dry-run, WSL argument forwarding, unique logs and summaries; party creation still requires visual review. No training or reward logic changed.
 - **Decision:** `0x0014` remains provisional. Next independently review battle-entry, battle-result, field-return, title/menu, and game-over scenes, then compare candidate RAM values with those manual labels. Preserve v0.7 and do not start new training.
+
+## 2026-10-27 — Reviewed successful GBA runtime and guarded menu cycling
+
+- Inspected the complete local run `20261027_203527_887912Z`, including its
+  report, metrics, runtime milestones, all 47 action endpoints, both contact
+  sheets, candidate screenshot, post-reload screenshot, native state presence,
+  and execution log. The screenshots show the boot logo, Dawn of Souls title,
+  game selection, FF1 setup, party name/class assignment, and class selection.
+  They do not show a completed party or playable overworld.
+- The original probe wrote a 397,312-byte native Stable-Retro state and passed
+  a deterministic reset/reload/replay frame comparison. The replayed A action
+  remained in class selection. State serialization and restore are verified at
+  a menu checkpoint; party creation and gameplay resume are not.
+- Fixed GBA result reporting so top-level and nested runtime milestone objects
+  match and the text report prints the runtime results. `status: completed`
+  describes probe execution, while `gameplay_readiness: not_verified` prevents
+  treating it as game completion.
+- Added an exact-frame pair-boundary cycle guard to the bounded START/A party
+  macro. A new one-click WSL run (`20261027_204417_21619_444`) stopped after
+  pair 10 repeated pair 8's screenshot, saved 41 trace rows, and again passed
+  native state reset/reload. Its candidate screen remains party setup, so the
+  guard reduces blind input cycling but does not create a playable checkpoint.
+- Published sanitized findings and milestone metrics at
+  `docs/experiments/gba_feasibility/20261027_203527_887912Z/`. Local screenshots,
+  raw traces, native states, ROMs, and logs remain ignored and uncommitted.
+- Full WSL unittest suite: 26 passed. The one-click runtime probe also
+  completed successfully. No NES reward/model changes or training were made.
+
+### Immediate next decision
+
+Build a bounded feedback-driven party setup route from the recorded menu
+screens. Capture and validate each confirmation/name/class transition, stop on
+unrecognized screens, and reach the Cornelia overworld before saving the
+candidate checkpoint. After reset/reload, demonstrate an actual field movement.
+Keep GBA training disabled; preserve the v0.7 NES baseline and all provisional
+NES RAM findings.

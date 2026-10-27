@@ -1,0 +1,54 @@
+{
+  "experiment": "GBA Dawn of Souls feasibility",
+  "reviewed_run_id": "20261027_203527_887912Z",
+  "reviewed_execution_id": "20261027_203521_9209_325",
+  "follow_up_run_id": "20261027_204417_21619_444",
+  "follow_up_report_id": "20261027_204423_053988Z",
+  "screen_observations": {
+    "boot_logo_visible": true,
+    "title_and_game_selection_visible": true,
+    "party_name_class_setup_visible": true,
+    "class_selection_dialog_visible": true,
+    "playable_overworld_visible": false,
+    "party_creation_verified": false
+  },
+  "original_run": {
+    "trace_rows": 95,
+    "ordered_input_actions": 47,
+    "unique_exact_released_frames": 29,
+    "repeated_adjacent_released_frames": 7,
+    "candidate_checkpoint_screen": "party name/class assignment menu",
+    "native_state_bytes": 397312,
+    "native_state_write_match": true,
+    "reset_reload_continuation_frame_match": true,
+    "post_reload_gameplay_verified": false,
+    "battery_save_verified": false
+  },
+  "follow_up_run": {
+    "execution_completed": true,
+    "party_setup_pair_count": 10,
+    "repeated_pair_boundary_detected": true,
+    "repeat_observed_at_pair": 10,
+    "prior_matching_pair": 8,
+    "trace_rows": 41,
+    "native_state_bytes": 397312,
+    "reset_reload_continuation_frame_match": true,
+    "playable_overworld_visible": false
+  },
+  "milestones": {
+    "emulator_boot": "partially_verified",
+    "input_response": "partially_verified",
+    "party_creation": "not_verified",
+    "playable_overworld": "not_reached",
+    "native_state_serialized": "passed",
+    "native_state_restored_after_reset": "passed",
+    "gameplay_after_restore": "not_verified",
+    "battery_save_loading": "not_tested"
+  },
+  "interpretation_limits": [
+    "Exact image equality and pixel-change fractions do not identify screen meaning or prove a stall.",
+    "The successful native round trip occurred at a party menu and does not imply a playable checkpoint.",
+    "Source screenshots, raw traces, native states, ROMs, and local machine paths are excluded from this package."
+  ],
+  "next_step": "Replace the blind party macro with a bounded screen-feedback-driven setup flow, reach and visually confirm the Cornelia overworld, then verify an actual movement after native reload."
+}

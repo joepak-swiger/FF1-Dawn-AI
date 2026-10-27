@@ -15,13 +15,14 @@ text report, native checkpoint, and small screenshots. The launcher prints the
 exact report paths. Failed or incomplete work is preserved for diagnosis and
 does not overwrite prior runs.
 
-The fixed START/A/SELECT/DOWN macro is only a candidate party-setup route. In
-runtime mode, the probe now writes `party_setup_trace.csv` and a small
+The START/A/SELECT/DOWN sequence is only a candidate party-setup route. In
+runtime mode, the probe writes `party_setup_trace.csv` and a small
 `party_trace_*.png` after each pressed and released input, including the boot
-idle image and per-step changed-pixel fraction. Use the ordered trace to find
-the first input where the screen stops progressing or reaches the wrong menu;
-do not repeat the macro blindly. A successful state serialization and
-deterministic resume do not prove that party creation succeeded. Review
+idle image and per-step changed-pixel fraction. The bounded START/A phase now
+stops if a completed pair returns an exact frame seen at an earlier pair
+boundary. This is a conservative cycle guard, not a screen classifier or proof
+of a stall. A successful state serialization and deterministic resume do not
+prove that party creation succeeded. Review
 `gba_candidate_party_state.png` visually, then record whether it shows the
 expected playable scene. The probe's
 `party_creation_verified` and `battery_save_verified` fields remain false until
@@ -40,6 +41,9 @@ change. Repeated IDs indicate identical saved pixels only; animation timing,
 transitions, and gameplay meaning still require interpretation. The probe does
 not automatically call a frame a title, name-entry, or playable screen.
 
+The top-level metrics, nested runtime metrics, and text report use the same
+runtime milestones. `status: completed` means the probe finished its checks;
+`gameplay_readiness: not_verified` means it did not establish a playable game.
 The metrics and report separate these milestones: integration boot, input
 control evidence, party creation, reaching a playable scene, native state
 serialization, state restoration after reset, and correct gameplay resume.

@@ -165,6 +165,33 @@ def _initial_milestones() -> dict:
     }
 
 
+def _repeated_pair_boundary_frame(obs: np.ndarray, seen: dict[str, int], pair_index: int) -> tuple[bool, str]:
+    """Detect an exact screenshot cycle at a completed START/A pair boundary.
+
+    This is a conservative stop signal only. It does not classify the screen
+    or prove that the game is stalled; it prevents replaying the same macro
+    cycle indefinitely when an exact visual state reappears.
+    """
+    signature = hashlib.sha256(np.ascontiguousarray(obs).tobytes()).hexdigest()
+    previous = seen.get(signature)
+    if previous is not None:
+        return True, f"pair {pair_index} returned the exact frame already seen after pair {previous}"
+    seen[signature] = pair_index
+    return False, ""
+
+
+def _merge_runtime_results(report: dict, runtime: dict) -> None:
+    """Keep top-level status and milestones consistent with the live probe."""
+    report["runtime"] = runtime
+    report["status"] = runtime.get("status", "failed")
+    report["milestones"] = runtime.get("milestones", report.get("milestones", _initial_milestones()))
+    gameplay_milestones = ("party_creation_works", "playable_scene_reached", "gameplay_resumes_correctly")
+    if all(report["milestones"].get(key, {}).get("status") == "passed" for key in gameplay_milestones):
+        report["gameplay_readiness"] = "verified"
+    else:
+        report["gameplay_readiness"] = "not_verified"
+
+
 def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
     """Generate a checkpoint from this Stable-Retro core and verify resume."""
     try:
@@ -240,15 +267,27 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
             trace_previous = obs
             trace_step += 1
         if automate_party_setup:
-            for _ in range(20):
+            seen_pair_frames: dict[str, int] = {}
+            loop_detected = False
+            loop_reason = ""
+            pairs_completed = 0
+            for pair_index in range(1, 21):
                 tap("START")
                 obs = tap("A")
-            for name in ("SELECT", "DOWN", "SELECT", "DOWN", "SELECT", "DOWN", "SELECT"):
-                if name not in indices:
-                    raise RuntimeError(f"Party setup route requires button not exposed by core: {name}")
-                obs = tap(name)
+                pairs_completed += 1
+                loop_detected, loop_reason = _repeated_pair_boundary_frame(obs, seen_pair_frames, pair_index)
+                if loop_detected:
+                    break
+            if not loop_detected:
+                for name in ("SELECT", "DOWN", "SELECT", "DOWN", "SELECT", "DOWN", "SELECT"):
+                    if name not in indices:
+                        raise RuntimeError(f"Party setup route requires button not exposed by core: {name}")
+                    obs = tap(name)
             obs = _run(env, None, 60)
             checkpoint_image = output_dir / "gba_candidate_party_state.png"
+            report["party_setup_pairs_completed"] = pairs_completed
+            report["party_setup_loop_detected"] = loop_detected
+            report["party_setup_stop_reason"] = loop_reason or "configured route completed"
         else:
             obs = tap("START")
             obs = tap("A")
@@ -298,12 +337,16 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
 
         trace_analysis = _summarize_party_trace(output_dir, trace_rows) if automate_party_setup else None
         report.update({
-            "status": "passed",
+            "status": "completed",
+            "gameplay_readiness": "not_verified",
             "observation_shape": list(obs.shape),
             "action_space_shape": list(env.action_space.shape),
             "button_names": button_names,
             "tested_inputs": ["START", "A"],
             "party_setup_macro_attempted": bool(automate_party_setup),
+            "party_setup_pairs_completed": report.get("party_setup_pairs_completed", 0),
+            "party_setup_loop_detected": report.get("party_setup_loop_detected", False),
+            "party_setup_stop_reason": report.get("party_setup_stop_reason"),
             "party_setup_trace_rows": len(trace_rows),
             "party_setup_trace_csv": str(output_dir / "party_setup_trace.csv") if automate_party_setup else None,
             "party_setup_trace_screenshots": len(trace_rows),
@@ -367,12 +410,12 @@ def main() -> int:
             "format_inspection": static_inspection(args.files or list(DEFAULT_FILES)),
         })
         if args.runtime:
-            report["runtime"] = runtime_smoke(output_dir, args.automate_party_setup)
-            report["status"] = report["runtime"]["status"]
+            _merge_runtime_results(report, runtime_smoke(output_dir, args.automate_party_setup))
         (output_dir / "metrics.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
         report_text = [
             "FF1 Dawn of Souls GBA feasibility probe",
-            f"Status: {report['status']}",
+            f"Execution status: {report['status']}",
+            f"Gameplay readiness: {report.get('gameplay_readiness', 'not_verified')}",
             "Format inspection: read-only; no ROM or integration files modified.",
         ]
         for item in report["format_inspection"]["artifacts"]:
@@ -386,7 +429,10 @@ def main() -> int:
         if args.runtime:
             runtime = report["runtime"]
             report_text.append(f"Native core reset/reload/resume frame match: {runtime.get('reset_reload_resume_frame_match', False)}")
-            report_text.append("Party creation/playability and battery-save loading are not verified by this probe.")
+            report_text.append(f"Party creation/playability: {report.get('gameplay_readiness', 'not_verified')}.")
+            if runtime.get("party_setup_macro_attempted"):
+                report_text.append(f"Party macro: {runtime.get('party_setup_pairs_completed', 0)} START/A pairs; loop detected={runtime.get('party_setup_loop_detected', False)}; stop reason={runtime.get('party_setup_stop_reason')}.")
+            report_text.append("Battery-save loading is not verified by this probe.")
             if runtime.get("party_setup_trace_csv"):
                 report_text.append(f"Party macro trace: {runtime['party_setup_trace_csv']} ({runtime.get('party_setup_trace_rows', 0)} screenshots/rows; inspect each input in order).")
                 report_text.append(f"Party macro contact sheets: {', '.join(runtime.get('party_setup_contact_sheets', [])) or 'not generated'}.")
@@ -397,7 +443,7 @@ def main() -> int:
         (output_dir / "run_report.txt").write_text("\n".join(report_text) + "\n", encoding="utf-8")
         print(f"GBA feasibility report: {output_dir / 'run_report.txt'}")
         print(f"Metrics: {output_dir / 'metrics.json'}")
-        return 0 if report["status"] == "completed" or report["status"] == "passed" else 1
+        return 0 if report["status"] == "completed" else 1
     except Exception as exc:
         report["failure"] = f"{type(exc).__name__}: {exc}"
         if output_dir is not None:

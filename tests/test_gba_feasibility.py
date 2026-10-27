@@ -14,6 +14,8 @@ from ff1_dawn_ai.gba_feasibility import inspect_file, png_chunks
 from scripts.gba_feasibility_probe import (
     GAME,
     _initial_milestones,
+    _merge_runtime_results,
+    _repeated_pair_boundary_frame,
     _save_trace_frame,
     _summarize_party_trace,
     runtime_smoke,
@@ -78,7 +80,9 @@ class GbaStateFormatTests(unittest.TestCase):
                 report = runtime_smoke(output, automate_party_setup=True)
 
             milestones = report["milestones"]
-            self.assertEqual(report["status"], "passed")
+            self.assertEqual(report["status"], "completed")
+            self.assertEqual(report["gameplay_readiness"], "not_verified")
+            self.assertEqual(report["milestones"], milestones)
             self.assertEqual(milestones["rom_integration_boots"]["status"], "partially_verified")
             self.assertEqual(milestones["input_controls_function"]["status"], "partially_verified")
             self.assertEqual(milestones["party_creation_works"]["status"], "not_verified")
@@ -129,6 +133,27 @@ class GbaStateFormatTests(unittest.TestCase):
         self.assertEqual(milestones["party_creation_works"]["status"], "not_verified")
         self.assertEqual(milestones["playable_scene_reached"]["status"], "not_verified")
         self.assertEqual(milestones["gameplay_resumes_correctly"]["status"], "not_verified")
+
+    def test_macro_loop_guard_stops_only_on_repeated_exact_pair_frame(self):
+        seen = {}
+        frame_a = np.zeros((2, 3, 3), dtype=np.uint8)
+        frame_b = np.ones((2, 3, 3), dtype=np.uint8)
+        self.assertEqual(_repeated_pair_boundary_frame(frame_a, seen, 1), (False, ""))
+        self.assertEqual(_repeated_pair_boundary_frame(frame_b, seen, 2), (False, ""))
+        repeated, reason = _repeated_pair_boundary_frame(frame_a.copy(), seen, 3)
+        self.assertTrue(repeated)
+        self.assertIn("pair 3", reason)
+        self.assertIn("pair 1", reason)
+
+    def test_top_level_runtime_milestones_match_nested_runtime_results(self):
+        milestones = _initial_milestones()
+        milestones["native_state_serialized"] = {"status": "passed", "evidence": "synthetic"}
+        runtime = {"status": "completed", "milestones": milestones}
+        summary = {"status": "failed", "milestones": _initial_milestones()}
+        _merge_runtime_results(summary, runtime)
+        self.assertEqual(summary["status"], "completed")
+        self.assertEqual(summary["milestones"], runtime["milestones"])
+        self.assertEqual(summary["gameplay_readiness"], "not_verified")
 
     def test_reads_png_chunk_inventory_without_decoding_payloads(self):
         sample = (
