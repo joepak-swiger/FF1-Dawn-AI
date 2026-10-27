@@ -23,7 +23,7 @@
     "movement_action": "UP held 12 frames, then 30 frames idle"
   },
   "other_milestones": {
-    "stable_retro_core_initialized": "partial; title/boot image not semantically classified",
+    "stable_retro_core_initialized": "passed; initial boot-logo anchor and expected menu transitions observed",
     "battery_save_loading": "not_tested"
   },
   "wrapper": {

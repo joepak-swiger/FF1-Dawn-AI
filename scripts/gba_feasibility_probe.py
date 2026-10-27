@@ -546,6 +546,11 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
             report["party_setup_loop_detected"] = False
             report["party_setup_pairs_completed"] = 0
             report["party_setup_started"] = bool(machine_result.get("party_setup_started"))
+            if machine_result.get("initial_screen") == Screen.BOOT.value:
+                report["milestones"]["rom_integration_boots"] = {
+                    "status": "passed",
+                    "evidence": "The initial Stable-Retro frame matched the locally recorded Dawn of Souls boot-logo anchor before navigating to the title.",
+                }
             if machine_result.get("party_setup_started"):
                 report["milestones"]["party_setup_started"] = {
                     "status": "passed", "evidence": "The state machine matched the recorded invariant party-editor panel anchor."
@@ -570,6 +575,10 @@ def runtime_smoke(output_dir: Path, automate_party_setup: bool = False) -> dict:
                     "status": "passed", "evidence": "Four roster rows were named, row 2 was changed to Monk, and the preselected Yes confirmation was accepted."
                 }
             if machine_result.get("playable_field_reached"):
+                report["milestones"]["input_controls_function"] = {
+                    "status": "passed",
+                    "evidence": "START/A menu transitions and party actions matched expected screens; UP produced controlled field movement after native restore.",
+                }
                 report["milestones"]["playable_field_reached"] = {
                     "status": "passed", "evidence": "A colorful field-map candidate passed an independent post-reset UP movement trial against two no-input controls."
                 }

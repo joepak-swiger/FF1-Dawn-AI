@@ -1,0 +1,30 @@
+{
+  "run_id": "20261027_213318_29077_440",
+  "probe_report_id": "20261027_213323_923267Z",
+  "status": "completed",
+  "gameplay_readiness": "verified",
+  "milestones": {
+    "rom_integration_boots": "passed; saved boot-logo anchor matched",
+    "input_controls_function": "passed; menu transitions and post-restore UP movement",
+    "party_setup_started": "passed",
+    "four_characters_confirmed": "passed; 4/4 name regions changed",
+    "party_setup_completed": "passed; START then A accepted Yes",
+    "playable_field_reached": "passed; Cornelia world map visually reviewed",
+    "native_checkpoint_saved": "passed; 397312 bytes",
+    "native_checkpoint_restored": "passed",
+    "field_movement_after_restore": "passed",
+    "gameplay_resumes_correctly": "passed",
+    "battery_save_loading": "not_tested"
+  },
+  "party_classes": ["Warrior", "Monk", "White Mage", "Black Mage"],
+  "movement_control": {
+    "idle_changed_pixel_fraction": 0.0,
+    "up_changed_pixel_fraction": 0.6040625,
+    "threshold": 0.03,
+    "action": "UP held 12 frames, then 30 frames idle after reset and native restore"
+  },
+  "wrapper_summary": "playable checkpoint verified",
+  "training_started": false,
+  "nes_assets_or_rewards_modified": false,
+  "roms_states_raw_traces_or_screenshots_published": false
+}

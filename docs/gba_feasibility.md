@@ -48,7 +48,7 @@ under `docs/experiments/gba_feasibility/<run-id>/`.
 
 The automated party route and Cornelia movement test passed in WSL on
 2026-10-27. Sanitized evidence is published under
-`docs/experiments/gba_feasibility/20261027_212818_932279Z/`. Native checkpoint
+`docs/experiments/gba_feasibility/20261027_213323_923267Z/`. Native checkpoint
 restore and post-restore movement passed. Battery-save loading has not been
 tested. Repeat the clean-reset route and validate several movement directions
 before large-scale training.

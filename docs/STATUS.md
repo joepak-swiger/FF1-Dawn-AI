@@ -344,11 +344,11 @@ NES RAM findings.
 ## 2026-10-27 — Automated GBA party and Cornelia checkpoint
 
 - The bounded state machine completed a real Stable-Retro run
-  (`20261027_213047_28057_328`; report directory
-  `20261027_213053_263767Z`). It matched locally observed anchors for Dawn of
-  Souls title, game selection, FF1 title, new-game prompt, party editor, and
-  party confirmation. It advanced the opening story with bounded taps rather
-  than repeating a blind setup macro.
+  (`20261027_213318_29077_440`; report directory
+  `20261027_213323_923267Z`). It matched locally observed anchors for Dawn of
+  Souls boot logo and title, game selection, FF1 title, new-game prompt, party
+  editor, and party confirmation. It advanced the opening story with bounded
+  taps rather than repeating a blind setup macro.
 - Stable-Retro's default `FILTERED` action mode discarded START because the
   custom integration has no valid-action list. The probe now requests
   `Actions.ALL`; START reached the game's Begin Game confirmation and A
@@ -363,11 +363,12 @@ NES RAM findings.
   map; movement is empirical evidence, while field-screen semantics remain
   based on screenshot review and the movement control comparison.
 - Corrected stale readiness fields in JSON, milestones, report, and WSL
-  wrapper summary. The fresh run now reports party confirmation and verified
-  gameplay readiness consistently. Battery-save loading remains unverified.
+  wrapper summary. The fresh run now reports boot, menu/input controls, party
+  confirmation, and verified gameplay readiness consistently. Battery-save
+  loading remains unverified.
 - WSL unittest suite: 33 tests passed. The fresh emulator run completed. A
   sanitized result is published under
-  `docs/experiments/gba_feasibility/20261027_213053_263767Z/`; full screenshots,
+  `docs/experiments/gba_feasibility/20261027_213323_923267Z/`; full screenshots,
   trace, native state, ROM, and saves remain local and ignored.
 
 ### Next GBA step

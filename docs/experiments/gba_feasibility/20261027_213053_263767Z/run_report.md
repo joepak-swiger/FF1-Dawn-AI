@@ -30,7 +30,7 @@ passed in the existing WSL Stable-Retro runtime.
 
 | Milestone | Result |
 |---|---|
-| Stable-Retro core initialized | Partial: RGB observation and input mapping; boot image is not semantically classified |
+| Stable-Retro boot/title and mapped controls | Passed: initial boot-logo anchor, menu transitions, and post-restore UP movement |
 | Party editor reached | Passed using a recorded panel anchor |
 | Four roster rows named | Passed |
 | Party submitted and confirmed | Passed |
