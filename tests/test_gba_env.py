@@ -136,10 +136,102 @@ class GbaGymnasiumTests(unittest.TestCase):
         self.assertEqual(longest_repeat_streak([]), 0)
 
     def test_reset_replays_same_observation_and_preserves_checkpoint(self):
-        first, _ = self.env.reset(seed=11)
-        second, _ = self.env.reset(seed=11)
+        first, first_info = self.env.reset(seed=11)
+        second, second_info = self.env.reset(seed=11)
         np.testing.assert_array_equal(first, second)
+        self.assertEqual(first_info["native_restore_count"], 2)
+        self.assertEqual(first_info["priming_noop_frames"], 4)
+        self.assertEqual(first_info["reset_index"], 1)
+        self.assertEqual(second_info["reset_index"], 2)
         self.assertEqual(self.checkpoint.read_bytes(), b"safe native fixture")
+
+    def test_evaluation_baselines_and_visual_metrics_are_explicit_and_deterministic(self):
+        from scripts.gba_eval import POLICIES, actions_for, changed_fraction, estimate_scene_translation, marker_candidate, shift_matches_direction
+
+        self.assertIn("NOOP", POLICIES)
+        self.assertIn("RANDOM", POLICIES)
+        self.assertTrue(set(("UP", "DOWN", "LEFT", "RIGHT", "A", "B", "START", "SELECT", "L", "R")).issubset(POLICIES))
+        self.assertEqual(actions_for("UP", 3, 2), ["UP"] * 3)
+        self.assertEqual(actions_for("RANDOM", 20, 1729), actions_for("RANDOM", 20, 1729))
+        blank = np.zeros((160, 240, 3), dtype=np.uint8)
+        changed = blank.copy()
+        changed[10, 10] = 255
+        self.assertAlmostEqual(changed_fraction(blank, changed), 1 / (160 * 240))
+        self.assertIsNone(marker_candidate(blank))
+        avatar = blank.copy()
+        avatar[80:83, 110:114] = (220, 110, 30)
+        marker = marker_candidate(avatar)
+        self.assertEqual(marker["confidence"], "low_unvalidated")
+        self.assertEqual(marker["matching_pixels"], 12)
+
+    def test_scene_translation_estimator_recovers_synthetic_screen_shift(self):
+        try:
+            import cv2
+        except ImportError:
+            self.skipTest("opencv is optional; scene translation remains unavailable")
+        from scripts.gba_eval import estimate_scene_translation, shift_matches_direction
+
+        rng = np.random.default_rng(3)
+        frame = rng.integers(0, 255, size=(160, 240, 3), dtype=np.uint8)
+        transform = np.float32([[1, 0, 7], [0, 1, -4]])
+        shifted = cv2.warpAffine(frame, transform, (240, 160))
+        result = estimate_scene_translation(frame, shifted)
+        self.assertAlmostEqual(result["dx_pixels_candidate"], 7, delta=0.2)
+        self.assertAlmostEqual(result["dy_pixels_candidate"], -4, delta=0.2)
+        self.assertTrue(shift_matches_direction("LEFT", {"dx_pixels_candidate": 12, "dy_pixels_candidate": 0}))
+        self.assertFalse(shift_matches_direction("UP", {"dx_pixels_candidate": 0, "dy_pixels_candidate": -12}))
+
+    def test_single_restore_configuration_is_available_for_reset_audit(self):
+        one_restore = FF1GbaEnv(
+            self.checkpoint, max_steps=1, action_frames=1, restore_count=1,
+            priming_frames_per_restore=2, retro_factory=lambda: self.stub,
+        )
+        try:
+            first, info = one_restore.reset(seed=1)
+            second, later_info = one_restore.reset(seed=1)
+            np.testing.assert_array_equal(first, second)
+            self.assertEqual(info["native_restore_count"], 1)
+            self.assertEqual(info["priming_noop_frames"], 2)
+            self.assertEqual(later_info["reset_index"], 2)
+        finally:
+            one_restore.close()
+
+    def test_gba_eval_evidence_packager_strips_raw_checkpoint_metadata_and_fails_closed(self):
+        from scripts.package_gba_eval_evidence import package
+
+        source = Path(self.temp.name) / "local-run"
+        source.mkdir()
+        metrics = {
+            "run_id": "run-1", "checkpoint_run_id": "seed-1",
+            "checkpoint_sha256_before": "private", "checkpoint_unchanged": True,
+            "reset_observation_hashes_identical": True, "reset_count": 4,
+            "reset_strategy_audit": {"1": {"first_equals_later": True}},
+            "mean_reset_seconds": 0.1,
+            "policies": ["NOOP", "UP"], "repeats_per_policy": 2,
+            "fixed_horizon_actions": 3, "action_frames": 8,
+            "trials_completed": 6, "extra_control_trials": 2,
+            "blocked_terrain_probe": {"horizon_actions": 24},
+            "action_steps_completed": 60,
+            "neutral_rewards_only": True,
+            "mean_env_step_seconds": 0.01,
+            "episode_summary": {"NOOP": {}, "UP": {}}, "interpretation": {},
+        }
+        (source / "metrics.json").write_text(json.dumps(metrics), encoding="utf-8")
+        for name in (
+            "noop_r1_s001.png", "up_r1_s008.png", "down_r1_s008.png",
+            "left_r1_s008.png", "right_r1_s008.png", "start_r1_s008.png",
+            "edge_noop_s024.png", "edge_right_s024.png",
+        ):
+            Image.new("RGB", (30, 20), (25, 80, 130)).save(source / name)
+        out = package(source, Path(self.temp.name) / "published")
+        public = json.loads((out / "metrics.json").read_text(encoding="utf-8"))
+        self.assertNotIn("checkpoint_sha256_before", public)
+        self.assertTrue((out / "proof.png").is_file())
+        self.assertTrue((out / "REPORT.md").is_file())
+        metrics["checkpoint_unchanged"] = False
+        (source / "metrics.json").write_text(json.dumps(metrics), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "Refusing incomplete"):
+            package(source, Path(self.temp.name) / "rejected")
 
     def test_core_termination_is_forwarded_without_time_limit_truncation(self):
         self.env.reset()

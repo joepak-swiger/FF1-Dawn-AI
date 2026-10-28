@@ -5,8 +5,59 @@
 The latest owner-approved GBA roster is Sif/Warrior, Myth/Thief, Milo/Monk,
 Seed/Red Mage. Earlier Seed and Mustar checkpoints, reports, and Gymnasium
 smokes remain historical and unmodified. Two new clean Seed starts and the
-real two-episode Gymnasium action smoke passed. NES remains secondary; v0.7
-stays trusted, and RAM signals remain provisional.
+real two-episode Gymnasium action smoke passed. PR #6 and its stacked PR #7
+are merged into `main`. The newest controlled GBA evaluation confirms
+repeatable reset with the two-restore path and repeatable screen-space map
+translation under directional controls. No player/world coordinate or
+story-progress signal is verified. NES remains secondary; v0.7 stays trusted,
+and RAM signals remain provisional.
+
+## 2026-10-28 — Repeatable GBA evaluation and reset audit
+
+- Added `scripts/gba_eval.py` to run no-op, seeded-random, all four cardinal,
+  and A/B/START/SELECT/L/R controls from the same official Seed-party native
+  checkpoint. It stores unique local runs with per-action trace, timings,
+  frame samples, reset hashes, and no-op comparisons. Added a separate
+  24-action RIGHT-vs-NOOP edge probe; it reports only a candidate plateau,
+  never confirmed collision.
+- Added deterministic reset/step diagnostics to `FF1GbaEnv` and made the
+  restore count/priming frames explicit. Gymnasium checker coverage caught and
+  fixed nondeterministic timing/cumulative-frame fields in step `info`.
+- Real WSL evaluations `20261028_004926_473980Z` and
+  `20261028_005025_703640Z`: each ran 12 controls x 3 repeats x 8 discrete
+  actions, plus two 24-action controls; 38 trials, 336 actions, 38 identical
+  reset observation hashes, unchanged checkpoint, and only zero rewards.
+  Latest mean reset was 0.00477 sec; mean discrete step was 0.00732 sec.
+- Three one-restore resets produced two distinct observation hashes. Three
+  two-restore resets matched exactly. The evaluator's 36 ordinary resets also
+  matched. Keep the double-restore/two-priming-frame behavior; removing the
+  first restore is not currently reproducible.
+- Directional screenshots and action-vs-idle comparisons show clear
+  screen-space map/avatar changes: mean changed-pixel fraction 0.642-0.755
+  for cardinal actions versus 0.0287 for no-op. Visual review confirms
+  directional movement in Cornelia. Phase correlation independently matched
+  scene shifts with the opposite cardinal input sign in 3/3 trials across both
+  runs: UP (0.002,+62.042 px), DOWN (-0.008,-47.890 px), LEFT (+61.987,-0.052
+  px), RIGHT (-62.010,+0.033 px). The no-op scene shift was (-0.008,-0.002
+  px). These are rendered background shifts, not player coordinates or tile
+  units; camera transitions and scenery can change the estimates. The
+  heuristic gold/red avatar centroid misses the reset frame and is rejected
+  as a progress signal. The 24-action RIGHT probe did not reach a stable
+  visual plateau; blocked terrain was not confirmed.
+- START opened the party/status menu. A, B, SELECT, L, and R produced no obvious
+  screen difference from idle over this trial; this only describes these
+  controls in the tested field state. Seeded-random produced large scene
+  changes but no semantic outcome was inferred.
+- Sanitized evidence: `docs/experiments/gba_eval/20261028_005025_703640Z-compact-v2/`.
+  It contains a concise report, safe metrics, and a small selected-frame proof
+  sheet. Native state, raw traces, full recordings, and private paths remain
+  local. The earlier shorter edge-probe attempt remains local and was not
+  packaged because its environment truncated it before its advertised horizon.
+- Tests after implementation: 49/49 passed in WSL. No PPO training, reward
+  changes, or NES changes were made.
+- Next: calibrate the scene-translation proxy to map/tile units or derive
+  position from independently documented Stable-Retro RAM; confirm a known
+  blocked tile and reentry after restore before measuring exploration/progress.
 
 ## 2026-10-28 — Official Seed party and GBA Gymnasium smoke
 

@@ -62,14 +62,21 @@ performed or tested here.
 - Keep GBA exploratory code and findings on the dedicated `codex/gba-*`
   branch until reviewed. Do not disturb the NES environment, model, ROM,
   recordings, or save states.
-- Prefer making save states directly through the active Stable-Retro core and
-- The GBA Gymnasium adapter loads only a verified, run-specific native
-  checkpoint and uses neutral rewards until progress signals are validated.
-- Prefer making save states directly through the active Stable-Retro core and
-  verifying reset/reload/resume. Do not repeat speculative mGBA savestate
+- Make save states directly through the active Stable-Retro core and verify
+  reset/reload/resume. Do not repeat speculative mGBA savestate
   conversion or copy guessed battery-save filenames into the real integration.
   Test battery-save loading only in an isolated copy and report whether the
   frontend actually persists libretro save RAM.
+- The GBA Gymnasium adapter loads only a verified, run-specific native
+  checkpoint and uses neutral rewards until progress signals are validated.
+- Use `scripts/gba_eval.py` for repeated checkpoint-reset control baselines.
+  It records no-op, seeded-random, cardinal, and physical-button trials,
+  reset/step timing, action traces, and conservative image diagnostics. The
+  phase-correlation output is screen-space background displacement only, not
+  player/world coordinates or tile units. The central color-centroid candidate
+  is unreliable and must not be used as progress. Compare all image signals
+  against idle controls and manually reviewed screenshots before changing
+  rewards.
 - Before GBA training, confirm repeatable boot, mapped controls, a visually
   verified playable post-party checkpoint, and native state save/reset/reload/
   resume. Never commit ROMs, saves, native states, or raw captures.
