@@ -7,6 +7,8 @@ the first observation. Actions are a stable discrete mapping to GBA controls.
 
 from __future__ import annotations
 
+import hashlib
+import time
 from pathlib import Path
 from typing import Callable
 
@@ -41,12 +43,17 @@ class FF1GbaEnv(gym.Env):
         action_frames: int = 16,
         obs_size: tuple[int, int] = (84, 84),
         frame_stack: int = 3,
+        restore_count: int = 2,
+        priming_frames_per_restore: int = 2,
         render_mode: str | None = None,
         retro_factory: Callable | None = None,
     ) -> None:
         super().__init__()
-        if max_steps < 1 or action_frames < 1 or frame_stack < 1:
-            raise ValueError("max_steps, action_frames, and frame_stack must be positive")
+        if min(max_steps, action_frames, frame_stack, restore_count, priming_frames_per_restore) < 1:
+            raise ValueError(
+                "max_steps, action_frames, frame_stack, restore_count, and "
+                "priming_frames_per_restore must be positive"
+            )
         if render_mode not in (None, "rgb_array"):
             raise ValueError(f"Unsupported render mode: {render_mode}")
         self.project_root = Path(project_root or Path(__file__).resolve().parents[1])
@@ -62,6 +69,8 @@ class FF1GbaEnv(gym.Env):
         self.action_frames = int(action_frames)
         self.obs_width, self.obs_height = map(int, obs_size)
         self.frame_stack = int(frame_stack)
+        self.restore_count = int(restore_count)
+        self.priming_frames_per_restore = int(priming_frames_per_restore)
         self.render_mode = render_mode
 
         if retro_factory is None:
@@ -94,6 +103,8 @@ class FF1GbaEnv(gym.Env):
         self._rgb: np.ndarray | None = None
         self._frames: np.ndarray | None = None
         self._steps = 0
+        self._reset_count = 0
+        self._episode_frames = 0
         self._closed = False
 
     def _empty_action(self) -> np.ndarray:
@@ -127,24 +138,37 @@ class FF1GbaEnv(gym.Env):
         else:
             obs, _reward, done, _info = result
             done = bool(done)
+        self._episode_frames += 1
         return np.asarray(obs), done
 
     def reset(self, *, seed: int | None = None, options: dict | None = None):
+        reset_started = time.perf_counter()
         super().reset(seed=seed)
         result = self.retro_env.reset()
         raw = np.asarray(result[0] if isinstance(result, tuple) else result)
+        self._episode_frames = 0
         # First load primes this core's GBA framebuffer. Reloading the same
         # checkpoint then produces an identical observation even on the
         # first episode; this was verified against repeated native restores.
-        for _restore in range(2):
+        for _restore in range(self.restore_count):
             self.retro_env.em.set_state(self._checkpoint)
-            for _ in range(2):
+            for _ in range(self.priming_frames_per_restore):
                 raw, done = self._one_step(self._empty_action())
                 if done:
                     raise RuntimeError("GBA core terminated while loading the checkpoint")
         self._steps = 0
+        self._reset_count += 1
         observation = self._observe(raw, reset=True)
-        return observation, {"checkpoint_path": str(self.checkpoint_path), "checkpoint_loaded": True}
+        return observation, {
+            "checkpoint_path": str(self.checkpoint_path),
+            "checkpoint_loaded": True,
+            "reset_index": self._reset_count,
+            "native_restore_count": self.restore_count,
+            "priming_noop_frames": self.restore_count * self.priming_frames_per_restore,
+            "emulator_frames_in_episode": self._episode_frames,
+            "observation_sha256": hashlib.sha256(observation.tobytes()).hexdigest(),
+            "reset_elapsed_seconds": time.perf_counter() - reset_started,
+        }
 
     def step(self, action: int):
         if self._frames is None:
@@ -159,8 +183,10 @@ class FF1GbaEnv(gym.Env):
 
         raw = self._rgb
         core_terminated = False
+        frames_executed = 0
         for _ in range(self.action_frames):
             raw, done = self._one_step(retro_action)
+            frames_executed += 1
             core_terminated = core_terminated or done
             if done:
                 break
@@ -172,6 +198,8 @@ class FF1GbaEnv(gym.Env):
             "step_count": self._steps,
             "neutral_reward": True,
             "checkpoint_loaded_on_reset": True,
+            "emulator_frames_executed": frames_executed,
+            "emulator_frames_in_episode": self._episode_frames,
         }
 
     def render(self) -> np.ndarray | None:

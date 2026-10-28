@@ -1,0 +1,434 @@
+{
+  "run_id": "20261028_005025_703640Z",
+  "checkpoint_run_id": "20261028_001816_066107Z",
+  "reset_count": 38,
+  "reset_observations_identical": true,
+  "reset_strategy_audit": {
+    "1": {
+      "reset_count": 3,
+      "observation_hashes_identical": false,
+      "first_equals_later": false,
+      "unique_hash_count": 2,
+      "first_observation_sha256": "7dd39ff65c3641fb4c79a4a24859b5d5405126515826102bfdc39c0c6f506a2a",
+      "mean_reset_seconds": 0.005256,
+      "priming_noop_frames_per_reset": 2
+    },
+    "2": {
+      "reset_count": 3,
+      "observation_hashes_identical": true,
+      "first_equals_later": true,
+      "unique_hash_count": 1,
+      "first_observation_sha256": "73b5ac9c9d9336753bd22a0b4f7dda08339e208cfd05c3e606be7215067c0394",
+      "mean_reset_seconds": 0.004639,
+      "priming_noop_frames_per_reset": 4
+    },
+    "one_restore_matches_two_restore": false
+  },
+  "mean_reset_seconds": 0.004766,
+  "policies": [
+    "NOOP",
+    "RANDOM",
+    "UP",
+    "DOWN",
+    "LEFT",
+    "RIGHT",
+    "A",
+    "B",
+    "START",
+    "SELECT",
+    "L",
+    "R"
+  ],
+  "repeats_per_policy": 3,
+  "fixed_horizon_actions": 8,
+  "action_frames": 8,
+  "trials_completed": 38,
+  "action_steps_completed": 336,
+  "neutral_rewards_only": true,
+  "mean_env_step_seconds": 0.007321,
+  "episode_summary": {
+    "NOOP": {
+      "mean_changed_pixel_fraction": 0.028737,
+      "marker_detection_rate": 0.0,
+      "candidate_marker_start_end": [
+        null,
+        null,
+        null
+      ],
+      "scene_translation_candidates": [
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -0.002,
+          "response": 0.99653,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -0.002,
+          "response": 0.99653,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -0.002,
+          "response": 0.99653,
+          "confidence": "unvalidated_scene_translation"
+        }
+      ],
+      "directional_translation_match_rate": null
+    },
+    "RANDOM": {
+      "mean_changed_pixel_fraction": 0.769382,
+      "marker_detection_rate": 0.958333,
+      "candidate_marker_start_end": [
+        null,
+        null,
+        null
+      ],
+      "scene_translation_candidates": [
+        {
+          "dx_pixels_candidate": 16.097,
+          "dy_pixels_candidate": 32.058,
+          "response": 0.64862,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": 25.957,
+          "dy_pixels_candidate": -15.987,
+          "response": 0.70781,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": -14.042,
+          "dy_pixels_candidate": -16.005,
+          "response": 0.7214,
+          "confidence": "unvalidated_scene_translation"
+        }
+      ],
+      "directional_translation_match_rate": null
+    },
+    "UP": {
+      "mean_changed_pixel_fraction": 0.71305,
+      "marker_detection_rate": 1.0,
+      "candidate_marker_start_end": [
+        null,
+        null,
+        null
+      ],
+      "scene_translation_candidates": [
+        {
+          "dx_pixels_candidate": 0.002,
+          "dy_pixels_candidate": 62.042,
+          "response": 0.33052,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": 0.002,
+          "dy_pixels_candidate": 62.042,
+          "response": 0.33052,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": 0.002,
+          "dy_pixels_candidate": 62.042,
+          "response": 0.33052,
+          "confidence": "unvalidated_scene_translation"
+        }
+      ],
+      "directional_translation_match_rate": 1.0
+    },
+    "DOWN": {
+      "mean_changed_pixel_fraction": 0.6418,
+      "marker_detection_rate": 0.875,
+      "candidate_marker_start_end": [
+        null,
+        null,
+        null
+      ],
+      "scene_translation_candidates": [
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -47.89,
+          "response": 0.40079,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -47.89,
+          "response": 0.40079,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -47.89,
+          "response": 0.40079,
+          "confidence": "unvalidated_scene_translation"
+        }
+      ],
+      "directional_translation_match_rate": 1.0
+    },
+    "LEFT": {
+      "mean_changed_pixel_fraction": 0.755059,
+      "marker_detection_rate": 1.0,
+      "candidate_marker_start_end": [
+        null,
+        null,
+        null
+      ],
+      "scene_translation_candidates": [
+        {
+          "dx_pixels_candidate": 61.987,
+          "dy_pixels_candidate": -0.052,
+          "response": 0.60213,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": 61.987,
+          "dy_pixels_candidate": -0.052,
+          "response": 0.60213,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": 61.987,
+          "dy_pixels_candidate": -0.052,
+          "response": 0.60213,
+          "confidence": "unvalidated_scene_translation"
+        }
+      ],
+      "directional_translation_match_rate": 1.0
+    },
+    "RIGHT": {
+      "mean_changed_pixel_fraction": 0.752493,
+      "marker_detection_rate": 1.0,
+      "candidate_marker_start_end": [
+        null,
+        null,
+        null
+      ],
+      "scene_translation_candidates": [
+        {
+          "dx_pixels_candidate": -62.01,
+          "dy_pixels_candidate": 0.033,
+          "response": 0.55048,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": -62.01,
+          "dy_pixels_candidate": 0.033,
+          "response": 0.55048,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": -62.01,
+          "dy_pixels_candidate": 0.033,
+          "response": 0.55048,
+          "confidence": "unvalidated_scene_translation"
+        }
+      ],
+      "directional_translation_match_rate": 1.0
+    },
+    "A": {
+      "mean_changed_pixel_fraction": 0.028737,
+      "marker_detection_rate": 0.0,
+      "candidate_marker_start_end": [
+        null,
+        null,
+        null
+      ],
+      "scene_translation_candidates": [
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -0.002,
+          "response": 0.99653,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -0.002,
+          "response": 0.99653,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -0.002,
+          "response": 0.99653,
+          "confidence": "unvalidated_scene_translation"
+        }
+      ],
+      "directional_translation_match_rate": null
+    },
+    "B": {
+      "mean_changed_pixel_fraction": 0.028737,
+      "marker_detection_rate": 0.0,
+      "candidate_marker_start_end": [
+        null,
+        null,
+        null
+      ],
+      "scene_translation_candidates": [
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -0.002,
+          "response": 0.99653,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -0.002,
+          "response": 0.99653,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -0.002,
+          "response": 0.99653,
+          "confidence": "unvalidated_scene_translation"
+        }
+      ],
+      "directional_translation_match_rate": null
+    },
+    "START": {
+      "mean_changed_pixel_fraction": 0.473535,
+      "marker_detection_rate": 0.0,
+      "candidate_marker_start_end": [
+        null,
+        null,
+        null
+      ],
+      "scene_translation_candidates": [
+        {
+          "dx_pixels_candidate": 7.168,
+          "dy_pixels_candidate": -4.886,
+          "response": 0.03231,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": 7.168,
+          "dy_pixels_candidate": -4.886,
+          "response": 0.03231,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": 7.168,
+          "dy_pixels_candidate": -4.886,
+          "response": 0.03231,
+          "confidence": "unvalidated_scene_translation"
+        }
+      ],
+      "directional_translation_match_rate": null
+    },
+    "SELECT": {
+      "mean_changed_pixel_fraction": 0.028737,
+      "marker_detection_rate": 0.0,
+      "candidate_marker_start_end": [
+        null,
+        null,
+        null
+      ],
+      "scene_translation_candidates": [
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -0.002,
+          "response": 0.99653,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -0.002,
+          "response": 0.99653,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -0.002,
+          "response": 0.99653,
+          "confidence": "unvalidated_scene_translation"
+        }
+      ],
+      "directional_translation_match_rate": null
+    },
+    "L": {
+      "mean_changed_pixel_fraction": 0.028737,
+      "marker_detection_rate": 0.0,
+      "candidate_marker_start_end": [
+        null,
+        null,
+        null
+      ],
+      "scene_translation_candidates": [
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -0.002,
+          "response": 0.99653,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -0.002,
+          "response": 0.99653,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -0.002,
+          "response": 0.99653,
+          "confidence": "unvalidated_scene_translation"
+        }
+      ],
+      "directional_translation_match_rate": null
+    },
+    "R": {
+      "mean_changed_pixel_fraction": 0.028737,
+      "marker_detection_rate": 0.0,
+      "candidate_marker_start_end": [
+        null,
+        null,
+        null
+      ],
+      "scene_translation_candidates": [
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -0.002,
+          "response": 0.99653,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -0.002,
+          "response": 0.99653,
+          "confidence": "unvalidated_scene_translation"
+        },
+        {
+          "dx_pixels_candidate": -0.008,
+          "dy_pixels_candidate": -0.002,
+          "response": 0.99653,
+          "confidence": "unvalidated_scene_translation"
+        }
+      ],
+      "directional_translation_match_rate": null
+    }
+  },
+  "extra_control_trials": 2,
+  "blocked_terrain_probe": {
+    "action": "RIGHT",
+    "horizon_actions": 24,
+    "mean_changed_pixel_fraction_last_4_noop": 0.032559,
+    "mean_changed_pixel_fraction_last_4_right": 0.1611,
+    "candidate_screen_plateau_vs_noop": false,
+    "interpretation": "candidate visual plateau only; collision/blocked terrain not confirmed without reviewed avatar/map alignment"
+  },
+  "interpretation": {
+    "changed_pixel_fraction": "screen-change triage only; can include animation and camera movement",
+    "marker_candidate": "heuristic gold/red pixel centroid in the central map ROI; not a tile/world coordinate and not an independently confirmed game signal",
+    "scene_translation_candidate": "phase-correlation displacement of the background crop; screen-scene movement only, not player/world coordinates or tile units",
+    "position_signal_status": "screen_space_map_translation_repeatable_for_this_checkpoint; not a world coordinate; candidate avatar color centroid rejected",
+    "rewards": "neutral zero; no progress rewards or training"
+  },
+  "validation_checks": {
+    "checkpoint_unchanged": true,
+    "repeatable_reset": true,
+    "all_trials_completed": true,
+    "all_steps_completed": true,
+    "neutral_rewards_only": true
+  }
+}
