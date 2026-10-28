@@ -1,0 +1,1393 @@
+{
+  "run_id": "20261028_153708_566851Z",
+  "official_checkpoint_run_id": "20261028_001816_066107Z",
+  "party": [
+    {
+      "name": "Sif",
+      "class": "Warrior"
+    },
+    {
+      "name": "Myth",
+      "class": "Thief"
+    },
+    {
+      "name": "Milo",
+      "class": "Monk"
+    },
+    {
+      "name": "Seed",
+      "class": "Red Mage"
+    }
+  ],
+  "verified_start_count": 11,
+  "starts": [
+    {
+      "start_id": "center",
+      "route_family": "center",
+      "route_from_official_checkpoint": [],
+      "split": "train",
+      "field_confirmed_after_reload": true,
+      "reload_frame_reproducible": true,
+      "screen_translation_candidate_px": 0.008,
+      "translation_interpretation": "rendered map registration only; no coordinate claim"
+    },
+    {
+      "start_id": "west_near",
+      "route_family": "left",
+      "route_from_official_checkpoint": [
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT"
+      ],
+      "split": "train",
+      "field_confirmed_after_reload": true,
+      "reload_frame_reproducible": true,
+      "screen_translation_candidate_px": 47.985,
+      "translation_interpretation": "rendered map registration only; no coordinate claim"
+    },
+    {
+      "start_id": "west_far",
+      "route_family": "left",
+      "route_from_official_checkpoint": [
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT"
+      ],
+      "split": "train",
+      "field_confirmed_after_reload": true,
+      "reload_frame_reproducible": true,
+      "screen_translation_candidate_px": 79.96,
+      "translation_interpretation": "rendered map registration only; no coordinate claim"
+    },
+    {
+      "start_id": "east_near",
+      "route_family": "right",
+      "route_from_official_checkpoint": [
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT"
+      ],
+      "split": "train",
+      "field_confirmed_after_reload": true,
+      "reload_frame_reproducible": true,
+      "screen_translation_candidate_px": 47.991,
+      "translation_interpretation": "rendered map registration only; no coordinate claim"
+    },
+    {
+      "start_id": "east_far",
+      "route_family": "right",
+      "route_from_official_checkpoint": [
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT"
+      ],
+      "split": "train",
+      "field_confirmed_after_reload": true,
+      "reload_frame_reproducible": true,
+      "screen_translation_candidate_px": 80.002,
+      "translation_interpretation": "rendered map registration only; no coordinate claim"
+    },
+    {
+      "start_id": "south_near",
+      "route_family": "down",
+      "route_from_official_checkpoint": [
+        "DOWN",
+        "DOWN",
+        "DOWN",
+        "DOWN"
+      ],
+      "split": "train",
+      "field_confirmed_after_reload": true,
+      "reload_frame_reproducible": true,
+      "screen_translation_candidate_px": 47.946,
+      "translation_interpretation": "rendered map registration only; no coordinate claim"
+    },
+    {
+      "start_id": "south_far",
+      "route_family": "down",
+      "route_from_official_checkpoint": [
+        "DOWN",
+        "DOWN",
+        "DOWN",
+        "DOWN",
+        "DOWN",
+        "DOWN",
+        "DOWN",
+        "DOWN"
+      ],
+      "split": "train",
+      "field_confirmed_after_reload": true,
+      "reload_frame_reproducible": true,
+      "screen_translation_candidate_px": 47.899,
+      "translation_interpretation": "rendered map registration only; no coordinate claim"
+    },
+    {
+      "start_id": "east_north",
+      "route_family": "right+up",
+      "route_from_official_checkpoint": [
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "UP",
+        "UP",
+        "UP",
+        "UP"
+      ],
+      "split": "validation",
+      "field_confirmed_after_reload": true,
+      "reload_frame_reproducible": true,
+      "screen_translation_candidate_px": 47.984,
+      "translation_interpretation": "rendered map registration only; no coordinate claim"
+    },
+    {
+      "start_id": "west_north",
+      "route_family": "left+up",
+      "route_from_official_checkpoint": [
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "UP",
+        "UP",
+        "UP",
+        "UP"
+      ],
+      "split": "validation",
+      "field_confirmed_after_reload": true,
+      "reload_frame_reproducible": true,
+      "screen_translation_candidate_px": 47.993,
+      "translation_interpretation": "rendered map registration only; no coordinate claim"
+    },
+    {
+      "start_id": "east_south",
+      "route_family": "right+down",
+      "route_from_official_checkpoint": [
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "DOWN",
+        "DOWN",
+        "DOWN",
+        "DOWN"
+      ],
+      "split": "final_test",
+      "field_confirmed_after_reload": true,
+      "reload_frame_reproducible": true,
+      "screen_translation_candidate_px": 47.935,
+      "translation_interpretation": "rendered map registration only; no coordinate claim"
+    },
+    {
+      "start_id": "west_south",
+      "route_family": "left+down",
+      "route_from_official_checkpoint": [
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "DOWN",
+        "DOWN",
+        "DOWN",
+        "DOWN"
+      ],
+      "split": "final_test",
+      "field_confirmed_after_reload": true,
+      "reload_frame_reproducible": true,
+      "screen_translation_candidate_px": 47.973,
+      "translation_interpretation": "rendered map registration only; no coordinate claim"
+    }
+  ],
+  "rejected_start_candidates": [],
+  "demonstration_method": "scripted route labels recorded from live observations; not reinforcement learning",
+  "demonstration_decision_samples": 127,
+  "demonstrations": [
+    {
+      "start_id": "center",
+      "route_family": "center",
+      "success": true,
+      "decisions": 13,
+      "goal_confirmation_decision": 13,
+      "route_prefix": [],
+      "action_names": [
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP"
+      ],
+      "macro_frames": 130
+    },
+    {
+      "start_id": "west_near",
+      "route_family": "left",
+      "success": true,
+      "decisions": 18,
+      "goal_confirmation_decision": 18,
+      "route_prefix": [
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT"
+      ],
+      "action_names": [
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP"
+      ],
+      "macro_frames": 180
+    },
+    {
+      "start_id": "west_far",
+      "route_family": "left",
+      "success": true,
+      "decisions": 21,
+      "goal_confirmation_decision": 21,
+      "route_prefix": [
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT"
+      ],
+      "action_names": [
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP"
+      ],
+      "macro_frames": 210
+    },
+    {
+      "start_id": "east_near",
+      "route_family": "right",
+      "success": true,
+      "decisions": 18,
+      "goal_confirmation_decision": 18,
+      "route_prefix": [
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT"
+      ],
+      "action_names": [
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP"
+      ],
+      "macro_frames": 180
+    },
+    {
+      "start_id": "east_far",
+      "route_family": "right",
+      "success": true,
+      "decisions": 21,
+      "goal_confirmation_decision": 21,
+      "route_prefix": [
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT"
+      ],
+      "action_names": [
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP"
+      ],
+      "macro_frames": 210
+    },
+    {
+      "start_id": "south_near",
+      "route_family": "down",
+      "success": true,
+      "decisions": 18,
+      "goal_confirmation_decision": 18,
+      "route_prefix": [
+        "UP",
+        "UP",
+        "UP",
+        "UP"
+      ],
+      "action_names": [
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP"
+      ],
+      "macro_frames": 180
+    },
+    {
+      "start_id": "south_far",
+      "route_family": "down",
+      "success": true,
+      "decisions": 18,
+      "goal_confirmation_decision": 18,
+      "route_prefix": [
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP"
+      ],
+      "action_names": [
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP",
+        "UP"
+      ],
+      "macro_frames": 180
+    }
+  ],
+  "split_manifest": {
+    "train_start_ids": [
+      "center",
+      "west_near",
+      "west_far",
+      "east_near",
+      "east_far",
+      "south_near",
+      "south_far"
+    ],
+    "validation_start_ids": [
+      "east_north",
+      "west_north"
+    ],
+    "final_test_start_ids": [
+      "east_south",
+      "west_south"
+    ],
+    "selection_rule": "validation-only model selection; final south-diagonal route families remain untouched until final scoring"
+  },
+  "imitation_algorithms": {
+    "BC_3NN_CENTER_WEST_ABLATION": "3-NN frame-only; center and west_near training demonstrations",
+    "BC_3NN_MULTI_START": "3-NN frame-only; all successful cardinal training demonstrations",
+    "BC_TEMPORAL_3NN": "3-NN over ordered three-observation windows, kept within each trajectory",
+    "BC_BALANCED_LINEAR": "class-balanced multinomial linear model on spatially downsampled RGB"
+  },
+  "action_macro": {
+    "hold_frames": 8,
+    "release_frames": 2,
+    "evaluation_horizon_decisions": 48
+  },
+  "evaluation_by_split": {
+    "train": {
+      "IDLE": {
+        "successes": 0,
+        "episodes": 7,
+        "success_rate": 0.0,
+        "mean_success_decisions": null,
+        "unknown_observation_fraction": 0.4842,
+        "mean_dominant_action_fraction": 1.0,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 1,
+        "false_goal_events": 0
+      },
+      "SEEDED_RANDOM": {
+        "successes": 0,
+        "episodes": 7,
+        "success_rate": 0.0,
+        "mean_success_decisions": null,
+        "unknown_observation_fraction": 0.9586,
+        "mean_dominant_action_fraction": 0.3095,
+        "directional_oscillation_total": 62,
+        "worst_identical_observation_streak": 5,
+        "false_goal_events": 0
+      },
+      "ALWAYS_UP": {
+        "successes": 3,
+        "episodes": 7,
+        "success_rate": 0.42857142857142855,
+        "mean_success_decisions": 16.333333333333332,
+        "unknown_observation_fraction": 0.9296,
+        "mean_dominant_action_fraction": 1.0,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 2,
+        "false_goal_events": 0
+      },
+      "SCRIPTED": {
+        "successes": 7,
+        "episodes": 7,
+        "success_rate": 1.0,
+        "mean_success_decisions": 18.142857142857142,
+        "unknown_observation_fraction": 0.9042,
+        "mean_dominant_action_fraction": 0.8277,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 1,
+        "false_goal_events": 0
+      },
+      "BC_3NN_CENTER_WEST_ABLATION": {
+        "successes": 5,
+        "episodes": 7,
+        "success_rate": 0.7142857142857143,
+        "mean_success_decisions": 17.6,
+        "unknown_observation_fraction": 0.9227,
+        "mean_dominant_action_fraction": 0.9206,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 1,
+        "false_goal_events": 0
+      },
+      "BC_3NN_MULTI_START": {
+        "successes": 7,
+        "episodes": 7,
+        "success_rate": 1.0,
+        "mean_success_decisions": 18.142857142857142,
+        "unknown_observation_fraction": 0.9042,
+        "mean_dominant_action_fraction": 0.8277,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 1,
+        "false_goal_events": 0
+      },
+      "BC_TEMPORAL_3NN": {
+        "successes": 7,
+        "episodes": 7,
+        "success_rate": 1.0,
+        "mean_success_decisions": 18.142857142857142,
+        "unknown_observation_fraction": 0.9042,
+        "mean_dominant_action_fraction": 0.8277,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 1,
+        "false_goal_events": 0
+      },
+      "BC_BALANCED_LINEAR": {
+        "successes": 7,
+        "episodes": 7,
+        "success_rate": 1.0,
+        "mean_success_decisions": 18.142857142857142,
+        "unknown_observation_fraction": 0.9042,
+        "mean_dominant_action_fraction": 0.8277,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 1,
+        "false_goal_events": 0
+      }
+    },
+    "validation": {
+      "IDLE": {
+        "successes": 0,
+        "episodes": 4,
+        "success_rate": 0.0,
+        "mean_success_decisions": null,
+        "unknown_observation_fraction": 0.3948,
+        "mean_dominant_action_fraction": 1.0,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 1,
+        "false_goal_events": 0
+      },
+      "SEEDED_RANDOM": {
+        "successes": 0,
+        "episodes": 4,
+        "success_rate": 0.0,
+        "mean_success_decisions": null,
+        "unknown_observation_fraction": 0.9875,
+        "mean_dominant_action_fraction": 0.3438,
+        "directional_oscillation_total": 30,
+        "worst_identical_observation_streak": 5,
+        "false_goal_events": 0
+      },
+      "ALWAYS_UP": {
+        "successes": 0,
+        "episodes": 4,
+        "success_rate": 0.0,
+        "mean_success_decisions": null,
+        "unknown_observation_fraction": 0.9833,
+        "mean_dominant_action_fraction": 1.0,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 2,
+        "false_goal_events": 0
+      },
+      "SCRIPTED": {
+        "successes": 0,
+        "episodes": 4,
+        "success_rate": 0.0,
+        "mean_success_decisions": null,
+        "unknown_observation_fraction": 0.9729,
+        "mean_dominant_action_fraction": 0.8333,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 1,
+        "false_goal_events": 0
+      },
+      "BC_3NN_CENTER_WEST_ABLATION": {
+        "successes": 0,
+        "episodes": 4,
+        "success_rate": 0.0,
+        "mean_success_decisions": null,
+        "unknown_observation_fraction": 0.4916,
+        "mean_dominant_action_fraction": 0.9271,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 2,
+        "false_goal_events": 0
+      },
+      "BC_3NN_MULTI_START": {
+        "successes": 0,
+        "episodes": 4,
+        "success_rate": 0.0,
+        "mean_success_decisions": null,
+        "unknown_observation_fraction": 0.3948,
+        "mean_dominant_action_fraction": 1.0,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 1,
+        "false_goal_events": 0
+      },
+      "BC_TEMPORAL_3NN": {
+        "successes": 0,
+        "episodes": 4,
+        "success_rate": 0.0,
+        "mean_success_decisions": null,
+        "unknown_observation_fraction": 0.3948,
+        "mean_dominant_action_fraction": 1.0,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 1,
+        "false_goal_events": 0
+      },
+      "BC_BALANCED_LINEAR": {
+        "successes": 0,
+        "episodes": 4,
+        "success_rate": 0.0,
+        "mean_success_decisions": null,
+        "unknown_observation_fraction": 0.3948,
+        "mean_dominant_action_fraction": 1.0,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 1,
+        "false_goal_events": 0
+      }
+    },
+    "final_test": {
+      "IDLE": {
+        "successes": 0,
+        "episodes": 4,
+        "success_rate": 0.0,
+        "mean_success_decisions": null,
+        "unknown_observation_fraction": 0.7896,
+        "mean_dominant_action_fraction": 1.0,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 1,
+        "false_goal_events": 0
+      },
+      "SEEDED_RANDOM": {
+        "successes": 0,
+        "episodes": 4,
+        "success_rate": 0.0,
+        "mean_success_decisions": null,
+        "unknown_observation_fraction": 0.976,
+        "mean_dominant_action_fraction": 0.3073,
+        "directional_oscillation_total": 26,
+        "worst_identical_observation_streak": 7,
+        "false_goal_events": 0
+      },
+      "ALWAYS_UP": {
+        "successes": 0,
+        "episodes": 4,
+        "success_rate": 0.0,
+        "mean_success_decisions": null,
+        "unknown_observation_fraction": 0.9583,
+        "mean_dominant_action_fraction": 1.0,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 2,
+        "false_goal_events": 0
+      },
+      "SCRIPTED": {
+        "successes": 0,
+        "episodes": 4,
+        "success_rate": 0.0,
+        "mean_success_decisions": null,
+        "unknown_observation_fraction": 0.9583,
+        "mean_dominant_action_fraction": 0.9167,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 1,
+        "false_goal_events": 0
+      },
+      "BC_3NN_CENTER_WEST_ABLATION": {
+        "successes": 2,
+        "episodes": 4,
+        "success_rate": 0.5,
+        "mean_success_decisions": 21.0,
+        "unknown_observation_fraction": 0.9669,
+        "mean_dominant_action_fraction": 0.8809,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 1,
+        "false_goal_events": 0
+      },
+      "BC_3NN_MULTI_START": {
+        "successes": 4,
+        "episodes": 4,
+        "success_rate": 1.0,
+        "mean_success_decisions": 21.0,
+        "unknown_observation_fraction": 0.9381,
+        "mean_dominant_action_fraction": 0.8095,
+        "directional_oscillation_total": 4,
+        "worst_identical_observation_streak": 1,
+        "false_goal_events": 0
+      },
+      "BC_TEMPORAL_3NN": {
+        "successes": 4,
+        "episodes": 4,
+        "success_rate": 1.0,
+        "mean_success_decisions": 21.0,
+        "unknown_observation_fraction": 0.9381,
+        "mean_dominant_action_fraction": 0.8095,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 1,
+        "false_goal_events": 0
+      },
+      "BC_BALANCED_LINEAR": {
+        "successes": 4,
+        "episodes": 4,
+        "success_rate": 1.0,
+        "mean_success_decisions": 21.0,
+        "unknown_observation_fraction": 0.9381,
+        "mean_dominant_action_fraction": 0.7857,
+        "directional_oscillation_total": 0,
+        "worst_identical_observation_streak": 1,
+        "false_goal_events": 0
+      }
+    }
+  },
+  "validation_model_results": {
+    "IDLE": {
+      "successes": 0,
+      "episodes": 4,
+      "success_rate": 0.0,
+      "mean_success_decisions": null,
+      "unknown_observation_fraction": 0.3948,
+      "mean_dominant_action_fraction": 1.0,
+      "directional_oscillation_total": 0,
+      "worst_identical_observation_streak": 1,
+      "false_goal_events": 0
+    },
+    "SEEDED_RANDOM": {
+      "successes": 0,
+      "episodes": 4,
+      "success_rate": 0.0,
+      "mean_success_decisions": null,
+      "unknown_observation_fraction": 0.9875,
+      "mean_dominant_action_fraction": 0.3438,
+      "directional_oscillation_total": 30,
+      "worst_identical_observation_streak": 5,
+      "false_goal_events": 0
+    },
+    "ALWAYS_UP": {
+      "successes": 0,
+      "episodes": 4,
+      "success_rate": 0.0,
+      "mean_success_decisions": null,
+      "unknown_observation_fraction": 0.9833,
+      "mean_dominant_action_fraction": 1.0,
+      "directional_oscillation_total": 0,
+      "worst_identical_observation_streak": 2,
+      "false_goal_events": 0
+    },
+    "SCRIPTED": {
+      "successes": 0,
+      "episodes": 4,
+      "success_rate": 0.0,
+      "mean_success_decisions": null,
+      "unknown_observation_fraction": 0.9729,
+      "mean_dominant_action_fraction": 0.8333,
+      "directional_oscillation_total": 0,
+      "worst_identical_observation_streak": 1,
+      "false_goal_events": 0
+    },
+    "BC_3NN_CENTER_WEST_ABLATION": {
+      "successes": 0,
+      "episodes": 4,
+      "success_rate": 0.0,
+      "mean_success_decisions": null,
+      "unknown_observation_fraction": 0.4916,
+      "mean_dominant_action_fraction": 0.9271,
+      "directional_oscillation_total": 0,
+      "worst_identical_observation_streak": 2,
+      "false_goal_events": 0
+    },
+    "BC_3NN_MULTI_START": {
+      "successes": 0,
+      "episodes": 4,
+      "success_rate": 0.0,
+      "mean_success_decisions": null,
+      "unknown_observation_fraction": 0.3948,
+      "mean_dominant_action_fraction": 1.0,
+      "directional_oscillation_total": 0,
+      "worst_identical_observation_streak": 1,
+      "false_goal_events": 0
+    },
+    "BC_TEMPORAL_3NN": {
+      "successes": 0,
+      "episodes": 4,
+      "success_rate": 0.0,
+      "mean_success_decisions": null,
+      "unknown_observation_fraction": 0.3948,
+      "mean_dominant_action_fraction": 1.0,
+      "directional_oscillation_total": 0,
+      "worst_identical_observation_streak": 1,
+      "false_goal_events": 0
+    },
+    "BC_BALANCED_LINEAR": {
+      "successes": 0,
+      "episodes": 4,
+      "success_rate": 0.0,
+      "mean_success_decisions": null,
+      "unknown_observation_fraction": 0.3948,
+      "mean_dominant_action_fraction": 1.0,
+      "directional_oscillation_total": 0,
+      "worst_identical_observation_streak": 1,
+      "false_goal_events": 0
+    }
+  },
+  "validation_selection": {
+    "policy": null,
+    "status": "no_learned_policy_succeeded_on_validation"
+  },
+  "final_test_results": {
+    "IDLE": {
+      "successes": 0,
+      "episodes": 4,
+      "success_rate": 0.0,
+      "mean_success_decisions": null,
+      "unknown_observation_fraction": 0.7896,
+      "mean_dominant_action_fraction": 1.0,
+      "directional_oscillation_total": 0,
+      "worst_identical_observation_streak": 1,
+      "false_goal_events": 0,
+      "per_start": {
+        "east_south": {
+          "successes": 0,
+          "episodes": 2,
+          "success_rate": 0.0,
+          "decision_counts": [
+            48,
+            48
+          ],
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 96,
+            "UP": 0,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 0
+          },
+          "unknown_observation_fraction": 0.7896,
+          "mean_dominant_action_fraction": 1.0,
+          "directional_oscillation_count": 0,
+          "max_identical_macro_observation_streak": 1
+        },
+        "west_south": {
+          "successes": 0,
+          "episodes": 2,
+          "success_rate": 0.0,
+          "decision_counts": [
+            48,
+            48
+          ],
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 96,
+            "UP": 0,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 0
+          },
+          "unknown_observation_fraction": 0.7896,
+          "mean_dominant_action_fraction": 1.0,
+          "directional_oscillation_count": 0,
+          "max_identical_macro_observation_streak": 1
+        }
+      }
+    },
+    "SEEDED_RANDOM": {
+      "successes": 0,
+      "episodes": 4,
+      "success_rate": 0.0,
+      "mean_success_decisions": null,
+      "unknown_observation_fraction": 0.976,
+      "mean_dominant_action_fraction": 0.3073,
+      "directional_oscillation_total": 26,
+      "worst_identical_observation_streak": 7,
+      "false_goal_events": 0,
+      "per_start": {
+        "east_south": {
+          "successes": 0,
+          "episodes": 2,
+          "success_rate": 0.0,
+          "decision_counts": [
+            48,
+            48
+          ],
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 25,
+            "DOWN": 20,
+            "LEFT": 26,
+            "RIGHT": 25
+          },
+          "unknown_observation_fraction": 0.9865,
+          "mean_dominant_action_fraction": 0.3229,
+          "directional_oscillation_count": 11,
+          "max_identical_macro_observation_streak": 3
+        },
+        "west_south": {
+          "successes": 0,
+          "episodes": 2,
+          "success_rate": 0.0,
+          "decision_counts": [
+            48,
+            48
+          ],
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 21,
+            "DOWN": 23,
+            "LEFT": 25,
+            "RIGHT": 27
+          },
+          "unknown_observation_fraction": 0.9656,
+          "mean_dominant_action_fraction": 0.2916,
+          "directional_oscillation_count": 15,
+          "max_identical_macro_observation_streak": 7
+        }
+      }
+    },
+    "ALWAYS_UP": {
+      "successes": 0,
+      "episodes": 4,
+      "success_rate": 0.0,
+      "mean_success_decisions": null,
+      "unknown_observation_fraction": 0.9583,
+      "mean_dominant_action_fraction": 1.0,
+      "directional_oscillation_total": 0,
+      "worst_identical_observation_streak": 2,
+      "false_goal_events": 0,
+      "per_start": {
+        "east_south": {
+          "successes": 0,
+          "episodes": 2,
+          "success_rate": 0.0,
+          "decision_counts": [
+            48,
+            48
+          ],
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 96,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 0
+          },
+          "unknown_observation_fraction": 0.9833,
+          "mean_dominant_action_fraction": 1.0,
+          "directional_oscillation_count": 0,
+          "max_identical_macro_observation_streak": 2
+        },
+        "west_south": {
+          "successes": 0,
+          "episodes": 2,
+          "success_rate": 0.0,
+          "decision_counts": [
+            48,
+            48
+          ],
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 96,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 0
+          },
+          "unknown_observation_fraction": 0.9333,
+          "mean_dominant_action_fraction": 1.0,
+          "directional_oscillation_count": 0,
+          "max_identical_macro_observation_streak": 2
+        }
+      }
+    },
+    "SCRIPTED": {
+      "successes": 0,
+      "episodes": 4,
+      "success_rate": 0.0,
+      "mean_success_decisions": null,
+      "unknown_observation_fraction": 0.9583,
+      "mean_dominant_action_fraction": 0.9167,
+      "directional_oscillation_total": 0,
+      "worst_identical_observation_streak": 1,
+      "false_goal_events": 0,
+      "per_start": {
+        "east_south": {
+          "successes": 0,
+          "episodes": 2,
+          "success_rate": 0.0,
+          "decision_counts": [
+            48,
+            48
+          ],
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 88,
+            "DOWN": 0,
+            "LEFT": 8,
+            "RIGHT": 0
+          },
+          "unknown_observation_fraction": 0.9833,
+          "mean_dominant_action_fraction": 0.9167,
+          "directional_oscillation_count": 0,
+          "max_identical_macro_observation_streak": 1
+        },
+        "west_south": {
+          "successes": 0,
+          "episodes": 2,
+          "success_rate": 0.0,
+          "decision_counts": [
+            48,
+            48
+          ],
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 88,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 8
+          },
+          "unknown_observation_fraction": 0.9333,
+          "mean_dominant_action_fraction": 0.9167,
+          "directional_oscillation_count": 0,
+          "max_identical_macro_observation_streak": 1
+        }
+      }
+    },
+    "BC_3NN_CENTER_WEST_ABLATION": {
+      "successes": 2,
+      "episodes": 4,
+      "success_rate": 0.5,
+      "mean_success_decisions": 21.0,
+      "unknown_observation_fraction": 0.9669,
+      "mean_dominant_action_fraction": 0.8809,
+      "directional_oscillation_total": 0,
+      "worst_identical_observation_streak": 1,
+      "false_goal_events": 0,
+      "per_start": {
+        "east_south": {
+          "successes": 0,
+          "episodes": 2,
+          "success_rate": 0.0,
+          "decision_counts": [
+            48,
+            48
+          ],
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 0,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 96
+          },
+          "unknown_observation_fraction": 0.9958,
+          "mean_dominant_action_fraction": 1.0,
+          "directional_oscillation_count": 0,
+          "max_identical_macro_observation_streak": 1
+        },
+        "west_south": {
+          "successes": 2,
+          "episodes": 2,
+          "success_rate": 1.0,
+          "decision_counts": [
+            21,
+            21
+          ],
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 32,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 10
+          },
+          "unknown_observation_fraction": 0.9381,
+          "mean_dominant_action_fraction": 0.7619,
+          "directional_oscillation_count": 0,
+          "max_identical_macro_observation_streak": 1
+        }
+      }
+    },
+    "BC_3NN_MULTI_START": {
+      "successes": 4,
+      "episodes": 4,
+      "success_rate": 1.0,
+      "mean_success_decisions": 21.0,
+      "unknown_observation_fraction": 0.9381,
+      "mean_dominant_action_fraction": 0.8095,
+      "directional_oscillation_total": 4,
+      "worst_identical_observation_streak": 1,
+      "false_goal_events": 0,
+      "per_start": {
+        "east_south": {
+          "successes": 2,
+          "episodes": 2,
+          "success_rate": 1.0,
+          "decision_counts": [
+            21,
+            21
+          ],
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 34,
+            "DOWN": 0,
+            "LEFT": 8,
+            "RIGHT": 0
+          },
+          "unknown_observation_fraction": 0.9381,
+          "mean_dominant_action_fraction": 0.8095,
+          "directional_oscillation_count": 2,
+          "max_identical_macro_observation_streak": 1
+        },
+        "west_south": {
+          "successes": 2,
+          "episodes": 2,
+          "success_rate": 1.0,
+          "decision_counts": [
+            21,
+            21
+          ],
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 34,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 8
+          },
+          "unknown_observation_fraction": 0.9381,
+          "mean_dominant_action_fraction": 0.8095,
+          "directional_oscillation_count": 2,
+          "max_identical_macro_observation_streak": 1
+        }
+      }
+    },
+    "BC_TEMPORAL_3NN": {
+      "successes": 4,
+      "episodes": 4,
+      "success_rate": 1.0,
+      "mean_success_decisions": 21.0,
+      "unknown_observation_fraction": 0.9381,
+      "mean_dominant_action_fraction": 0.8095,
+      "directional_oscillation_total": 0,
+      "worst_identical_observation_streak": 1,
+      "false_goal_events": 0,
+      "per_start": {
+        "east_south": {
+          "successes": 2,
+          "episodes": 2,
+          "success_rate": 1.0,
+          "decision_counts": [
+            21,
+            21
+          ],
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 34,
+            "DOWN": 0,
+            "LEFT": 8,
+            "RIGHT": 0
+          },
+          "unknown_observation_fraction": 0.9381,
+          "mean_dominant_action_fraction": 0.8095,
+          "directional_oscillation_count": 0,
+          "max_identical_macro_observation_streak": 1
+        },
+        "west_south": {
+          "successes": 2,
+          "episodes": 2,
+          "success_rate": 1.0,
+          "decision_counts": [
+            21,
+            21
+          ],
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 34,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 8
+          },
+          "unknown_observation_fraction": 0.9381,
+          "mean_dominant_action_fraction": 0.8095,
+          "directional_oscillation_count": 0,
+          "max_identical_macro_observation_streak": 1
+        }
+      }
+    },
+    "BC_BALANCED_LINEAR": {
+      "successes": 4,
+      "episodes": 4,
+      "success_rate": 1.0,
+      "mean_success_decisions": 21.0,
+      "unknown_observation_fraction": 0.9381,
+      "mean_dominant_action_fraction": 0.7857,
+      "directional_oscillation_total": 0,
+      "worst_identical_observation_streak": 1,
+      "false_goal_events": 0,
+      "per_start": {
+        "east_south": {
+          "successes": 2,
+          "episodes": 2,
+          "success_rate": 1.0,
+          "decision_counts": [
+            21,
+            21
+          ],
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 32,
+            "DOWN": 0,
+            "LEFT": 10,
+            "RIGHT": 0
+          },
+          "unknown_observation_fraction": 0.9381,
+          "mean_dominant_action_fraction": 0.7619,
+          "directional_oscillation_count": 0,
+          "max_identical_macro_observation_streak": 1
+        },
+        "west_south": {
+          "successes": 2,
+          "episodes": 2,
+          "success_rate": 1.0,
+          "decision_counts": [
+            21,
+            21
+          ],
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 34,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 8
+          },
+          "unknown_observation_fraction": 0.9381,
+          "mean_dominant_action_fraction": 0.8095,
+          "directional_oscillation_count": 0,
+          "max_identical_macro_observation_streak": 1
+        }
+      }
+    }
+  },
+  "imitation_assessment": {
+    "demonstrated_start_ids": [
+      "center",
+      "west_near",
+      "west_far",
+      "east_near",
+      "east_far",
+      "south_near",
+      "south_far"
+    ],
+    "held_out_start_ids": [
+      "east_south",
+      "west_south"
+    ],
+    "final_test_scope": true,
+    "training_start_count": 7,
+    "training_start_successes": 7,
+    "training_start_success_with_turns": true,
+    "held_out_count": 2,
+    "held_out_successes": 2,
+    "held_out_always_up_successes": 0,
+    "held_out_turn_challenge_ids": [
+      "east_south",
+      "west_south"
+    ],
+    "best_learned_policy": "BC_3NN_MULTI_START",
+    "held_out_turn_imitation_successes": 2,
+    "held_out_turn_success_ids": [
+      "east_south",
+      "west_south"
+    ],
+    "held_out_policy_comparison": {
+      "BC_3NN_CENTER_WEST_ABLATION": {
+        "episodes": 4,
+        "successes": 2,
+        "turn_challenge_success_ids": [
+          "west_south"
+        ]
+      },
+      "BC_3NN_MULTI_START": {
+        "episodes": 4,
+        "successes": 4,
+        "turn_challenge_success_ids": [
+          "east_south",
+          "west_south"
+        ]
+      },
+      "BC_TEMPORAL_3NN": {
+        "episodes": 4,
+        "successes": 4,
+        "turn_challenge_success_ids": [
+          "east_south",
+          "west_south"
+        ]
+      },
+      "BC_BALANCED_LINEAR": {
+        "episodes": 4,
+        "successes": 4,
+        "turn_challenge_success_ids": [
+          "east_south",
+          "west_south"
+        ]
+      }
+    },
+    "held_out_beats_always_up": true,
+    "claim": "learned_policy_succeeded_on_multiple_held_out_turning_start_families"
+  },
+  "negative_controls": {
+    "status_menu": {
+      "confirmed_scenes": [
+        "cornelia_exterior_field",
+        "menu"
+      ],
+      "false_castle_scene_transitions": 0,
+      "castle_entry_events": 0
+    }
+  },
+  "resource": {
+    "elapsed_seconds": 370.529,
+    "episodes": 120,
+    "rl_timesteps": 0,
+    "replicates_per_validation_or_test_start": 2
+  },
+  "claim": "learned_policy_succeeded_on_multiple_held_out_turning_start_families",
+  "limitations": [
+    "All starts derive from one official save and one outdoor map; they are reproducible view states, not independent maps or exact coordinates.",
+    "Validation routes failed for every tested policy. The two frozen final route families each have two repeats; this is promising feasibility evidence, not broad statistical generalization.",
+    "Policies use screen observations only; no coordinates, RAM progress signals, rewards, or RL timesteps were used.",
+    "The best final-test comparator is reported after evaluating all predeclared variants; it was not selected using validation success."
+  ]
+}

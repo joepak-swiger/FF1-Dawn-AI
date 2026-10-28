@@ -1,0 +1,182 @@
+{
+  "run_id": "20261028_155424_893532Z",
+  "source_benchmark_run_id": "20261028_153708_566851Z",
+  "official_party_checkpoint_run_id": "20261028_001816_066107Z",
+  "demonstrations_recollected": 7,
+  "successful_demonstration_count": 7,
+  "supervised_decisions": 127,
+  "training_start_ids": [
+    "center",
+    "west_near",
+    "west_far",
+    "east_near",
+    "east_far",
+    "south_near",
+    "south_far"
+  ],
+  "frozen_test_start_ids": [
+    "east_south",
+    "west_south"
+  ],
+  "methods": "3-NN supervised behavior cloning; perturbations apply the opposite of the current policy suggestion, then return control to that same policy; no expert labels on perturbed states, no DAgger, no RL",
+  "perturbation_results": {
+    "0_wrong_moves": {
+      "successes": 4,
+      "episodes": 4,
+      "per_start": {
+        "east_south": {
+          "successes": 2,
+          "episodes": 2,
+          "decisions_to_goal": [
+            21,
+            21
+          ],
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 34,
+            "DOWN": 0,
+            "LEFT": 8,
+            "RIGHT": 0
+          }
+        },
+        "west_south": {
+          "successes": 2,
+          "episodes": 2,
+          "decisions_to_goal": [
+            21,
+            21
+          ],
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 34,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 8
+          }
+        }
+      },
+      "directional_oscillation_total": 4,
+      "unknown_observation_frames": 788,
+      "stalled_episode_count": 0,
+      "mean_dominant_action_fraction": 0.8095
+    },
+    "1_wrong_moves": {
+      "successes": 4,
+      "episodes": 4,
+      "per_start": {
+        "east_south": {
+          "successes": 2,
+          "episodes": 2,
+          "decisions_to_goal": [
+            25,
+            25
+          ],
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 34,
+            "DOWN": 0,
+            "LEFT": 14,
+            "RIGHT": 2
+          }
+        },
+        "west_south": {
+          "successes": 2,
+          "episodes": 2,
+          "decisions_to_goal": [
+            25,
+            25
+          ],
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 34,
+            "DOWN": 0,
+            "LEFT": 2,
+            "RIGHT": 14
+          }
+        }
+      },
+      "directional_oscillation_total": 0,
+      "unknown_observation_frames": 892,
+      "stalled_episode_count": 0,
+      "mean_dominant_action_fraction": 0.68
+    },
+    "2_wrong_moves": {
+      "successes": 0,
+      "episodes": 4,
+      "per_start": {
+        "east_south": {
+          "successes": 0,
+          "episodes": 2,
+          "decisions_to_goal": [],
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 70,
+            "DOWN": 0,
+            "LEFT": 24,
+            "RIGHT": 6
+          }
+        },
+        "west_south": {
+          "successes": 0,
+          "episodes": 2,
+          "decisions_to_goal": [],
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 68,
+            "DOWN": 0,
+            "LEFT": 4,
+            "RIGHT": 28
+          }
+        }
+      },
+      "directional_oscillation_total": 4,
+      "unknown_observation_frames": 1992,
+      "stalled_episode_count": 0,
+      "mean_dominant_action_fraction": 0.69
+    },
+    "4_wrong_moves": {
+      "successes": 2,
+      "episodes": 4,
+      "per_start": {
+        "east_south": {
+          "successes": 2,
+          "episodes": 2,
+          "decisions_to_goal": [
+            28,
+            28
+          ],
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 32,
+            "DOWN": 0,
+            "LEFT": 16,
+            "RIGHT": 8
+          }
+        },
+        "west_south": {
+          "successes": 0,
+          "episodes": 2,
+          "decisions_to_goal": [],
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 0,
+            "DOWN": 0,
+            "LEFT": 104,
+            "RIGHT": 0
+          }
+        }
+      },
+      "directional_oscillation_total": 0,
+      "unknown_observation_frames": 1558,
+      "stalled_episode_count": 0,
+      "mean_dominant_action_fraction": 0.7857
+    }
+  },
+  "elapsed_seconds": 33.624,
+  "rl_timesteps": 0,
+  "limitations": [
+    "Perturbations are a bounded adversarial stress test on two previously tested route families, not new held-out routes.",
+    "Success only means two-frame Castle Cornelia detector confirmation.",
+    "No coordinates, RAM-derived labels, progress rewards, or model weights are published."
+  ]
+}
