@@ -97,6 +97,27 @@ performed or tested here.
   field return. Package reviewed results with
   `scripts/package_gba_castle_evidence.py`; keep raw traces, native states,
   ROMs, and full run directories local.
+- Raw one-frame scene matches from `CastleCorneliaDetector` are candidates,
+  never confirmed events. Use `SceneConfirmationGate` with two distinct
+  consecutive emulator observations; reset it on every episode reset. A
+  first Castle-entry event is valid only after the exterior field was
+  confirmed first. Unknown/fade/mismatching frames clear the match streak.
+- `SceneAnchorClassifier` recognizes only its reviewed Cornelia exterior,
+  Cornelia town title, Castle Cornelia 1F title, and party/status menu anchors.
+  It returns `unknown` elsewhere. The exterior template allows a bounded
+  vertical camera shift, not coordinate inference. Keep title/new-game,
+  transition, menu, and town negative controls in regression tests; summarize
+  results by independent episode rather than correlated frames.
+- Run `scripts/gba_scene_eval.py` for the bounded fresh-reset Castle
+  entry/exit, seeded-town, and menu checks. The base `FF1GbaEnv` must stay
+  reward-neutral. `FirstCastleEntryReward` is a separately constructed,
+  disabled-by-default sparse wrapper for only the first confirmed
+  exterior-to-Castle event; never use it until the scene gate tests pass.
+  `scripts/gba_castle_learning_smoke.py` is capped at 4,096 PPO steps and is a
+  feasibility smoke, not proof of learned navigation. Compare against the
+  scripted route, random, and idle. Do not commit local PPO weights or raw
+  traces; publish compact reports with
+  `scripts/package_gba_scene_learning_evidence.py`.
 - RAM bytes `0x33FC` and `0x3404` are still provisional. The pair `226/230`
   was observed on both Castle Cornelia 1F and the separate Cornelia town
   screen, so neither byte nor the pair is a unique castle-entry signal.

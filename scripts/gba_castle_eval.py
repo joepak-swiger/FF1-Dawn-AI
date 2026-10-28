@@ -98,7 +98,7 @@ def run(checkpoint: Path, reference: Path, *, repeats: int = 3, horizon: int = 1
         prev_frame = frame
         for step_no, action in enumerate(actions, 1):
             frame, row = step(trial_id, step_no, action)
-            if row["status"] == "confirmed":
+            if row["status"] == "candidate":
                 first_candidate = step_no if first_candidate is None else first_candidate
                 consecutive += 1
                 if consecutive >= 2 and confirmed_at is None:
@@ -107,7 +107,7 @@ def run(checkpoint: Path, reference: Path, *, repeats: int = 3, horizon: int = 1
                 consecutive = 0
             if save_proof and (step_no in {1, 8, 32, 64, 96, 112, 120, 124, 126, 127, 128, 129, 130, 132, 144, 160, horizon}
                                or 108 <= step_no <= 132
-                               or (row["status"] == "confirmed" and consecutive <= 2)):
+                               or (row["status"] == "candidate" and consecutive <= 2)):
                 name = f"{trial_id}_step_{step_no:03d}.png"
                 Image.fromarray(frame).save(out / name)
                 if step_no in {max(1, (first_candidate or step_no) - 1), first_candidate, confirmed_at}:
@@ -146,7 +146,7 @@ def run(checkpoint: Path, reference: Path, *, repeats: int = 3, horizon: int = 1
         entry_streak = 0
         for entry_step in range(1, horizon + 1):
             exit_frame, row = step("castle_exit_test_entry", entry_step, "UP")
-            entry_streak = entry_streak + 1 if row["status"] == "confirmed" else 0
+            entry_streak = entry_streak + 1 if row["status"] == "candidate" else 0
             if entry_streak >= 2:
                 exit_test["castle_entry_confirmed"] = True
                 exit_test["castle_entry_confirmation_step"] = entry_step
@@ -155,11 +155,11 @@ def run(checkpoint: Path, reference: Path, *, repeats: int = 3, horizon: int = 1
         if exit_test["castle_entry_confirmed"]:
             for settle_step in range(1, 5):
                 exit_frame, _ = step("castle_exit_test_settle", settle_step, "NOOP")
-            exit_test["castle_start_frame_title_match"] = detector.classify(exit_frame).reached
+            exit_test["castle_start_frame_title_match"] = detector.classify(exit_frame).matched
             absent_streak = 0
             for exit_step in range(1, 129):
                 exit_frame, row = step("castle_exit_test_down", exit_step, "DOWN")
-                absent_streak = absent_streak + 1 if row["status"] != "confirmed" else 0
+                absent_streak = absent_streak + 1 if row["status"] != "candidate" else 0
                 if exit_step in (1, 8, 16, 24, 32, 48, 56, 58, 64, 72, 80, 96, 128) or (absent_streak and absent_streak <= 2):
                     Image.fromarray(exit_frame).save(out / f"castle_exit_test_down_{exit_step:03d}.png")
                 if absent_streak >= 8 and "first_sustained_title_absence_step" not in exit_test:
@@ -184,7 +184,7 @@ def run(checkpoint: Path, reference: Path, *, repeats: int = 3, horizon: int = 1
                 if i in (8, 32, 64):
                     proof_frames.append((f"START control {i}f", frame.copy()))
         menu_rows = [r for r in rows if r["trial"] == "start_menu_control"]
-        menu_positive_count = sum(r["status"] == "confirmed" for r in menu_rows)
+        menu_positive_count = sum(r["status"] == "candidate" for r in menu_rows)
 
         # Per-frame reversal timing diagnostic: 8 UP then direction reversal,
         # varying neutral-release intervals and comparing with a matched idle.
@@ -254,10 +254,10 @@ def run(checkpoint: Path, reference: Path, *, repeats: int = 3, horizon: int = 1
         # Compare candidate RAM byte pairs only against the independent visual
         # title match. This is a descriptive differential, not address meaning.
         castle_pairs = sorted({(r["ram_0x33FC"], r["ram_0x3404"]) for r in rows
-                               if r["status"] == "confirmed"})
+                               if r["label"] == "castle_cornelia_1f"})
         noncastle_pair_counts: dict[str, int] = {}
         for r in rows:
-            if r["status"] != "confirmed":
+            if r["label"] != "castle_cornelia_1f":
                 key = f"{r['ram_0x33FC']}/{r['ram_0x3404']}"
                 noncastle_pair_counts[key] = noncastle_pair_counts.get(key, 0) + 1
         candidate_pair_collisions = {
@@ -266,7 +266,7 @@ def run(checkpoint: Path, reference: Path, *, repeats: int = 3, horizon: int = 1
         }
         control_prefixes = ("seeded_random_", "idle_", "side_down_", "start_menu_control")
         negative_control_rows = [r for r in rows if r["trial"].startswith(control_prefixes)]
-        control_false_positive_count = sum(r["status"] == "confirmed" for r in negative_control_rows)
+        control_false_positive_count = sum(r["label"] == "castle_cornelia_1f" for r in negative_control_rows)
 
         # package compact proof contact sheet
         cols, tile_w, tile_h = 3, 260, 190
@@ -302,6 +302,7 @@ def run(checkpoint: Path, reference: Path, *, repeats: int = 3, horizon: int = 1
                                      "independent_evidence": "static in-game floor-title UI anchor from previously reviewed scene",
                                      "threshold": detector.threshold,
                                      "confirm_consecutive_frames": 2,
+                                     "single_frame_status": "candidate; never confirmed by primitive classifier",
                                      "ram_used_for_classification": False,
                                      "nonmatch_label": "unknown"},
             "policy_summary": summary,
@@ -315,7 +316,7 @@ def run(checkpoint: Path, reference: Path, *, repeats: int = 3, horizon: int = 1
                                     "castle_false_positive_frames": control_false_positive_count,
                                     "castle_false_positive_rate": control_false_positive_count / max(1, len(negative_control_rows))},
             "ram_candidate_label_differential": {
-                "castle_confirmed_pairs_0x33fc_0x3404": [list(pair) for pair in castle_pairs],
+                "castle_candidate_pairs_0x33fc_0x3404": [list(pair) for pair in castle_pairs],
                 "same_pair_count_in_noncastle_or_uncertain_frames": candidate_pair_collisions,
                 "interpretation": "empirical values grouped only by independent title-anchor result; not coordinate/map-ID validation"},
             "reversal_8_frame_release_diagnostic": reversal,
