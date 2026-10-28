@@ -1,0 +1,337 @@
+{
+  "run_id": "20261028_052724_624774Z",
+  "checkpoint_run_id": "20261028_001816_066107Z",
+  "checkpoint_unchanged": true,
+  "reset_observations_identical": true,
+  "reset_count": 67,
+  "destination_detector": {
+    "target": "Castle Cornelia 1F",
+    "independent_evidence": "static in-game floor-title UI anchor from previously reviewed scene",
+    "threshold": 0.985,
+    "confirm_consecutive_frames": 2,
+    "ram_used_for_classification": false,
+    "nonmatch_label": "unknown"
+  },
+  "policy_summary": {
+    "SCRIPTED_UP": {
+      "trials": 3,
+      "successes": 3,
+      "success_rate": 1.0,
+      "median_actions_to_confirmed_entry": 121.0,
+      "action_counts": {
+        "UP": 375,
+        "DOWN": 0,
+        "LEFT": 0,
+        "RIGHT": 0,
+        "NOOP": 0
+      }
+    },
+    "SEEDED_RANDOM": {
+      "trials": 12,
+      "successes": 0,
+      "success_rate": 0.0,
+      "median_actions_to_confirmed_entry": null,
+      "action_counts": {
+        "UP": 569,
+        "DOWN": 574,
+        "LEFT": 591,
+        "RIGHT": 570,
+        "NOOP": 0
+      }
+    },
+    "IDLE": {
+      "trials": 3,
+      "successes": 0,
+      "success_rate": 0.0,
+      "median_actions_to_confirmed_entry": null,
+      "action_counts": {
+        "UP": 0,
+        "DOWN": 0,
+        "LEFT": 0,
+        "RIGHT": 0,
+        "NOOP": 576
+      }
+    },
+    "SIDE_DOWN": {
+      "trials": 3,
+      "successes": 0,
+      "success_rate": 0.0,
+      "median_actions_to_confirmed_entry": null,
+      "action_counts": {
+        "UP": 0,
+        "DOWN": 576,
+        "LEFT": 0,
+        "RIGHT": 0,
+        "NOOP": 0
+      }
+    }
+  },
+  "all_control_screens": {
+    "frames_checked": 3539,
+    "castle_false_positive_frames": 0,
+    "castle_false_positive_rate": 0.0
+  },
+  "start_menu_control": {
+    "frames_checked": 65,
+    "false_positive_frames": 0,
+    "false_positive_rate": 0.0,
+    "screenshots_retained_at_frames": [
+      8,
+      16,
+      32,
+      64
+    ]
+  },
+  "castle_entry_transition_samples": [
+    {
+      "step": 119,
+      "label": "unknown",
+      "status": "uncertain",
+      "confidence": 0.981583
+    },
+    {
+      "step": 120,
+      "label": "castle_cornelia_1f",
+      "status": "confirmed",
+      "confidence": 0.995346
+    },
+    {
+      "step": 121,
+      "label": "castle_cornelia_1f",
+      "status": "confirmed",
+      "confidence": 0.989776
+    }
+  ],
+  "castle_exit_test": {
+    "castle_entry_confirmed": true,
+    "castle_title_absence_sustained": true,
+    "field_return_confirmed": false,
+    "castle_entry_confirmation_step": 121,
+    "castle_start_frame_title_match": true,
+    "first_sustained_title_absence_step": 58,
+    "down_actions_to_title_absence": 58,
+    "final_detector_label": "unknown",
+    "final_ram_candidates": {
+      "0x33FC": 132,
+      "0x3404": 164
+    },
+    "bounded_down_actions_after_entry": 128,
+    "visual_review_required": true
+  },
+  "field_return_visual_review": {
+    "reviewed": true,
+    "result": "overworld exterior visually confirmed at 80 DOWN frames after castle entry",
+    "automated_field_detector": false
+  },
+  "ram_candidate_label_differential": {
+    "castle_confirmed_pairs_0x33fc_0x3404": [
+      [
+        226,
+        230
+      ]
+    ],
+    "same_pair_count_in_noncastle_or_uncertain_frames": {
+      "226/230": 127
+    },
+    "interpretation": "empirical values grouped only by independent title-anchor result; not coordinate/map-ID validation"
+  },
+  "ram_counterexample": {
+    "policy": "seeded random",
+    "seed": 110,
+    "step": 128,
+    "independent_visual_label": "Cornelia town screen (not Castle Cornelia 1F)",
+    "detector_result": {
+      "label": "unknown",
+      "status": "no_match",
+      "confidence": 0.721641
+    },
+    "candidate_values": {
+      "0x33FC": 226,
+      "0x3404": 230
+    },
+    "interpretation": "counterexample to either offset or pair serving as a castle-entry flag; still no address meaning assigned"
+  },
+  "reversal_8_frame_release_summary": {
+    "0": {
+      "repeats": 3,
+      "mean_immediate_return_dy_pixels": 14.028,
+      "mean_settled_return_dy_pixels": 16.005,
+      "mean_matched_idle_dy_pixels": -0.003
+    },
+    "1": {
+      "repeats": 3,
+      "mean_immediate_return_dy_pixels": 14.993,
+      "mean_settled_return_dy_pixels": 0.974,
+      "mean_matched_idle_dy_pixels": -0.003
+    },
+    "2": {
+      "repeats": 3,
+      "mean_immediate_return_dy_pixels": 15.956,
+      "mean_settled_return_dy_pixels": 0.004,
+      "mean_matched_idle_dy_pixels": -0.003
+    },
+    "4": {
+      "repeats": 3,
+      "mean_immediate_return_dy_pixels": 14.057,
+      "mean_settled_return_dy_pixels": 0.004,
+      "mean_matched_idle_dy_pixels": -0.002
+    },
+    "8": {
+      "repeats": 3,
+      "mean_immediate_return_dy_pixels": 9.969,
+      "mean_settled_return_dy_pixels": 0.004,
+      "mean_matched_idle_dy_pixels": -0.002
+    },
+    "16": {
+      "repeats": 3,
+      "mean_immediate_return_dy_pixels": 9.97,
+      "mean_settled_return_dy_pixels": 0.005,
+      "mean_matched_idle_dy_pixels": -0.002
+    },
+    "32": {
+      "repeats": 3,
+      "mean_immediate_return_dy_pixels": 9.97,
+      "mean_settled_return_dy_pixels": 0.011,
+      "mean_matched_idle_dy_pixels": -0.002
+    }
+  },
+  "down_64_frame_summary": [
+    {
+      "action": "NOOP",
+      "frame": 8,
+      "scene_dx_pixels": -0.002,
+      "scene_dy_pixels": -0.005,
+      "ram_0x33FC": 132,
+      "ram_0x3404": 164
+    },
+    {
+      "action": "NOOP",
+      "frame": 16,
+      "scene_dx_pixels": -0.002,
+      "scene_dy_pixels": -0.005,
+      "ram_0x33FC": 132,
+      "ram_0x3404": 164
+    },
+    {
+      "action": "NOOP",
+      "frame": 24,
+      "scene_dx_pixels": -0.002,
+      "scene_dy_pixels": -0.003,
+      "ram_0x33FC": 132,
+      "ram_0x3404": 164
+    },
+    {
+      "action": "NOOP",
+      "frame": 32,
+      "scene_dx_pixels": -0.001,
+      "scene_dy_pixels": -0.003,
+      "ram_0x33FC": 132,
+      "ram_0x3404": 164
+    },
+    {
+      "action": "NOOP",
+      "frame": 40,
+      "scene_dx_pixels": -0.008,
+      "scene_dy_pixels": -0.002,
+      "ram_0x33FC": 132,
+      "ram_0x3404": 164
+    },
+    {
+      "action": "NOOP",
+      "frame": 48,
+      "scene_dx_pixels": -0.008,
+      "scene_dy_pixels": -0.002,
+      "ram_0x33FC": 132,
+      "ram_0x3404": 164
+    },
+    {
+      "action": "NOOP",
+      "frame": 56,
+      "scene_dx_pixels": -0.009,
+      "scene_dy_pixels": -0.002,
+      "ram_0x33FC": 132,
+      "ram_0x3404": 164
+    },
+    {
+      "action": "NOOP",
+      "frame": 64,
+      "scene_dx_pixels": -0.008,
+      "scene_dy_pixels": -0.002,
+      "ram_0x33FC": 132,
+      "ram_0x3404": 164
+    },
+    {
+      "action": "DOWN",
+      "frame": 8,
+      "scene_dx_pixels": -0.004,
+      "scene_dy_pixels": -6.009,
+      "ram_0x33FC": 132,
+      "ram_0x3404": 164
+    },
+    {
+      "action": "DOWN",
+      "frame": 16,
+      "scene_dx_pixels": 0.01,
+      "scene_dy_pixels": -14.036,
+      "ram_0x33FC": 134,
+      "ram_0x3404": 166
+    },
+    {
+      "action": "DOWN",
+      "frame": 24,
+      "scene_dx_pixels": -0.012,
+      "scene_dy_pixels": -22.022,
+      "ram_0x33FC": 132,
+      "ram_0x3404": 164
+    },
+    {
+      "action": "DOWN",
+      "frame": 32,
+      "scene_dx_pixels": -0.005,
+      "scene_dy_pixels": -29.939,
+      "ram_0x33FC": 134,
+      "ram_0x3404": 166
+    },
+    {
+      "action": "DOWN",
+      "frame": 40,
+      "scene_dx_pixels": 0.013,
+      "scene_dy_pixels": -37.987,
+      "ram_0x33FC": 132,
+      "ram_0x3404": 164
+    },
+    {
+      "action": "DOWN",
+      "frame": 48,
+      "scene_dx_pixels": -0.037,
+      "scene_dy_pixels": -45.973,
+      "ram_0x33FC": 134,
+      "ram_0x3404": 166
+    },
+    {
+      "action": "DOWN",
+      "frame": 56,
+      "scene_dx_pixels": -0.012,
+      "scene_dy_pixels": -47.895,
+      "ram_0x33FC": 132,
+      "ram_0x3404": 164
+    },
+    {
+      "action": "DOWN",
+      "frame": 64,
+      "scene_dx_pixels": -0.008,
+      "scene_dy_pixels": -47.89,
+      "ram_0x33FC": 132,
+      "ram_0x3404": 164
+    }
+  ],
+  "neutral_rewards_only": true,
+  "training_started": false,
+  "limitations": [
+    "The title anchor detects only the named Castle Cornelia 1F screen; other screens remain unknown.",
+    "The detector does not classify battles, menus, title/game-over screens, or general field scenes.",
+    "Scene translation is camera/map pixel motion, not player coordinates or tile units.",
+    "RAM offsets 0x33FC and 0x3404 remain provisional and are not used for landmark classification or rewards.",
+    "The castle-exit field image was visually reviewed; no automated exterior-field detector exists yet."
+  ]
+}
