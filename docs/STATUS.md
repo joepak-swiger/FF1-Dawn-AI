@@ -712,11 +712,72 @@ events and beats seeded-random/idle baselines on more than this one checkpoint.
   `docs/experiments/gba_navigation_imitation/20261028_062140_608666Z/`.
   Detailed data and derived native states remain local/ignored.
 
+### Superseding GBA navigation milestone — held-out turning imitation
+
+PR #12 was merged into `main` at `c3d8509`. A multi-start follow-up experiment
+and recovery stress test are published under
+`docs/experiments/gba_navigation_imitation/20261028_153708_566851Z/` and
+`docs/experiments/gba_navigation_recovery/20261028_155424_893532Z/`. They use
+the unchanged official Seed-party checkpoint and preserve the NES v0.7 model.
+
+- The corpus generator produced 11 unique, reproducible exterior view states
+  from the same checkpoint and map. Every state passed the two-frame field
+  gate after native reload; none was rejected. No tile coordinates or new maps
+  are claimed. The previously failing camera-offset views became classifiable
+  after human visual review and addition of seven small field-only anchor
+  references. The direct-match scene-classifier path now avoids the prior
+  expensive exhaustive offset scan; its sampled offline throughput was about
+  3,037 classifications/second.
+- Frozen split: seven cardinal starts for training; `east_north` and
+  `west_north` for validation; `east_south` and `west_south` for the final
+  turning test. Seven successful scripted cardinal demonstrations supplied
+  127 labeled decisions. East and west examples were both included. No final
+  test actions or checkpoint provenance were provided to policies.
+- Validation failed: every baseline and learned policy scored 0/4 over the two
+  north-diagonal starts and two resets. Thus no model was validation-selected.
+- On the untouched final south-diagonal set, the original center/west-only
+  3-NN scored 2/4 and selected RIGHT for all east-south decisions. Expanded
+  frame 3-NN, three-frame temporal 3-NN, and balanced linear imitation each
+  scored 4/4 (2/2 on each start). Always-UP, idle, seeded random, and the
+  provenance-based scripted baseline each scored 0/4. Each successful expanded
+  frame 3-NN episode used four corrective LEFT actions then 17 UP from
+  east-south, or four RIGHT then 17 UP from west-south; Castle was confirmed
+  at decision 21. This meets the narrow turning-generalization criterion for
+  these two route families, not broad exploration or map generalization.
+- Menu negative control produced zero false Castle-entry events. The main
+  benchmark ran 120 evaluation episodes in 370.5 seconds; supervised dataset:
+  127 decisions; RL timesteps: 0. No progress reward or RAM position signal
+  was used. Official checkpoint SHA-256 remained
+  `2BAD13AA73FDEA33661D39F9D1B83E56D2A0936964703EC4195493E1D4607CFF`.
+- The field-anchor classifier returned `unknown` on about 94% of emulator
+  frames in moving final-test rollouts. It retained the reset's confirmed
+  exterior through uncertain frames and the separate two-frame Castle title
+  detector had zero false entries, but this is not adequate coverage for a
+  general scene/visit tracker. The script baseline is a provenance-based
+  comparator, not an optimized expert on diagonal starts.
+- Perturb-and-recover repeated the seven cardinal demonstrations and tested
+  two diagonal starts twice at each disturbance level: 0 wrong moves 4/4; 1
+  wrong move 4/4; 2 wrong moves 0/4; 4 wrong moves 2/4 (east-south 2/2,
+  west-south 0/2). Four wrong west-south moves produced an all-LEFT collapse.
+- The updated run `20261028_160355_758132Z` repeated those 16 episodes in 50.7
+  seconds and added a bounded compound objective: after each confirmed Castle
+  entry, press DOWN and require two consecutive reviewed exterior-anchor
+  matches. All 10/10 Castle-successful episodes confirmed field return. These
+  are the same final-test route families, not new generalization evidence.
+- Published follow-up: `docs/experiments/gba_navigation_recovery/20261028_160355_758132Z/`.
+- Full WSL suite: 92 tests passed. Python compilation and checkpoint dry-run
+passed. The latest recovery/compound run used 16 episodes and 50.7 seconds. All ROMs, save states,
+  native checkpoints, model weights, raw observations and detailed traces stay
+  local; sanitized reports and small screenshots are published.
+
 ### Next GBA milestone
 
-Add a successful east-side demonstration and test a held-out route with a
-different turn sequence. Improve the observation policy or use a short
-curriculum only if it can be evaluated against the same always-UP and scripted
-controls. Do not increase PPO timesteps or add progress rewards until the agent
-beats always-UP from a held-out start that requires a turn. NES v0.7 remains
-untouched.
+Collect expert correction traces from fresh perturbed states, then test recovery
+on new route families and a blocked-terrain challenge with the two-frame Castle
+gate and scene negatives intact. Do not start PPO yet: no policy succeeded on
+validation, robustness failed after two wrong actions, and dynamic field
+classification remains sparse even though Castle entry and field return were
+confirmed for these bounded routes. After repeatable
+recovery on unseen starts, extend to Castle entry → Castle exit → exterior, then
+Cornelia town entry. The next project priority is still actual FF1 gameplay;
+keep NES v0.7 and all prior evidence unchanged.

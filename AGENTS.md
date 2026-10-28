@@ -182,3 +182,48 @@ observed results from hypotheses.
 - Publish only the compact package under
   `docs/experiments/gba_navigation_imitation/<run-id>/`; raw traces, screenshots,
   states, ROMs, and any future model weights remain local.
+
+### GBA navigation generalization update (2026-10-28)
+
+- PR #12 was merged at `c3d8509`. New navigation work branches from current
+  `main`; preserve the verified Seed-party state, prior runs, and NES v0.7.
+- The current corpus builder creates 11 fresh scene-confirmed start views from
+  one official overworld state. Train is seven cardinal route starts,
+  validation is east_north/west_north, and final test is east_south/west_south.
+  These are route-family splits on the same map, not new maps, seeds, or tile
+  coordinates. Scene-anchor reference images have been visually reviewed and
+  may classify scene only; never pass anchor labels, route provenance, or start
+  IDs into a navigation policy.
+- Use `scripts/gba_navigation_imitation.py --max-decisions 48 --replicates 2
+  --publish` for matched baseline/BC comparisons. The current verified run is
+  `20261028_153708_566851Z`: 7/7 cardinal scripted demonstrations, 127 action
+  labels; validation candidates all 0/4; on the two frozen south-diagonal
+  families, expanded frame 3-NN, temporal 3-NN, and balanced linear each
+  succeeded 4/4, while always-UP, idle, random, and the provenance script were
+  0/4. This is narrow supervised turn generalization, not broad autonomous
+  exploration. A validation set with no successes selects no model.
+- `scripts/gba_navigation_recovery.py --source-run-id
+  20261028_153708_566851Z --horizon 48 --repeats 2` performs perturb-and-recover
+  tests. Run `20261028_160355_758132Z` succeeded 4/4 at zero perturbation and
+  4/4 after one wrong move, 0/4 after two, and 2/4 after four (east-south 2/2,
+  west-south 0/2; the latter collapsed to LEFT). This is not DAgger because
+  learner-visited states receive no expert labels. Do not infer robustness
+  beyond the tested states. The same run confirmed the compound Castle-entry →
+  DOWN-to-field return on 10/10 Castle-successful episodes by requiring two
+  consecutive reviewed exterior-anchor matches. These reused final-test route
+  families and are not fresh generalization evidence.
+- The exterior classifier now tries exact matches against reviewed camera-view
+  anchors before a narrow vertical-settling fallback. Keep menu, town, Castle,
+  title, transition and fade negatives. The Castle gate remains a separate
+  two-frame signal. The successful navigation evaluation had zero menu false
+  Castle events; no RAM signal or reward was used. The field classifier was
+  `unknown` on about 94% of emulator frames during movement, so do not use it
+  as a broad field/visit tracker yet; the held reset scene and narrow Castle
+  target gate are what were verified.
+- Future experiment reports must include train/validation/final-test splits,
+  per-policy held-out results and repeated resets, turn action counts, action
+  collapse/stalls, and the validation-selected model (or explicitly `none`).
+  A post-hoc best test candidate must not be presented as validation-selected.
+  Preserve raw data and checkpoints locally; publish only compact sanitized
+  evidence. Keep PPO timesteps at zero until fresh route-family and recovery
+  tests remain reliable.

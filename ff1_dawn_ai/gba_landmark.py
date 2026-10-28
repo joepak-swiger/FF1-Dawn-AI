@@ -98,16 +98,29 @@ class SceneAnchorClassifier:
         return float(min(values))
 
     def _field_score(self, frame: np.ndarray) -> float:
-        """Match three outdoor landmarks with a shared vertical camera shift.
+        """Match three outdoor landmarks, using direct anchors before fallback.
 
-        Prior live exits showed the same Cornelia map scrolling vertically by
-        one pixel per emulator frame during the transition. The bounded
-        translation search is limited to those map templates and is not used
-        to infer position or coordinates.
+        Field templates are manually reviewed views with different camera
+        offsets. Most steady observations should match one directly. Only a
+        near match gets a small vertical-shift fallback, avoiding the old full
+        65-offset scan on every emulator frame. This is scene classification,
+        not a player-position or coordinate estimate.
         """
         best = 0.0
         for reference in self._field_references:
-            for dy in range(-32, 33):
+            direct = min(self._similarity(frame[y0:y1, x0:x1],
+                                          reference[y0:y1, x0:x1])
+                         for x0, y0, x1, y1 in self._field_rois)
+            best = max(best, direct)
+            if best >= 0.999:
+                return best
+        # Do not spend time searching unrelated menu/title/fade frames. The
+        # vertical fallback only addresses modest camera settling near a known
+        # field anchor. Larger camera offsets need a separately reviewed view.
+        if best < self.field_threshold - 0.16:
+            return best
+        for reference in self._field_references:
+            for dy in range(-8, 9):
                 scores = []
                 for x0, y0, x1, y1 in self._field_rois:
                     sy0, sy1 = y0 + dy, y1 + dy
