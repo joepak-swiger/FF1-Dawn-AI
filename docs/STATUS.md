@@ -6,11 +6,13 @@ The latest owner-approved GBA roster is Sif/Warrior, Myth/Thief, Milo/Monk,
 Seed/Red Mage. Earlier Seed and Mustar checkpoints, reports, and Gymnasium
 smokes remain historical and unmodified. Two new clean Seed starts and the
 real two-episode Gymnasium action smoke passed. PR #6 and its stacked PR #7
-are merged into `main`. The newest controlled GBA evaluation confirms
-repeatable reset with the two-restore path and repeatable screen-space map
-translation under directional controls. No player/world coordinate or
-story-progress signal is verified. NES remains secondary; v0.7 stays trusted,
-and RAM signals remain provisional.
+are merged into `main`. The newest controlled GBA evaluation independently
+detected Castle Cornelia 1F from the game's title banner in 3/3 scripted
+starts. Seeded random reached 0/12 within 192 one-frame actions; idle and DOWN
+controls also had no castle hits. A same-value RAM counterexample from
+Cornelia town rules out the current candidate pair as a unique castle flag.
+NES remains secondary; v0.7 stays trusted, rewards remain neutral, and RAM
+signals remain provisional.
 
 ## 2026-10-28 — Repeatable GBA evaluation and reset audit
 
@@ -569,3 +571,54 @@ target a known wall or water boundary with matched no-op and reverse controls.
 Only after coordinate-like values distinguish those origins and survive
 reversal should an evaluation-only position/visit tracker be added. Do not
 start PPO or add progress rewards yet.
+
+## 2026-10-28 — Castle Cornelia landmark navigation goal
+
+- Read the full PR #9 review (`6459865229`) and confirmed PR #9 is merged at
+  `6ea564ab`. Work is based on current `main` in the isolated
+  `codex/gba-castle-goal` branch.
+- Added `ff1_dawn_ai/gba_landmark.py` and
+  `scripts/gba_castle_eval.py`. The conservative detector matches the game's
+  static “Castle Cornelia 1F” title region from a previously reviewed frame,
+  requires two consecutive matches, ignores RAM and full-screen hashes, and
+  leaves every other screen unknown.
+- Live WSL evaluation `20261028_052724_624774Z` used the verified
+  Seed-party checkpoint `20261028_001816_066107Z`. Three clean scripted UP
+  routes reached the detector at the same step: first match 120, two-frame
+  confirmation 121 (3/3). Twelve seeded-random 192-action routes, three idle
+  trials, and three DOWN controls produced 0 castle detections. The detector
+  returned 0 false positives across 3,539 random/idle/DOWN/START observations.
+  The START control visually showed a transition at 8/16 frames and the actual
+  party/status menu at 32/64 frames; it remained negative throughout.
+- A seeded-random counterexample reached the distinct Cornelia town screen at
+  step 128. Both provisional RAM bytes were `0x33FC=226` and `0x3404=230`, the
+  same pair observed on the Castle screen; this pair occurred on 127
+  non-confirmed frames in the full run. Neither byte nor the pair is a unique
+  Castle indicator, and none is used by the detector or rewards.
+- The optional castle exit route returned visually to the exterior Cornelia
+  overworld after a transition (fade at 72 frames, field view at 80). The
+  Castle-specific detector intentionally did not automatically certify the
+  field screen; the evidence package records this as visual review.
+- An 8-frame UP/DOWN reversal showed approximately 14–16 screen pixels of
+  residual immediately after reversing. One neutral release frame plus 16
+  settling frames reduced residual to about 1 px; two or more release frames
+  plus settling returned to within 0.01 px, against near-zero matched idle.
+  This supports input/animation timing effects, not a tile-coordinate claim.
+  The 64-frame DOWN scene shift plateaued near −47.9 px by frame 56 as the
+  player approached/crossed the southern bridge and the camera view reached
+  its edge; blocked terrain remains unverified.
+- Full WSL unit suite: 59 passed. Python compilation passed. Rewards stayed
+  neutral; no PPO run, NES code, NES model, or old experiment was changed.
+- Sanitized evidence is published under
+  `docs/experiments/gba_castle_goal/20261028_052724_624774Z/` with a compact
+  report, metrics, contact sheet, and selected transition/control frames.
+  Raw trace, full capture directory, ROM, and native checkpoint remain local.
+  Run instructions are in `docs/gba_castle_goal.md`.
+
+### Next GBA decision
+
+Add separately validated field/town/castle screen labels, then use the Castle
+title landmark in a short held-out Gymnasium evaluation. Test entry and exit
+under more routes and restores, including battle, menu, fade, and unrelated
+scene controls. Keep rewards neutral until those labels remain distinct. Do
+not begin large PPO training yet.

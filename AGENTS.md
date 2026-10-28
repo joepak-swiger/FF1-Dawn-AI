@@ -87,6 +87,20 @@ performed or tested here.
   from these candidates alone; report a blocked tile as unverified unless a
   known obstacle is visually identified and repeated directional input is
   compared with idle and reverse controls.
+- Use `scripts/gba_castle_eval.py` to compare straight-north navigation with
+  seeded-random, idle, straight-south, and START-menu controls from the
+  verified Seed-party checkpoint. Its Castle Cornelia 1F detector matches the
+  game's static floor-title banner against the reviewed
+  `docs/experiments/gba_castle_goal/reference_cornelia_1f.png` and requires two
+  consecutive matches. It is a destination detector only: other screens stay
+  `unknown`, and title loss during a transition does not by itself establish a
+  field return. Package reviewed results with
+  `scripts/package_gba_castle_evidence.py`; keep raw traces, native states,
+  ROMs, and full run directories local.
+- RAM bytes `0x33FC` and `0x3404` are still provisional. The pair `226/230`
+  was observed on both Castle Cornelia 1F and the separate Cornelia town
+  screen, so neither byte nor the pair is a unique castle-entry signal.
+  Neither RAM candidates nor phase-correlation pixels may be used as rewards.
 - Before GBA training, confirm repeatable boot, mapped controls, a visually
   verified playable post-party checkpoint, and native state save/reset/reload/
   resume. Never commit ROMs, saves, native states, or raw captures.
