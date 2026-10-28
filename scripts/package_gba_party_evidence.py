@@ -41,7 +41,7 @@ def validate_run(run_dir: Path) -> tuple[dict, dict, dict]:
     names = machine.get("entered_names", [])
     canonical = [item.get("canonical_name") for item in names]
     displays = [item.get("display_name") for item in names]
-    if canonical != ["Sif", "Myth", "Milo", "Mustard"] or displays != ["Sif", "Myth", "Milo", "Mustar"]:
+    if canonical != ["Sif", "Myth", "Milo", "Seed"] or displays != ["Sif", "Myth", "Milo", "Seed"]:
         raise ValueError(f"Custom GBA name roster mismatch: {run_dir.name}")
     if not all(item.get("display_name_matches_verified_key_sequence") for item in names):
         raise ValueError(f"Name keyboard evidence missing: {run_dir.name}")

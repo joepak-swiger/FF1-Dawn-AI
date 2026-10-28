@@ -95,6 +95,46 @@ class GbaGymnasiumTests(unittest.TestCase):
         self.assertEqual(np.flatnonzero(self.stub.actions_seen[-1]).tolist(), [])
         self.assertEqual(len(self.stub.actions_seen), 4 + 3 + 3)
 
+    def test_seeded_direction_policy_is_reproducible_and_covers_directions(self):
+        from scripts.gba_gym_smoke import seeded_direction_actions
+
+        actions = seeded_direction_actions(64, seed=1729)
+        self.assertEqual(actions, seeded_direction_actions(64, seed=1729))
+        self.assertEqual(set(actions), {"UP", "DOWN", "LEFT", "RIGHT"})
+
+    def test_checkpoint_discovery_requires_exact_seed_roster(self):
+        from unittest.mock import patch
+        from scripts import gba_gym_smoke
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            for run_id, last_name in (("older-seed", "Seed"), ("newer-mustar", "Mustard")):
+                report = root / "videos" / "gba_feasibility" / run_id
+                report.mkdir(parents=True)
+                names = ["Sif", "Myth", "Milo", last_name]
+                metrics = {"runtime": {
+                    "gameplay_readiness": "verified",
+                    "party_state_machine": {
+                        "entered_names": [
+                            {"canonical_name": name, "display_name": name} for name in names
+                        ],
+                        "classes": ["Warrior", "Thief", "Monk", "Red Mage"],
+                    },
+                }}
+                (report / "metrics.json").write_text(json.dumps(metrics), encoding="utf-8")
+                state = root / "states" / "gba_custom_party" / run_id / "stable_retro_core.state"
+                state.parent.mkdir(parents=True)
+                state.write_bytes(run_id.encode())
+            with patch.object(gba_gym_smoke, "ROOT", root):
+                self.assertEqual(gba_gym_smoke.discover_checkpoint(),
+                                 root / "states/gba_custom_party/older-seed/stable_retro_core.state")
+
+    def test_identical_observation_streak_is_pixel_diagnostic(self):
+        from scripts.gba_gym_smoke import longest_repeat_streak
+
+        self.assertEqual(longest_repeat_streak(["a", "a", "b", "b", "b", "c"]), 3)
+        self.assertEqual(longest_repeat_streak([]), 0)
+
     def test_reset_replays_same_observation_and_preserves_checkpoint(self):
         first, _ = self.env.reset(seed=11)
         second, _ = self.env.reset(seed=11)
@@ -122,10 +162,13 @@ class GbaGymnasiumTests(unittest.TestCase):
         source = Path(self.temp.name) / "run"
         source.mkdir()
         metrics = {
-            "run_id": "synthetic", "checkpoint_loaded": True,
+            "run_id": "synthetic", "checkpoint_run_id": "seed-run", "checkpoint_loaded": True,
             "reset_reproducible_observation": True, "observation_shape": [84, 84, 3],
             "observation_dtype": "uint8", "action_names": ["NOOP", "UP"],
-            "requested_steps": 1, "completed_steps": 1, "action_frames": 4,
+            "requested_steps": 2, "steps_per_episode": 1, "completed_steps": 2, "action_frames": 4,
+            "episodes_requested": 2, "episodes_completed": 2,
+            "episodes_reproducible": True, "action_counts": {},
+            "longest_identical_observation_streak": 1,
             "neutral_rewards_only": True, "terminated": False, "truncated": True,
             "checkpoint_source_unchanged": True, "checkpoint_sha256": "private-detail-to-strip",
             "absolute_checkpoint_path": "C:/private/path/native.state", "limitations": [],

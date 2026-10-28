@@ -1,0 +1,51 @@
+{
+  "run_id": "20261028_002105_827756Z",
+  "checkpoint_run_id": "20261028_001816_066107Z",
+  "checkpoint_loaded": true,
+  "reset_reproducible_observation": true,
+  "observation_shape": [
+    84,
+    84,
+    3
+  ],
+  "observation_dtype": "uint8",
+  "action_names": [
+    "NOOP",
+    "UP",
+    "DOWN",
+    "LEFT",
+    "RIGHT",
+    "A",
+    "B",
+    "START",
+    "SELECT",
+    "L",
+    "R"
+  ],
+  "requested_steps": 24,
+  "steps_per_episode": 12,
+  "completed_steps": 24,
+  "action_frames": 8,
+  "episodes_requested": 2,
+  "episodes_completed": 2,
+  "episodes_reproducible": true,
+  "action_counts": {
+    "UP": 6,
+    "DOWN": 6,
+    "LEFT": 6,
+    "RIGHT": 6
+  },
+  "longest_identical_observation_streak": 1,
+  "neutral_rewards_only": true,
+  "sb3_env_checker": "passed",
+  "sb3_model_initialized_without_learning": true,
+  "sb3_predicted_action_executed": "LEFT",
+  "training_steps": 0,
+  "terminated": false,
+  "truncated": true,
+  "checkpoint_source_unchanged": true,
+  "limitations": [
+    "The seeded random policy executes directional controls from a verified custom-party checkpoint; identical observations are a pixel-level diagnostic, not proof of a semantic stall.",
+    "No battle/outcome rewards or PPO training are used."
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "run_id": "20261028_001756_354424Z",
+  "other_matching_successful_run_ids": [
+    "20261028_001816_066107Z"
+  ],
+  "matching_clean_run_count": 2,
+  "independent_sessions": [
+    {
+      "run_id": "20261028_001756_354424Z",
+      "verified": true
+    },
+    {
+      "run_id": "20261028_001816_066107Z",
+      "verified": true
+    }
+  ],
+  "execution_status": "completed",
+  "gameplay_readiness": "verified",
+  "party": [
+    {
+      "slot": 1,
+      "canonical_name": "Sif",
+      "display_name": "Sif",
+      "class": "Warrior",
+      "keyboard_keys_cursor_verified": true
+    },
+    {
+      "slot": 2,
+      "canonical_name": "Myth",
+      "display_name": "Myth",
+      "class": "Thief",
+      "keyboard_keys_cursor_verified": true
+    },
+    {
+      "slot": 3,
+      "canonical_name": "Milo",
+      "display_name": "Milo",
+      "class": "Monk",
+      "keyboard_keys_cursor_verified": true
+    },
+    {
+      "slot": 4,
+      "canonical_name": "Seed",
+      "display_name": "Seed",
+      "class": "Red Mage",
+      "keyboard_keys_cursor_verified": true
+    }
+  ],
+  "milestones": {
+    "rom_integration_boots": "passed",
+    "party_setup_started": "passed",
+    "four_characters_confirmed": "passed",
+    "party_setup_completed": "passed",
+    "playable_field_reached": "passed",
+    "native_checkpoint_saved": "passed",
+    "native_checkpoint_restored": "passed",
+    "field_movement_after_restore": "passed"
+  },
+  "checkpoint_bytes": 397312,
+  "checkpoint_path_local_only": true,
+  "restore_movement_directions": [
+    "DOWN",
+    "LEFT",
+    "RIGHT",
+    "UP"
+  ],
+  "direction_trials": {
+    "UP": {
+      "passed": true,
+      "changed_pixel_fraction": 0.6394791666666667,
+      "idle_changed_pixel_fraction": 0.0
+    },
+    "DOWN": {
+      "passed": true,
+      "changed_pixel_fraction": 0.6522395833333333,
+      "idle_changed_pixel_fraction": 0.0
+    },
+    "LEFT": {
+      "passed": true,
+      "changed_pixel_fraction": 0.6844010416666667,
+      "idle_changed_pixel_fraction": 0.0
+    },
+    "RIGHT": {
+      "passed": true,
+      "changed_pixel_fraction": 0.68546875,
+      "idle_changed_pixel_fraction": 0.0
+    }
+  },
+  "limitations": [
+    "Name spelling was validated by per-character keyboard cursor anchors and visually reviewed roster screenshot; OCR is not enabled.",
+    "Movement evidence compares direction trials with deterministic idle controls; it does not infer map coordinates.",
+    "Battery-save persistence and long-term gameplay are not tested."
+  ]
+}
