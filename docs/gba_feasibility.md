@@ -69,16 +69,56 @@ small `proof.png` under `docs/experiments/gba_feasibility/<run-id>/`.
 
 ## Current result and next check
 
-Earlier Seed and Mustard/Mustar runs remain intact as historical records. The
-latest owner decision makes Seed/Red Mage the official GBA profile. Two new
-independent runs (`20261028_001756_354424Z` and `20261028_001816_066107Z`)
-verified the exact names/classes, party setup, Cornelia, unique native
-checkpoint save/reset/reload, and UP/DOWN/LEFT/RIGHT movement beyond idle
-controls. Sanitized evidence is published under
-`docs/experiments/gba_feasibility/20261028_001756_354424Z/`.
+Earlier Seed sessions and the Mustard/Mustar sessions remain intact as
+historical records. The latest owner decision restores Seed as the official
+GBA Red Mage. New verification runs must have unique IDs; historical records
+must not be renamed or edited to imply they used the new official profile.
 
-Battery-save loading has not been tested. The reward-neutral Gymnasium adapter
-and seeded action smoke are tracked separately in follow-up PR #7.
+The reward-neutral Gymnasium adapter in ff1_dawn_ai/gba_env.py loads a native
+Seed-party checkpoint on each reset, returns 84x84 grayscale frame stacks, exposes
+NOOP/directions/A/B/START/SELECT/L/R, forwards core termination, and truncates
+at its configured step limit. Run python scripts/gba_gym_smoke.py in the
+activated WSL environment. The script discovers a local checkpoint only when
+its saved metrics verify the exact Seed/Red Mage roster and all gameplay
+milestones; it writes unique local run artifacts and a sanitized GitHub-ready
+report/proof package. Earlier live smokes from Mustar checkpoints are historical
+and unchanged. Earlier public smokes remain at
+docs/experiments/gba_gymnasium/20261027_225340_868798Z/ and
+docs/experiments/gba_gymnasium/20261027_225600_738614Z/.
+
+Earlier live 12-step Mustar smoke passed with repeatable reset observations,
+0.0 rewards, truncation at step 12, and an unchanged checkpoint. It does not
+infer map coordinates or story progress. Because the GBA core's first
+framebuffer after a restore differed, the environment performs two identical
+native restores with two neutral settling frames each; the resulting reset
+observation is deterministic.
+
+## Latest owner-approved Seed verification
+
+Two new clean Stable-Retro runs, `20261028_001756_354424Z` and
+`20261028_001816_066107Z`, verified the exact Sif/Warrior, Myth/Thief,
+Milo/Monk, Seed/Red Mage roster. Both completed setup, reached the visible
+Cornelia field, saved and restored unique native checkpoints, and passed
+UP/DOWN/LEFT/RIGHT movement checks beyond two idle controls. Sanitized evidence
+is published under `docs/experiments/gba_feasibility/20261028_001756_354424Z/`;
+the second clean-run contact sheet is included there. Raw reports, screenshots,
+traces, and checkpoint states remain local and are not staged.
+
+The seeded-random four-direction Gymnasium smoke
+`20261028_002105_827756Z` loaded the second Seed checkpoint and completed two
+12-action episodes (24 actions total). Both reset observations and complete
+observation-hash sequences matched. Counts were six UP, six DOWN, six LEFT,
+and six RIGHT; rewards remained 0.0; the configured 12-step truncation ended
+each episode; and the checkpoint file hash remained unchanged. The maximum
+identical-frame streak was 1 in this run. This is a pixel-repeat diagnostic,
+not a semantic stuck detector or coordinate/progression measurement. Public
+proof and metrics are at
+`docs/experiments/gba_gymnasium/20261028_002105_827756Z/`. PPO training and
+progress rewards remain disabled.
+
+Battery-save loading has not been tested. Next build a short-episode
+evaluation harness and independently validate movement, battle outcomes, and
+party survival before training.
 
 ## Offline format inspection
 

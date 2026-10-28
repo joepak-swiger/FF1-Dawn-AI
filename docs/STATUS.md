@@ -2,24 +2,47 @@
 
 **Updated:** 2026-10-28
 **Current milestone:** GBA Dawn of Souls is the primary development target.
-The latest owner-approved GBA party is Sif/Warrior, Myth/Thief, Milo/Monk,
-Seed/Red Mage. Two new clean starts verified the full roster, Cornelia, native
-checkpoint restoration, and four-direction movement. NES remains secondary;
-v0.7 stays trusted, and RAM signals remain provisional.
+The latest owner-approved GBA roster is Sif/Warrior, Myth/Thief, Milo/Monk,
+Seed/Red Mage. Earlier Seed and Mustar checkpoints, reports, and Gymnasium
+smokes remain historical and unmodified. Two new clean Seed starts and the
+real two-episode Gymnasium action smoke passed. NES remains secondary; v0.7
+stays trusted, and RAM signals remain provisional.
 
-## 2026-10-28 — GBA Seed party verification
+## 2026-10-28 — Official Seed party and GBA Gymnasium smoke
 
-- The latest owner correction on PR #6 (`6457061644`) intentionally restores
-  Seed/Red Mage as the official GBA fourth character. Earlier Seed and
-  Mustard/Mustar outputs remain historical and unchanged.
-- Two new independent clean starts, `20261028_001756_354424Z` and
-  `20261028_001816_066107Z`, visually displayed the requested names/classes,
-  completed party setup, and reached Cornelia. Each unique native checkpoint
-  restored after reset and passed UP/DOWN/LEFT/RIGHT movement checks against
-  idle controls. Sanitized evidence is at
+- Read the latest owner correction on PR #6 (`6457061644`): Seed/Red Mage is
+  intentional and supersedes Mustard/Mustar for the official GBA profile.
+- Updated canonical configuration, tests, evidence validation, checkpoint
+  discovery, `AGENTS.md`, and GBA runbook. The NES secondary profile is
+  unchanged. Previous Seed and Mustar records are historical and unmodified.
+- Fresh independent clean starts `20261028_001756_354424Z` and
+  `20261028_001816_066107Z` each entered and visibly displayed Sif/Warrior,
+  Myth/Thief, Milo/Monk, Seed/Red Mage; both completed setup and reached the
+  Cornelia field. Each saved and restored a unique native state and passed
+  UP/DOWN/LEFT/RIGHT movement after restore against idle controls. The on-screen
+  roster image confirms the four spellings/classes. Sanitized evidence is at
   `docs/experiments/gba_feasibility/20261028_001756_354424Z/`.
-- The reward-neutral Gymnasium environment and two-episode Seed checkpoint
-  smoke are in the linked follow-up PR #7. No training or reward changes ran.
+- Gymnasium smoke `20261028_002105_827756Z` loaded the second Seed checkpoint
+  and ran two 12-action seeded-random direction episodes. Both reset
+  observations and complete observation hashes matched; action counts were
+  6/6/6/6 across UP/DOWN/LEFT/RIGHT (24 total); all rewards were 0.0; both
+  episodes truncated at step 12; checkpoint remained unchanged; longest exact
+  repeated-frame streak was 1. This is a pixel-repeat diagnostic, not a
+  semantic stuck/progress detector. Sanitized package:
+  `docs/experiments/gba_gymnasium/20261028_002105_827756Z/`.
+- Gymnasium `check_env` also passed against the actual Seed checkpoint and
+  Stable-Retro core (only the standard alternate-render-mode warning appeared).
+- Stable-Baselines3's checker passed on that same checkpoint. A CPU PPO
+  `CnnPolicy` initialized and predicted/executed one `LEFT` action with an
+  84x84x3 observation and 0.0 reward; no `learn()` call or training step ran.
+- The first smoke attempt exposed an outer-loop break on time-limit truncation;
+  it ran only one episode and correctly failed the publication gate. The loop
+  now treats truncation as an episode boundary and continues to the next clean
+  reset. The succeeding two-episode run passed.
+- GBA has a reward-neutral AI-compatible environment and repeatable action
+  smoke, but no battle, coordinate, HP/EXP, or story reward is validated. No
+  PPO training ran. Next build a small evaluation interface and independently
+  validate field position/progress signals before introducing rewards.
 
 ## What the recordings show
 
@@ -341,10 +364,32 @@ rewards before that evidence exists.
   Evidence: docs/experiments/gba_feasibility/20261027_224615_320655Z/.
   Native checkpoints remain local and ignored.
 
+## 2026-10-27 — Reward-neutral GBA Gymnasium environment
+
+- Added FF1GbaEnv with a verified native checkpoint loaded at every reset,
+  discrete NOOP/direction/A/B/START/SELECT/L/R controls, 84x84 grayscale frame
+  stacks, neutral rewards, core termination forwarding, and step-limit
+  truncation.
+- Full WSL unittest suite passed (42 tests). Gymnasium's check_env also passed
+  against the actual Stable-Retro core and corrected native checkpoint.
+- Two 12-step smokes from the same corrected checkpoint passed with
+  deterministic reset observations, zero rewards, truncation at step 12, and
+  an unchanged checkpoint hash. Each recorded local traces/metrics/GIFs and
+  contact sheets. Sanitized summaries are published at
+  docs/experiments/gba_gymnasium/20261027_225340_868798Z/ and
+  docs/experiments/gba_gymnasium/20261027_225600_738614Z/.
+- Repeatable first-reset output required two identical native state restores,
+  each followed by two neutral settling frames; this behavior is encapsulated
+  in FF1GbaEnv.reset().
+- The smoke verifies control response and Gymnasium mechanics. It does not
+  infer coordinates, battle completion, survival, or story progress. No PPO
+  training or NES model/reward changes were made.
+
 ### Next GBA milestone
 
-Build a reward-neutral Gymnasium adapter and short gameplay smoke for the
-corrected custom-party checkpoint. Keep NES v0.7 untouched.
+Build a short-episode evaluation harness, then validate field movement,
+battle outcomes, and party survival against independent evidence before any
+training. Keep NES v0.7 untouched.
 
 
 ## 2026-10-27 — Sanitized NES evidence publication and GBA launcher
