@@ -77,6 +77,16 @@ performed or tested here.
   is unreliable and must not be used as progress. Compare all image signals
   against idle controls and manually reviewed screenshots before changing
   rewards.
+- Use `scripts/gba_locomotion_probe.py` for bounded one-emulator-frame GBA
+  movement, reverse-route, no-op, terrain-candidate, and RAM-differential
+  probes; package only reviewed whitelisted output with
+  `scripts/package_gba_locomotion_evidence.py`. Its phase-correlation values
+  describe rendered map displacement, not tile coordinates. RAM byte offsets
+  stay provisional until validated across independent known positions and
+  opposite/reversed routes. Do not enable coordinate/visit tracking or rewards
+  from these candidates alone; report a blocked tile as unverified unless a
+  known obstacle is visually identified and repeated directional input is
+  compared with idle and reverse controls.
 - Before GBA training, confirm repeatable boot, mapped controls, a visually
   verified playable post-party checkpoint, and native state save/reset/reload/
   resume. Never commit ROMs, saves, native states, or raw captures.
