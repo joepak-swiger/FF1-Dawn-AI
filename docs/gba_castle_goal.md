@@ -57,5 +57,9 @@ capture runs remain local.
   castle-entry flag in the observed data.
 - Random-route success is only a bounded seeded baseline for the specified
   horizon; it is not a general probability estimate.
-- Do not add landmark rewards or begin large PPO training until destination
-  and negative-control labels are tested across more scenes and restores.
+- See [docs/gba_scene_learning.md](gba_scene_learning.md) for the later
+  multi-scene confirmation gate, fresh Castle entry/exit results, optional
+  one-time reward wrapper, and bounded PPO feasibility smoke. The base
+  Gymnasium environment remains reward-neutral. Do not generalize this visual
+  reward to other scenes or start larger training until the agent receives
+  goal events and beats random/idle on held-out routes and starts.

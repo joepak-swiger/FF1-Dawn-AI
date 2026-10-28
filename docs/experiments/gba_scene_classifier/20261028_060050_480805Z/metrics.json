@@ -1,0 +1,209 @@
+{
+  "run_id": "20261028_060050_480805Z",
+  "checkpoint_run_id": "20261028_001816_066107Z",
+  "checkpoint_unchanged": true,
+  "classifier": {
+    "anchor_labels": [
+      "castle_cornelia_1f",
+      "cornelia_exterior_field",
+      "cornelia_town",
+      "menu"
+    ],
+    "unknown_is_explicit": true,
+    "ram_used": false,
+    "frame_hash_used": false,
+    "temporal_confirmation_frames": 2,
+    "exterior_anchor_variants": 2,
+    "field_requires_independent_map_anchors": true
+  },
+  "episode_level_validation": {
+    "independent_entry_exit_episodes": 3,
+    "exterior_reset_candidates": 3,
+    "castle_entry_confirmed": 3,
+    "exterior_exit_confirmed": 3,
+    "independent_random_episodes": 3,
+    "cornelia_town_confirmed": 1,
+    "menu_control_episodes": 1,
+    "menu_confirmed": true,
+    "castle_entry_false_positive_episodes": 0,
+    "independent_scene_confusion": {
+      "cornelia_exterior_field": {
+        "expected": 10,
+        "confirmed": 10,
+        "missed": 0
+      },
+      "cornelia_town": {
+        "expected": 1,
+        "confirmed": 1,
+        "missed": 0
+      },
+      "castle_cornelia_1f": {
+        "expected": 3,
+        "confirmed": 3,
+        "missed": 0
+      },
+      "menu": {
+        "expected": 1,
+        "confirmed": 1,
+        "missed": 0
+      }
+    },
+    "unexpected_confirmed_scene_transitions": [],
+    "saved_image_negative_controls": {
+      "title_new_game": "unknown",
+      "castle_transition": "unknown",
+      "dark_fade": "uncertain_transition"
+    },
+    "title_new_game_negative_fixture": "local historical title screen manually inspected; kept out of runtime metrics",
+    "frames_recorded_for_diagnostics": 1086
+  },
+  "trials": [
+    {
+      "trial": "entry_exit_01",
+      "reset_candidate": "cornelia_exterior_field",
+      "reset_confirmed_scene_after_two_observations": "cornelia_exterior_field",
+      "castle_entry_confirmed": true,
+      "castle_entry_step": 122,
+      "exterior_exit_confirmed": true,
+      "exterior_exit_step": 205,
+      "episode_scene_candidates": {
+        "cornelia_exterior_field": 24,
+        "cornelia_town": 2,
+        "castle_cornelia_1f": 56
+      },
+      "expected_confirmed_scenes": [
+        "cornelia_exterior_field",
+        "castle_cornelia_1f",
+        "cornelia_exterior_field"
+      ],
+      "confirmed_scene_transitions": [
+        "cornelia_exterior_field",
+        "castle_cornelia_1f",
+        "cornelia_exterior_field"
+      ]
+    },
+    {
+      "trial": "entry_exit_02",
+      "reset_candidate": "cornelia_exterior_field",
+      "reset_confirmed_scene_after_two_observations": "cornelia_exterior_field",
+      "castle_entry_confirmed": true,
+      "castle_entry_step": 122,
+      "exterior_exit_confirmed": true,
+      "exterior_exit_step": 205,
+      "episode_scene_candidates": {
+        "cornelia_exterior_field": 24,
+        "cornelia_town": 2,
+        "castle_cornelia_1f": 56
+      },
+      "expected_confirmed_scenes": [
+        "cornelia_exterior_field",
+        "castle_cornelia_1f",
+        "cornelia_exterior_field"
+      ],
+      "confirmed_scene_transitions": [
+        "cornelia_exterior_field",
+        "castle_cornelia_1f",
+        "cornelia_exterior_field"
+      ]
+    },
+    {
+      "trial": "entry_exit_03",
+      "reset_candidate": "cornelia_exterior_field",
+      "reset_confirmed_scene_after_two_observations": "cornelia_exterior_field",
+      "castle_entry_confirmed": true,
+      "castle_entry_step": 122,
+      "exterior_exit_confirmed": true,
+      "exterior_exit_step": 205,
+      "episode_scene_candidates": {
+        "cornelia_exterior_field": 24,
+        "cornelia_town": 2,
+        "castle_cornelia_1f": 56
+      },
+      "expected_confirmed_scenes": [
+        "cornelia_exterior_field",
+        "castle_cornelia_1f",
+        "cornelia_exterior_field"
+      ],
+      "confirmed_scene_transitions": [
+        "cornelia_exterior_field",
+        "castle_cornelia_1f",
+        "cornelia_exterior_field"
+      ]
+    },
+    {
+      "trial": "random_110",
+      "policy": "seeded_random",
+      "seed": 110,
+      "cornelia_town_confirmed": true,
+      "cornelia_town_confirmed_step": 130,
+      "episode_scene_candidates": {
+        "cornelia_exterior_field": 5,
+        "cornelia_town": 2
+      },
+      "expected_confirmed_scenes": [
+        "cornelia_exterior_field",
+        "cornelia_town"
+      ],
+      "confirmed_scene_transitions": [
+        "cornelia_exterior_field",
+        "cornelia_town"
+      ]
+    },
+    {
+      "trial": "random_111",
+      "policy": "seeded_random",
+      "seed": 111,
+      "cornelia_town_confirmed": false,
+      "cornelia_town_confirmed_step": null,
+      "episode_scene_candidates": {
+        "cornelia_exterior_field": 14
+      },
+      "expected_confirmed_scenes": [
+        "cornelia_exterior_field"
+      ],
+      "confirmed_scene_transitions": [
+        "cornelia_exterior_field"
+      ]
+    },
+    {
+      "trial": "random_112",
+      "policy": "seeded_random",
+      "seed": 112,
+      "cornelia_town_confirmed": false,
+      "cornelia_town_confirmed_step": null,
+      "episode_scene_candidates": {
+        "cornelia_exterior_field": 15
+      },
+      "expected_confirmed_scenes": [
+        "cornelia_exterior_field"
+      ],
+      "confirmed_scene_transitions": [
+        "cornelia_exterior_field"
+      ]
+    },
+    {
+      "trial": "start_menu_control",
+      "menu_confirmed": true,
+      "menu_confirmed_step": 30,
+      "castle_entry_events": 0,
+      "episode_scene_candidates": {
+        "cornelia_exterior_field": 4,
+        "menu": 38
+      },
+      "expected_confirmed_scenes": [
+        "cornelia_exterior_field",
+        "menu"
+      ],
+      "confirmed_scene_transitions": [
+        "cornelia_exterior_field",
+        "menu"
+      ]
+    }
+  ],
+  "limitations": [
+    "title and map anchors are tied to reviewed Cornelia screens",
+    "same-seed random trials are repeatable, not independent policy draws",
+    "uncertain/unknown scenes do not imply field or gameplay state"
+  ],
+  "elapsed_seconds": 7.079
+}

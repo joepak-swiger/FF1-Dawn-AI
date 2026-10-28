@@ -1,0 +1,118 @@
+{
+  "run_id": "20261028_055426_707460Z",
+  "checkpoint_run_id": "20261028_001816_066107Z",
+  "checkpoint_sha256_unchanged": true,
+  "reward": {
+    "type": "one-time first confirmed exterior-to-Castle transition",
+    "value": 1.0,
+    "disabled_in_base_env": true,
+    "RAM_used": false,
+    "single_frame_match_rewarded": false,
+    "goal_ends_episode": true
+  },
+  "scene_gate": {
+    "consecutive_frames": 2,
+    "entry_requires_confirmed_exterior": true,
+    "unknown_frames_rewarded": false
+  },
+  "training": {
+    "algorithm": "Stable-Baselines3 PPO",
+    "policy": "CnnPolicy",
+    "timesteps_requested": 2048,
+    "timesteps_actual": 2048,
+    "timesteps_per_episode_limit": 32,
+    "emulator_frames_per_action": 8,
+    "episodes_with_goal_events": 0,
+    "elapsed_seconds": 23.496,
+    "device": "cpu",
+    "from_scratch": true
+  },
+  "evaluation": {
+    "SCRIPTED_UP": {
+      "episodes": 3,
+      "successes": 3,
+      "success_rate": 1.0,
+      "steps_to_goal": [
+        16,
+        16,
+        16
+      ],
+      "mean_decision_steps": 16.0,
+      "action_counts": {
+        "NOOP": 0,
+        "UP": 48,
+        "DOWN": 0,
+        "LEFT": 0,
+        "RIGHT": 0,
+        "A": 0,
+        "B": 0,
+        "START": 0,
+        "SELECT": 0,
+        "L": 0,
+        "R": 0
+      }
+    },
+    "SEEDED_RANDOM": {
+      "episodes": 3,
+      "successes": 0,
+      "success_rate": 0.0,
+      "steps_to_goal": [],
+      "mean_decision_steps": 32.0,
+      "action_counts": {
+        "NOOP": 24,
+        "UP": 23,
+        "DOWN": 18,
+        "LEFT": 18,
+        "RIGHT": 13,
+        "A": 0,
+        "B": 0,
+        "START": 0,
+        "SELECT": 0,
+        "L": 0,
+        "R": 0
+      }
+    },
+    "IDLE": {
+      "episodes": 3,
+      "successes": 0,
+      "success_rate": 0.0,
+      "steps_to_goal": [],
+      "mean_decision_steps": 32.0,
+      "action_counts": {
+        "NOOP": 96,
+        "UP": 0,
+        "DOWN": 0,
+        "LEFT": 0,
+        "RIGHT": 0,
+        "A": 0,
+        "B": 0,
+        "START": 0,
+        "SELECT": 0,
+        "L": 0,
+        "R": 0
+      }
+    },
+    "PPO_TRAINED": {
+      "episodes": 3,
+      "successes": 0,
+      "success_rate": 0.0,
+      "steps_to_goal": [],
+      "mean_decision_steps": 32.0,
+      "action_counts": {
+        "NOOP": 0,
+        "UP": 0,
+        "DOWN": 0,
+        "LEFT": 0,
+        "RIGHT": 0,
+        "A": 96,
+        "B": 0,
+        "START": 0,
+        "SELECT": 0,
+        "L": 0,
+        "R": 0
+      }
+    }
+  },
+  "claim": "bounded feasibility smoke only; a success would not establish general navigation or story learning",
+  "elapsed_seconds": 62.06
+}

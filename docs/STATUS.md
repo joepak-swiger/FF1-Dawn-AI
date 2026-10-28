@@ -4,14 +4,18 @@
 **Current milestone:** GBA Dawn of Souls is the primary development target.
 The latest owner-approved GBA roster is Sif/Warrior, Myth/Thief, Milo/Monk,
 Seed/Red Mage. Earlier Seed and Mustar checkpoints, reports, and Gymnasium
-smokes remain historical and unmodified. Two new clean Seed starts and the
-real two-episode Gymnasium action smoke passed. PR #6 and its stacked PR #7
-are merged into `main`. The newest controlled GBA evaluation independently
-detected Castle Cornelia 1F from the game's title banner in 3/3 scripted
-starts. Seeded random reached 0/12 within 192 one-frame actions; idle and DOWN
-controls also had no castle hits. A same-value RAM counterexample from
-Cornelia town rules out the current candidate pair as a unique castle flag.
-NES remains secondary; v0.7 stays trusted, rewards remain neutral, and RAM
+smokes remain historical and unmodified. PR #10 is merged. The latest GBA
+scene evaluation independently confirmed exterior-to-Castle-to-exterior on
+3/3 fresh checkpoint restores, and confirmed the Cornelia town title in 1/3
+seeded routes and the party/status menu in its control. The single-frame
+matcher now reports candidates only; a two-consecutive-frame gate emits
+events only after an exterior was confirmed. An optional one-time Castle-entry
+reward wrapper remains separate from the neutral base Gymnasium environment.
+A bounded PPO smoke (2,048 CPU timesteps, 23.5 seconds) observed zero training
+goal events and reached 0/3 post-training episodes from the same start.
+Scripted UP reached 3/3, while random and idle reached 0/3. This is not
+evidence of learned navigation.
+NES remains secondary; v0.7 and its experiments are unchanged, and RAM
 signals remain provisional.
 
 ## 2026-10-28 — Repeatable GBA evaluation and reset audit
@@ -622,3 +626,55 @@ title landmark in a short held-out Gymnasium evaluation. Test entry and exit
 under more routes and restores, including battle, menu, fade, and unrelated
 scene controls. Keep rewards neutral until those labels remain distinct. Do
 not begin large PPO training yet.
+
+## 2026-10-28 — GBA scene gate and bounded reward feasibility
+
+- Corrected `CastleCorneliaDetector`: a single frame is now a `candidate`,
+  never a confirmed result. `SceneConfirmationGate` needs two consecutive
+  matching emulator observations, clears streaks on unknown/other labels, and
+  emits a first Castle entry only after a confirmed exterior. Resetting from an
+  interior cannot emit that entry event.
+- Added reviewed visual anchors for Cornelia exterior field, Cornelia town,
+  Castle Cornelia 1F, and the party/status menu. Exterior matching uses three
+  independent map details plus a bounded vertical-shift search. Unknown and
+  fade frames remain unknown. No RAM values, coordinates, or frame hashes are
+  used as scene labels.
+- Live WSL run `20261028_060050_480805Z` used the unchanged Seed-party
+  checkpoint `20261028_001816_066107Z`. Exterior reset recognition, two-frame
+  Castle entry, and two-frame exterior exit all passed 3/3 fresh restores.
+  Confirmed Castle entry occurred at action 122; exterior return at action
+  205 using one emulator frame per action. A transient one-frame `Cornelia`
+  title during travel was not promoted to a town transition. The town title
+  was confirmed in 1/3 seeded-random routes; two did not visit it. The
+  party/status menu was confirmed and produced zero Castle entry events.
+  Historical title-screen, transition, and fade controls remain unknown in
+  saved-image regression checks. These counts are episode-level; adjacent
+  frames are not treated as independent trials.
+- Added `FirstCastleEntryReward`, an opt-in Gymnasium wrapper. The base
+  `FF1GbaEnv` remains reward-neutral. It can emit only one reward after two
+  confirmed Castle title frames following confirmed exterior; it truncates
+  that optional reward episode safely. Idle/menu/town/single-frame tests award
+  zero. No speculative RAM or exploration reward was introduced.
+- Bounded PPO run `20261028_055426_707460Z`: 2,048 actual CPU timesteps,
+  23.496 seconds, 8 emulator frames per decision, and zero goal events during
+  collection. Three held-out episodes per policy: scripted UP 3/3 at 16
+  decisions, random 0/3, idle 0/3, PPO 0/3. PPO selected A in all 96 decisions.
+  This is a failed sparse-reward learning feasibility smoke, not learned
+  navigation; the baseline's north route is scripted. The local PPO archive
+  and raw traces are excluded from Git.
+- Sanitized reports, aggregate metrics, and a small proof set are under
+  `docs/experiments/gba_scene_classifier/20261028_060050_480805Z/` and
+  `docs/experiments/gba_castle_learning/20261028_055426_707460Z/`.
+- Full WSL regression suite: 76 tests passed. `compileall` and dry-run checks
+  for the Castle, scene-evaluation, and learning-smoke scripts passed.
+  NES v0.7, checkpoints, ROMs, and previous experiment history were not
+  changed.
+
+### Next GBA milestone
+
+Improve discovery efficiency with a transparent demonstration/curriculum or
+action abstraction, then test on held-out starts/routes. Expand scene
+negatives to battles, result screens, game-over, and additional towns before
+using these labels for general progress rewards. Do not call the PPO attempt
+successful and do not increase the training budget until it receives reward
+events and beats seeded-random/idle baselines on more than this one checkpoint.
