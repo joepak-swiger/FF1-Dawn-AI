@@ -678,3 +678,45 @@ negatives to battles, result screens, game-over, and additional towns before
 using these labels for general progress rewards. Do not call the PPO attempt
 successful and do not increase the training budget until it receives reward
 events and beats seeded-random/idle baselines on more than this one checkpoint.
+
+## 2026-10-28 — GBA navigation action abstraction and imitation feasibility
+
+- Added the opt-in `NavigationActionEnv`, which narrows the unchanged full GBA
+  control space to NOOP/UP/DOWN/LEFT/RIGHT macros. A move is held for eight
+  emulator frames, then released for two frames; base rewards remain neutral.
+- Added `scripts/gba_navigation_imitation.py` to derive new local native starts
+  from bounded cardinal routes, confirm Cornelia exterior after reload, record
+  successful demonstrations, fit a transparent nearest-neighbor behavior
+  cloner, and compare it with idle, seeded random, always-UP, and scripted
+  navigation. Each run gets unique ignored output. The official
+  `20261028_001816_066107Z` party checkpoint remains unchanged.
+- Live run `20261028_062140_608666Z` saved four distinct, reproducible exterior
+  starts: center, west, east, and south offsets. Every start passed the
+  two-observation exterior gate after native restore. The directionally
+  generated views showed about 48 px screen-space map shift; this is not a
+  coordinate or tile-position measurement.
+- Across one evaluation per start with a 32-decision limit: scripted route
+  4/4; always-UP 2/4 (failed west/east); behavior cloning 3/4; seeded random
+  0/4; idle 0/4. The clone reproduced the successful center and west
+  demonstrations, and reached the held-out south start with UP. It failed the
+  held-out east turn challenge, choosing RIGHT for all 32 decisions. Thus this
+  is useful behavior cloning on demonstrations, not a generalized turning
+  policy. The held-out south success matches always-UP.
+- The status-menu control confirmed exterior then menu with zero false Castle
+  events. Total runtime was 54.5 seconds, with 31 supervised demonstration
+  decisions and zero RL timesteps. No RAM address or progress reward was used.
+- Full WSL regression suite: 84 tests passed. Python syntax compilation passed;
+  `--dry-run` validated the official checkpoint and action configuration. The
+  live emulator comparison completed and published sanitized metrics/report
+  and a small contact sheet under
+  `docs/experiments/gba_navigation_imitation/20261028_062140_608666Z/`.
+  Detailed data and derived native states remain local/ignored.
+
+### Next GBA milestone
+
+Add a successful east-side demonstration and test a held-out route with a
+different turn sequence. Improve the observation policy or use a short
+curriculum only if it can be evaluated against the same always-UP and scripted
+controls. Do not increase PPO timesteps or add progress rewards until the agent
+beats always-UP from a held-out start that requires a turn. NES v0.7 remains
+untouched.

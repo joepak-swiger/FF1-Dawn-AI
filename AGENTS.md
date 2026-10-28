@@ -148,3 +148,37 @@ observed results from hypotheses.
 - For NES scene verification, use `scripts/nes_scene_audit.py` to select saved frames around pixel-proxy transitions and a few independently reviewed visual anchors. Its layout cues are triage only; they cannot distinguish battle results from active battle or confirm victory, defeat, escape, HP, EXP, location, or game-over state.
 - After each completed NES RAM analysis, publish only the sanitized package under `docs/experiments/nes_ram/<run-id>/` using `scripts/package_nes_ram_evidence.py`. Review it before staging. Exclude raw RAM, full analysis CSVs, ROMs, saves, models, videos, full-size captures, and private paths.
 - Keep both tracks exploratory until their relevant gameplay-state checks are validated; no unverified RAM reward changes or major training runs.
+
+## GBA navigation imitation workflow
+
+- GBA remains primary. Keep `FF1GbaEnv`'s full eleven-button control space
+  unchanged. For field navigation use the opt-in
+  `NavigationActionEnv` five-action interface (NOOP/UP/DOWN/LEFT/RIGHT), with
+  eight held emulator frames and two released frames per decision.
+- Use `scripts/gba_navigation_imitation.py --dry-run` to validate config, and
+  `--max-decisions 32 --publish` for a bounded live comparison. It starts only
+  from the official local Seed-party checkpoint, writes route-derived native
+  starts to ignored per-run output, validates the exterior scene and repeated
+  native reload, then compares idle, seeded random, always-UP, scripted, and
+  nearest-neighbor behavior cloning. Never overwrite the official checkpoint.
+- Keep scripted demonstrations distinct from behavior cloning and RL. The
+  policy receives rendered observations and demonstration action labels; it
+  does not receive route IDs. Always report training-start and held-out results
+  separately. A held-out success that also succeeds under always-UP does not
+  establish turn generalization. Never call the demonstrator itself learned.
+- Current run `20261028_062140_608666Z` confirmed four reproducible Cornelia
+  exterior starts. Scripted navigation reached the Castle 4/4, always-UP 2/4,
+  random and idle 0/4. Behavior cloning reproduced the two demonstrated starts
+  (center and west) and succeeded on one of two held-out starts. It failed the
+  held-out east turn challenge, selecting RIGHT for 32 actions; always-UP also
+  failed there. South-start behavior cloning succeeded with UP, matching the
+  always-UP baseline. Treat turning as ungeneralized. The 48 px
+  phase-correlation shift is screen-space only, not a coordinate.
+- The current field anchor set includes small reviewed screenshots from west,
+  east, and south routes. Preserve title, transition, town, menu, and Castle
+  negative controls when adjusting thresholds or anchors. A confirmed field
+  scene is still not a location coordinate. No PPO, progress reward, or RAM
+  reward is enabled by this milestone.
+- Publish only the compact package under
+  `docs/experiments/gba_navigation_imitation/<run-id>/`; raw traces, screenshots,
+  states, ROMs, and any future model weights remain local.

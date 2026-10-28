@@ -1,0 +1,504 @@
+{
+  "run_id": "20261028_062140_608666Z",
+  "official_checkpoint_run_id": "20261028_001816_066107Z",
+  "verified_start_count": 4,
+  "start_ids": [
+    "center",
+    "west_offset",
+    "east_offset",
+    "south_offset"
+  ],
+  "starts": [
+    {
+      "start_id": "center",
+      "route_from_official_checkpoint": [],
+      "official_checkpoint_sha256": "2bad13aa73fdea33661d39f9d1b83e56d2a0936964703ec4195493e1d4607cff",
+      "frame_sha256": "5b739a6918f5c112c1d27c76fead778da712965fc106ed7efb56c09c3facd43e",
+      "field_confirmed_after_reload": true,
+      "reload_frame_reproducible": true,
+      "screen_translation_candidate_px": 0.008,
+      "screen_translation_candidate": {
+        "dx_pixels_candidate": -0.008,
+        "dy_pixels_candidate": -0.002,
+        "response": 0.99905,
+        "confidence": "unvalidated_scene_translation"
+      },
+      "translation_interpretation": "rendered map registration only; no coordinate claim",
+      "classification_observations": [
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field"
+      ]
+    },
+    {
+      "start_id": "west_offset",
+      "route_from_official_checkpoint": [
+        "LEFT",
+        "LEFT",
+        "LEFT",
+        "LEFT"
+      ],
+      "official_checkpoint_sha256": "2bad13aa73fdea33661d39f9d1b83e56d2a0936964703ec4195493e1d4607cff",
+      "frame_sha256": "78a2eaddadb4961286b123ea2aff4be7310194f6e5d694fcd55175a43413e5b5",
+      "field_confirmed_after_reload": true,
+      "reload_frame_reproducible": true,
+      "screen_translation_candidate_px": 47.985,
+      "screen_translation_candidate": {
+        "dx_pixels_candidate": 47.985,
+        "dy_pixels_candidate": 0.032,
+        "response": 0.69138,
+        "confidence": "unvalidated_scene_translation"
+      },
+      "translation_interpretation": "rendered map registration only; no coordinate claim",
+      "classification_observations": [
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field"
+      ]
+    },
+    {
+      "start_id": "east_offset",
+      "route_from_official_checkpoint": [
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT"
+      ],
+      "official_checkpoint_sha256": "2bad13aa73fdea33661d39f9d1b83e56d2a0936964703ec4195493e1d4607cff",
+      "frame_sha256": "05518264e27234fd425c91e8847d6e5118fc9d62d35345358d691537cbe19090",
+      "field_confirmed_after_reload": true,
+      "reload_frame_reproducible": true,
+      "screen_translation_candidate_px": 47.991,
+      "screen_translation_candidate": {
+        "dx_pixels_candidate": -47.991,
+        "dy_pixels_candidate": -0.031,
+        "response": 0.66539,
+        "confidence": "unvalidated_scene_translation"
+      },
+      "translation_interpretation": "rendered map registration only; no coordinate claim",
+      "classification_observations": [
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field"
+      ]
+    },
+    {
+      "start_id": "south_offset",
+      "route_from_official_checkpoint": [
+        "DOWN",
+        "DOWN",
+        "DOWN",
+        "DOWN"
+      ],
+      "official_checkpoint_sha256": "2bad13aa73fdea33661d39f9d1b83e56d2a0936964703ec4195493e1d4607cff",
+      "frame_sha256": "c41c2d052eca9b6e02a7b543edbd75be253aba210b96bac71ef44f488689da6b",
+      "field_confirmed_after_reload": true,
+      "reload_frame_reproducible": true,
+      "screen_translation_candidate_px": 47.946,
+      "screen_translation_candidate": {
+        "dx_pixels_candidate": 0.003,
+        "dy_pixels_candidate": -47.946,
+        "response": 0.39536,
+        "confidence": "unvalidated_scene_translation"
+      },
+      "translation_interpretation": "rendered map registration only; no coordinate claim",
+      "classification_observations": [
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field",
+        "cornelia_exterior_field"
+      ]
+    }
+  ],
+  "rejected_start_candidates": [],
+  "demonstration_method": "scripted route labels recorded from live observations; not reinforcement learning",
+  "demonstrations": [
+    {
+      "start_id": "center",
+      "success": true,
+      "decisions": 13,
+      "route_prefix": [],
+      "goal_confirmation_decision": 13
+    },
+    {
+      "start_id": "west_offset",
+      "success": true,
+      "decisions": 18,
+      "route_prefix": [
+        "RIGHT",
+        "RIGHT",
+        "RIGHT",
+        "RIGHT"
+      ],
+      "goal_confirmation_decision": 18
+    }
+  ],
+  "demonstration_decision_samples": 31,
+  "imitation_algorithm": "3-nearest-neighbor behavior cloning over downsampled rendered observations",
+  "evaluation_horizon_decisions": 32,
+  "evaluation": {
+    "IDLE": {
+      "successes": 0,
+      "episodes": 4,
+      "per_start": {
+        "center": {
+          "success": false,
+          "decisions": 32,
+          "goal_confirmation_decision": null,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 32,
+            "UP": 0,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 0
+          }
+        },
+        "west_offset": {
+          "success": false,
+          "decisions": 32,
+          "goal_confirmation_decision": null,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 32,
+            "UP": 0,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 0
+          }
+        },
+        "east_offset": {
+          "success": false,
+          "decisions": 32,
+          "goal_confirmation_decision": null,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 32,
+            "UP": 0,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 0
+          }
+        },
+        "south_offset": {
+          "success": false,
+          "decisions": 32,
+          "goal_confirmation_decision": null,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 32,
+            "UP": 0,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 0
+          }
+        }
+      }
+    },
+    "SEEDED_RANDOM": {
+      "successes": 0,
+      "episodes": 4,
+      "per_start": {
+        "center": {
+          "success": false,
+          "decisions": 32,
+          "goal_confirmation_decision": null,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 6,
+            "DOWN": 10,
+            "LEFT": 7,
+            "RIGHT": 9
+          }
+        },
+        "west_offset": {
+          "success": false,
+          "decisions": 32,
+          "goal_confirmation_decision": null,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 4,
+            "DOWN": 9,
+            "LEFT": 9,
+            "RIGHT": 10
+          }
+        },
+        "east_offset": {
+          "success": false,
+          "decisions": 32,
+          "goal_confirmation_decision": null,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 7,
+            "DOWN": 10,
+            "LEFT": 6,
+            "RIGHT": 9
+          }
+        },
+        "south_offset": {
+          "success": false,
+          "decisions": 32,
+          "goal_confirmation_decision": null,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 9,
+            "DOWN": 7,
+            "LEFT": 7,
+            "RIGHT": 9
+          }
+        }
+      }
+    },
+    "ALWAYS_UP": {
+      "successes": 2,
+      "episodes": 4,
+      "per_start": {
+        "center": {
+          "success": true,
+          "decisions": 13,
+          "goal_confirmation_decision": 13,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 13,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 0
+          }
+        },
+        "west_offset": {
+          "success": false,
+          "decisions": 32,
+          "goal_confirmation_decision": null,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 32,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 0
+          }
+        },
+        "east_offset": {
+          "success": false,
+          "decisions": 32,
+          "goal_confirmation_decision": null,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 32,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 0
+          }
+        },
+        "south_offset": {
+          "success": true,
+          "decisions": 18,
+          "goal_confirmation_decision": 18,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 18,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 0
+          }
+        }
+      }
+    },
+    "SCRIPTED": {
+      "successes": 4,
+      "episodes": 4,
+      "per_start": {
+        "center": {
+          "success": true,
+          "decisions": 13,
+          "goal_confirmation_decision": 13,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 13,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 0
+          }
+        },
+        "west_offset": {
+          "success": true,
+          "decisions": 18,
+          "goal_confirmation_decision": 18,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 14,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 4
+          }
+        },
+        "east_offset": {
+          "success": true,
+          "decisions": 18,
+          "goal_confirmation_decision": 18,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 14,
+            "DOWN": 0,
+            "LEFT": 4,
+            "RIGHT": 0
+          }
+        },
+        "south_offset": {
+          "success": true,
+          "decisions": 18,
+          "goal_confirmation_decision": 18,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 18,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 0
+          }
+        }
+      }
+    },
+    "BEHAVIOR_CLONING": {
+      "successes": 3,
+      "episodes": 4,
+      "per_start": {
+        "center": {
+          "success": true,
+          "decisions": 13,
+          "goal_confirmation_decision": 13,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 13,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 0
+          }
+        },
+        "west_offset": {
+          "success": true,
+          "decisions": 18,
+          "goal_confirmation_decision": 18,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 14,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 4
+          }
+        },
+        "east_offset": {
+          "success": false,
+          "decisions": 32,
+          "goal_confirmation_decision": null,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 0,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 32
+          }
+        },
+        "south_offset": {
+          "success": true,
+          "decisions": 18,
+          "goal_confirmation_decision": 18,
+          "false_goal_events": 0,
+          "action_counts": {
+            "NOOP": 0,
+            "UP": 18,
+            "DOWN": 0,
+            "LEFT": 0,
+            "RIGHT": 0
+          }
+        }
+      }
+    }
+  },
+  "negative_controls": {
+    "status_menu": {
+      "confirmed_scenes": [
+        "cornelia_exterior_field",
+        "menu"
+      ],
+      "false_castle_scene_transitions": 0,
+      "castle_entry_events": 0
+    }
+  },
+  "imitation_assessment": {
+    "demonstrated_start_ids": [
+      "center",
+      "west_offset"
+    ],
+    "held_out_start_ids": [
+      "east_offset",
+      "south_offset"
+    ],
+    "training_start_count": 2,
+    "training_start_successes": 2,
+    "training_start_success_with_turns": true,
+    "held_out_count": 2,
+    "held_out_successes": 1,
+    "held_out_always_up_successes": 1,
+    "held_out_turn_challenge_ids": [
+      "east_offset"
+    ],
+    "held_out_turn_imitation_successes": 0,
+    "held_out_beats_always_up": false,
+    "claim": "imitation_reproduced_demonstrated_turn_routes_only;_held_out_turn_start_failed"
+  },
+  "training": {
+    "rl_timesteps": 0,
+    "algorithm": "supervised imitation only; no RL training"
+  },
+  "elapsed_seconds": 54.496,
+  "claim": "imitation_reproduced_demonstrated_turn_routes_only;_held_out_turn_start_failed"
+}
