@@ -55,13 +55,16 @@ performed or tested here.
   secondary experiment. Preserve NES v0.7 as the trusted baseline; keep RAM
   signals provisional and do not add unverified RAM rewards or start large
   training runs.
-- Official GBA party: Sif (Warrior), Myth (Thief), Milo (Monk), Mustard
-  (displayed as Mustar; Red Mage). Official NES secondary party: Sif (Warrior), Mustard (White Mage),
+- Official GBA party: Sif (Warrior), Myth (Thief), Milo (Monk), Seed
+  (Red Mage). Official NES secondary party: Sif (Warrior), Mustard (White Mage),
   Lock (Black Mage), Milo (Monk). Preserve canonical requested names and any
   platform-specific UI aliases in `ff1_dawn_ai/party_config.py`.
 - Keep GBA exploratory code and findings on the dedicated `codex/gba-*`
   branch until reviewed. Do not disturb the NES environment, model, ROM,
   recordings, or save states.
+- Prefer making save states directly through the active Stable-Retro core and
+- The GBA Gymnasium adapter loads only a verified, run-specific native
+  checkpoint and uses neutral rewards until progress signals are validated.
 - Prefer making save states directly through the active Stable-Retro core and
   verifying reset/reload/resume. Do not repeat speculative mGBA savestate
   conversion or copy guessed battery-save filenames into the real integration.

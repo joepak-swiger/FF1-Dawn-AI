@@ -214,9 +214,12 @@ class GbaStateFormatTests(unittest.TestCase):
         self.assertIn("observed unknown", result["failure"])
 
     def test_custom_party_profiles_and_keyboard_navigation_are_exact(self):
+        self.assertEqual([m.canonical_name for m in GBA_CUSTOM_PARTY], [
+            "Sif", "Myth", "Milo", "Seed",
+        ])
         self.assertEqual([(m.display_name, m.job) for m in GBA_CUSTOM_PARTY], [
             ("Sif", "Warrior"), ("Myth", "Thief"),
-            ("Milo", "Monk"), ("Mustar", "Red Mage"),
+            ("Milo", "Monk"), ("Seed", "Red Mage"),
         ])
         self.assertEqual([(m.display_name, m.job) for m in NES_SECONDARY_PARTY], [
             ("Sif", "Warrior"), ("Must", "White Mage"),
@@ -259,7 +262,7 @@ class GbaStateFormatTests(unittest.TestCase):
                 {"canonical_name": "Sif", "display_name": "Sif", "display_name_matches_verified_key_sequence": True},
                 {"canonical_name": "Myth", "display_name": "Myth", "display_name_matches_verified_key_sequence": True},
                 {"canonical_name": "Milo", "display_name": "Milo", "display_name_matches_verified_key_sequence": True},
-                {"canonical_name": "Mustard", "display_name": "Mustar", "display_name_matches_verified_key_sequence": True},
+                {"canonical_name": "Seed", "display_name": "Seed", "display_name_matches_verified_key_sequence": True},
             ]
             passed = {name: {"status": "passed"} for name in (
                 "four_characters_confirmed", "party_setup_completed", "playable_field_reached",
@@ -281,7 +284,8 @@ class GbaStateFormatTests(unittest.TestCase):
             packaged = package_run(run, output, ["independent-run"])
             public = json.loads((packaged / "metrics.json").read_text(encoding="utf-8"))
             self.assertEqual(public["matching_clean_run_count"], 2)
-            self.assertEqual(public["party"][3]["display_name"], "Mustar")
+            self.assertEqual(public["party"][3]["canonical_name"], "Seed")
+            self.assertEqual(public["party"][3]["display_name"], "Seed")
             self.assertTrue((packaged / "proof_independent-run.png").is_file())
             report = (packaged / "REPORT.md").read_text(encoding="utf-8")
             self.assertIn("independent-run", report)

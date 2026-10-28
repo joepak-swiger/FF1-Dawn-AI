@@ -1,11 +1,25 @@
 # FF1-Dawn-AI status
 
-**Updated:** 2026-10-27
+**Updated:** 2026-10-28
 **Current milestone:** GBA Dawn of Souls is the primary development target.
-Two fresh independent runs verified the official Sif/Warrior, Myth/Thief,
-Milo/Monk, Mustard/Red Mage party (GBA alias Mustar), Cornelia, native
+The latest owner-approved GBA party is Sif/Warrior, Myth/Thief, Milo/Monk,
+Seed/Red Mage. Two new clean starts verified the full roster, Cornelia, native
 checkpoint restoration, and four-direction movement. NES remains secondary;
 v0.7 stays trusted, and RAM signals remain provisional.
+
+## 2026-10-28 — GBA Seed party verification
+
+- The latest owner correction on PR #6 (`6457061644`) intentionally restores
+  Seed/Red Mage as the official GBA fourth character. Earlier Seed and
+  Mustard/Mustar outputs remain historical and unchanged.
+- Two new independent clean starts, `20261028_001756_354424Z` and
+  `20261028_001816_066107Z`, visually displayed the requested names/classes,
+  completed party setup, and reached Cornelia. Each unique native checkpoint
+  restored after reset and passed UP/DOWN/LEFT/RIGHT movement checks against
+  idle controls. Sanitized evidence is at
+  `docs/experiments/gba_feasibility/20261028_001756_354424Z/`.
+- The reward-neutral Gymnasium environment and two-episode Seed checkpoint
+  smoke are in the linked follow-up PR #7. No training or reward changes ran.
 
 ## What the recordings show
 
