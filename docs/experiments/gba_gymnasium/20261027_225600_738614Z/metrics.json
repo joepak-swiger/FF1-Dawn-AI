@@ -1,0 +1,35 @@
+{
+  "run_id": "20261027_225600_738614Z",
+  "checkpoint_loaded": true,
+  "reset_reproducible_observation": true,
+  "observation_shape": [
+    84,
+    84,
+    3
+  ],
+  "observation_dtype": "uint8",
+  "action_names": [
+    "NOOP",
+    "UP",
+    "DOWN",
+    "LEFT",
+    "RIGHT",
+    "A",
+    "B",
+    "START",
+    "SELECT",
+    "L",
+    "R"
+  ],
+  "requested_steps": 12,
+  "completed_steps": 12,
+  "action_frames": 8,
+  "neutral_rewards_only": true,
+  "terminated": false,
+  "truncated": true,
+  "checkpoint_source_unchanged": true,
+  "limitations": [
+    "The smoke executes controls from a verified custom-party checkpoint; it does not infer coordinate changes or game progress.",
+    "No battle/outcome rewards or PPO training are used."
+  ]
+}

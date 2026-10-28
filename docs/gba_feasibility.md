@@ -1,59 +1,133 @@
 # Dawn of Souls GBA feasibility runbook
 
 The GBA experiment is separate from NES training and does not modify the NES
-environment or v0.7 model. The default Windows entrypoint is
-`run_gba_feasibility.cmd`; double-click it to use the existing WSL virtual
-environment, validate the local integration, ROM, and dependencies, then try
-the Stable-Retro boot, party-setup macro, and native-core state round trip.
-Use `run_gba_feasibility.cmd --dry-run` to validate command forwarding and the
-existing GBA runtime without starting the emulator. No packages are installed.
+environment or v0.7 model. Double-click `run_gba_feasibility.cmd` to use the
+existing WSL virtual environment. `run_gba_feasibility.cmd --dry-run` validates
+the runtime and command path without starting the emulator or installing
+packages.
 
 Each invocation writes a unique wrapper log and summary under
 `videos/gba_feasibility/logs/<run-id>/`. The Python probe writes its own unique
 report directory under `videos/gba_feasibility/<utc-id>/`, including JSON,
-text report, native checkpoint, and small screenshots. The launcher prints the
-exact report paths. Failed or incomplete work is preserved for diagnosis and
-does not overwrite prior runs.
+text report, native checkpoint, and small screenshots. Failed or incomplete
+work is preserved and prior runs are not overwritten.
 
-The fixed START/A/SELECT/DOWN macro is only a candidate party-setup route. In
-runtime mode, the probe now writes `party_setup_trace.csv` and a small
-`party_trace_*.png` after each pressed and released input, including the boot
-idle image and per-step changed-pixel fraction. Use the ordered trace to find
-the first input where the screen stops progressing or reaches the wrong menu;
-do not repeat the macro blindly. A successful state serialization and
-deterministic resume do not prove that party creation succeeded. Review
-`gba_candidate_party_state.png` visually, then record whether it shows the
-expected playable scene. The probe's
-`party_creation_verified` and `battery_save_verified` fields remain false until
-separately established. Do not train on GBA until repeatable controls, a
-visually confirmed post-party checkpoint, reset/reload/resume, and save-state
-behavior are confirmed.
+## Party setup and playable checkpoint
 
-The `party_setup_trace.csv` is flushed after every captured input so an
-interrupted run retains the diagnostic prefix. The screenshots and trace stay
-in the ignored local run directory and must not be committed.
+Runtime party creation uses `ff1_dawn_ai/gba_party_setup.py` and a bounded
+screen-state route. It matches locally observed title, game-selection,
+new-game, party-editor, class-picker, and party-confirmation anchors. Unknown
+menu states stop the route instead of guessing. Stable-Retro must use
+`Actions.ALL`: the custom integration has no valid-action list and default
+`FILTERED` mode drops START, which is the party editor's Done input. The route
+creates the official GBA party Sif (Warrior), Myth (Thief), Milo (Monk), and
+Seed (Red Mage). Names are typed from the actual on-screen keyboard; each
+character cursor is checked against a tolerant visual anchor before A selects
+it. The class picker's white-hand cursor is read from its four observed option
+positions, then checked again before the class is confirmed. The final roster
+screenshot is the visible name/class evidence. No auto-name sequence is used.
 
-Each trace record also has a `screen_id` based on exact screenshot bytes. The
-probe writes `party_setup_trace_summary.json` and compact contact sheet(s) of
-the boot image and post-release frames, with action names and per-action pixel
-change. Repeated IDs indicate identical saved pixels only; animation timing,
-transitions, and gameplay meaning still require interpretation. The probe does
-not automatically call a frame a title, name-entry, or playable screen.
+After submission, story advancement uses bounded A taps and only treats a
+colorful map as a candidate. The probe compares two equal-length no-input
+controls, then restores the exact candidate state four times and tests UP,
+DOWN, LEFT, and RIGHT independently. It requires each resulting frame to
+differ broadly from both idle controls. A field is called playable only after
+the image is visually reviewed and all four movement checks pass. This is
+direct movement evidence, not coordinate tracking or a general-purpose screen
+classifier. Battery-save loading remains a separate, unverified question.
 
-The metrics and report separate these milestones: integration boot, input
-control evidence, party creation, reaching a playable scene, native state
-serialization, state restoration after reset, and correct gameplay resume.
-Button mapping/action calls can be partially verified without proving that
-the character moves or menu selection advances. A deterministic frame match
-proves native serialization/replay only. `gameplay_resumes_correctly` stays
-unverified until a playable checkpoint is visually confirmed and an in-game
-action succeeds after reload.
+Each verified state is kept locally at
+`states/gba_custom_party/<run-id>/stable_retro_core.state`; the existing
+`states/ff1_after_party*` checkpoints are never replaced. The run also has a
+separate ignored report directory under `videos/gba_feasibility/<run-id>/`.
 
-For an offline report of available state formats, use the existing Python
-probe with no options from the active environment:
+The probe writes `party_setup_trace.csv`, `party_state_machine_trace.json`, and
+small `party_trace_*.png` images after every pressed/released input. Those
+diagnostics identify a failed transition. `gameplay_readiness` is derived from
+separately passed four-character, playable-field, native-restore, and
+post-restore-movement milestones. A completed probe only means execution
+finished. The WSL wrapper reads the same metrics and reports unverified
+gameplay milestones accurately.
+
+For key-grid calibration, `python scripts/gba_name_keyboard_probe.py` starts a
+separate fresh game, captures the name keyboard and locally observed letter
+cursor positions, and writes only to a unique ignored diagnostics directory.
+It does not submit a party or write a battery save.
+
+Screenshots, traces, native states, ROMs, and saves remain in ignored local
+directories; do not commit them. For a fully verified custom-party run, create
+a reviewed, sanitized summary and small roster/field contact sheet with:
+
+```bash
+python scripts/package_gba_party_evidence.py videos/gba_feasibility/<run-id> \
+  --repeat-run-id <second-successful-run-id>
+```
+
+The packager refuses incomplete milestones, unexpected names/classes, and
+existing output paths. It publishes only `REPORT.md`, `metrics.json`, and a
+small `proof.png` under `docs/experiments/gba_feasibility/<run-id>/`.
+
+## Current result and next check
+
+Earlier Seed sessions and the Mustard/Mustar sessions remain intact as
+historical records. The latest owner decision restores Seed as the official
+GBA Red Mage. New verification runs must have unique IDs; historical records
+must not be renamed or edited to imply they used the new official profile.
+
+The reward-neutral Gymnasium adapter in ff1_dawn_ai/gba_env.py loads a native
+Seed-party checkpoint on each reset, returns 84x84 grayscale frame stacks, exposes
+NOOP/directions/A/B/START/SELECT/L/R, forwards core termination, and truncates
+at its configured step limit. Run python scripts/gba_gym_smoke.py in the
+activated WSL environment. The script discovers a local checkpoint only when
+its saved metrics verify the exact Seed/Red Mage roster and all gameplay
+milestones; it writes unique local run artifacts and a sanitized GitHub-ready
+report/proof package. Earlier live smokes from Mustar checkpoints are historical
+and unchanged. Earlier public smokes remain at
+docs/experiments/gba_gymnasium/20261027_225340_868798Z/ and
+docs/experiments/gba_gymnasium/20261027_225600_738614Z/.
+
+Earlier live 12-step Mustar smoke passed with repeatable reset observations,
+0.0 rewards, truncation at step 12, and an unchanged checkpoint. It does not
+infer map coordinates or story progress. Because the GBA core's first
+framebuffer after a restore differed, the environment performs two identical
+native restores with two neutral settling frames each; the resulting reset
+observation is deterministic.
+
+## Latest owner-approved Seed verification
+
+Two new clean Stable-Retro runs, `20261028_001756_354424Z` and
+`20261028_001816_066107Z`, verified the exact Sif/Warrior, Myth/Thief,
+Milo/Monk, Seed/Red Mage roster. Both completed setup, reached the visible
+Cornelia field, saved and restored unique native checkpoints, and passed
+UP/DOWN/LEFT/RIGHT movement checks beyond two idle controls. Sanitized evidence
+is published under `docs/experiments/gba_feasibility/20261028_001756_354424Z/`;
+the second clean-run contact sheet is included there. Raw reports, screenshots,
+traces, and checkpoint states remain local and are not staged.
+
+The seeded-random four-direction Gymnasium smoke
+`20261028_002105_827756Z` loaded the second Seed checkpoint and completed two
+12-action episodes (24 actions total). Both reset observations and complete
+observation-hash sequences matched. Counts were six UP, six DOWN, six LEFT,
+and six RIGHT; rewards remained 0.0; the configured 12-step truncation ended
+each episode; and the checkpoint file hash remained unchanged. The maximum
+identical-frame streak was 1 in this run. This is a pixel-repeat diagnostic,
+not a semantic stuck detector or coordinate/progression measurement. Public
+proof and metrics are at
+`docs/experiments/gba_gymnasium/20261028_002105_827756Z/`. PPO training and
+progress rewards remain disabled.
+
+Battery-save loading has not been tested. Next build a short-episode
+evaluation harness and independently validate movement, battle outcomes, and
+party survival before training.
+
+## Offline format inspection
+
+With the active Python environment, the probe can inspect local save-state
+container metadata without running the emulator:
 
 ```bash
 python scripts/gba_feasibility_probe.py
 ```
 
-Routine Windows use should not require entering WSL or activating `.venv`.
+Routine Windows operation should not require entering WSL or activating
+`.venv`.

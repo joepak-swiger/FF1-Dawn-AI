@@ -1,0 +1,37 @@
+{
+  "run_id": "20261027_213047_28057_328",
+  "report_id": "20261027_213053_263767Z",
+  "track": "GBA Dawn of Souls feasibility",
+  "status": "completed",
+  "gameplay_readiness": "verified",
+  "party": {
+    "party_setup_started": true,
+    "four_characters_named": 4,
+    "classes": ["Warrior", "Monk", "White Mage", "Black Mage"],
+    "party_submitted_and_confirmed": true
+  },
+  "field": {
+    "location": "Cornelia world map (visual review)",
+    "playable_field_reached": true,
+    "native_checkpoint_saved": true,
+    "native_checkpoint_bytes": 397312,
+    "native_checkpoint_restored": true,
+    "idle_control_changed_pixel_fraction": 0.0,
+    "up_after_restore_changed_pixel_fraction": 0.6040625,
+    "movement_threshold": 0.03,
+    "movement_after_restore": true,
+    "movement_action": "UP held 12 frames, then 30 frames idle"
+  },
+  "other_milestones": {
+    "stable_retro_core_initialized": "passed; initial boot-logo anchor and expected menu transitions observed",
+    "battery_save_loading": "not_tested"
+  },
+  "wrapper": {
+    "runtime_smoke": "passed",
+    "dry_run": "passed",
+    "summary": "playable checkpoint verified"
+  },
+  "training_started": false,
+  "nes_model_or_rewards_modified": false,
+  "raw_screenshots_states_roms_or_saves_published": false
+}

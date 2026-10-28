@@ -1,8 +1,48 @@
 # FF1-Dawn-AI status
 
-**Updated:** 2026-10-27
-**Current milestone:** Offline analysis of NES RAM captures; no PPO reward changes
-or new training run.
+**Updated:** 2026-10-28
+**Current milestone:** GBA Dawn of Souls is the primary development target.
+The latest owner-approved GBA roster is Sif/Warrior, Myth/Thief, Milo/Monk,
+Seed/Red Mage. Earlier Seed and Mustar checkpoints, reports, and Gymnasium
+smokes remain historical and unmodified. Two new clean Seed starts and the
+real two-episode Gymnasium action smoke passed. NES remains secondary; v0.7
+stays trusted, and RAM signals remain provisional.
+
+## 2026-10-28 — Official Seed party and GBA Gymnasium smoke
+
+- Read the latest owner correction on PR #6 (`6457061644`): Seed/Red Mage is
+  intentional and supersedes Mustard/Mustar for the official GBA profile.
+- Updated canonical configuration, tests, evidence validation, checkpoint
+  discovery, `AGENTS.md`, and GBA runbook. The NES secondary profile is
+  unchanged. Previous Seed and Mustar records are historical and unmodified.
+- Fresh independent clean starts `20261028_001756_354424Z` and
+  `20261028_001816_066107Z` each entered and visibly displayed Sif/Warrior,
+  Myth/Thief, Milo/Monk, Seed/Red Mage; both completed setup and reached the
+  Cornelia field. Each saved and restored a unique native state and passed
+  UP/DOWN/LEFT/RIGHT movement after restore against idle controls. The on-screen
+  roster image confirms the four spellings/classes. Sanitized evidence is at
+  `docs/experiments/gba_feasibility/20261028_001756_354424Z/`.
+- Gymnasium smoke `20261028_002105_827756Z` loaded the second Seed checkpoint
+  and ran two 12-action seeded-random direction episodes. Both reset
+  observations and complete observation hashes matched; action counts were
+  6/6/6/6 across UP/DOWN/LEFT/RIGHT (24 total); all rewards were 0.0; both
+  episodes truncated at step 12; checkpoint remained unchanged; longest exact
+  repeated-frame streak was 1. This is a pixel-repeat diagnostic, not a
+  semantic stuck/progress detector. Sanitized package:
+  `docs/experiments/gba_gymnasium/20261028_002105_827756Z/`.
+- Gymnasium `check_env` also passed against the actual Seed checkpoint and
+  Stable-Retro core (only the standard alternate-render-mode warning appeared).
+- Stable-Baselines3's checker passed on that same checkpoint. A CPU PPO
+  `CnnPolicy` initialized and predicted/executed one `LEFT` action with an
+  84x84x3 observation and 0.0 reward; no `learn()` call or training step ran.
+- The first smoke attempt exposed an outer-loop break on time-limit truncation;
+  it ran only one episode and correctly failed the publication gate. The loop
+  now treats truncation as an episode boundary and continues to the next clean
+  reset. The succeeding two-episode run passed.
+- GBA has a reward-neutral AI-compatible environment and repeatable action
+  smoke, but no battle, coordinate, HP/EXP, or story reward is validated. No
+  PPO training ran. Next build a small evaluation interface and independently
+  validate field position/progress signals before introducing rewards.
 
 ## What the recordings show
 
@@ -293,6 +333,64 @@ real battle outcome and field return, then validate candidate HP/EXP/location
 signals against those observations. Do not promote RAM candidates or alter
 rewards before that evidence exists.
 
+## 2026-10-27 — GBA custom party and repeatable Cornelia checkpoint
+
+- The initial GBA profile used the unauthorized Seed (Red Mage) substitution;
+  the secondary NES profile remains Sif/Warrior, Mustard/White Mage,
+  Lock/Black Mage, Milo/Monk.
+- Replaced automatic naming with character-by-character keyboard navigation.
+  Each requested letter is checked against a tolerant visual keyboard cursor
+  anchor before it is entered. The selected class is checked from the white
+  hand cursor position in the actual 2x2 class picker; each class is then
+  confirmed in the roster. The final roster screenshot visibly shows every
+  requested name and class.
+- Two fresh Stable-Retro runs (`20261027_222448_322832Z` and
+  `20261027_222507_734422Z`) completed the same party setup, reached the
+  Cornelia field, saved a 397,312-byte native state into run-specific
+  `states/gba_custom_party/<run-id>/` directories, and restored it after reset.
+  For each run, two equal-length idle trials matched, and UP/DOWN/LEFT/RIGHT
+  each caused broad frame changes. The accepted roster and after-UP map were
+  visually inspected.
+- The earlier generic checkpoints and all previous runs remain unchanged. The
+  ROM, full traces, screenshots, and native states remain local and ignored.
+  Sanitized findings and a small proof contact sheet are published at
+  `docs/experiments/gba_feasibility/20261027_222507_734422Z/`.
+- Added a safe evidence packager that refuses unverified milestones, wrong
+  roster profiles, missing proof frames, and output overwrite. It emits only a
+  report, compact JSON and small contact sheet.
+- Review correction: replace Seed with canonical Mustard / in-game Mustar;
+  historical Seed states/evidence remain preserved and superseded. Two new
+  independent runs verified the corrected party and four-direction restore.
+  Evidence: docs/experiments/gba_feasibility/20261027_224615_320655Z/.
+  Native checkpoints remain local and ignored.
+
+## 2026-10-27 — Reward-neutral GBA Gymnasium environment
+
+- Added FF1GbaEnv with a verified native checkpoint loaded at every reset,
+  discrete NOOP/direction/A/B/START/SELECT/L/R controls, 84x84 grayscale frame
+  stacks, neutral rewards, core termination forwarding, and step-limit
+  truncation.
+- Full WSL unittest suite passed (42 tests). Gymnasium's check_env also passed
+  against the actual Stable-Retro core and corrected native checkpoint.
+- Two 12-step smokes from the same corrected checkpoint passed with
+  deterministic reset observations, zero rewards, truncation at step 12, and
+  an unchanged checkpoint hash. Each recorded local traces/metrics/GIFs and
+  contact sheets. Sanitized summaries are published at
+  docs/experiments/gba_gymnasium/20261027_225340_868798Z/ and
+  docs/experiments/gba_gymnasium/20261027_225600_738614Z/.
+- Repeatable first-reset output required two identical native state restores,
+  each followed by two neutral settling frames; this behavior is encapsulated
+  in FF1GbaEnv.reset().
+- The smoke verifies control response and Gymnasium mechanics. It does not
+  infer coordinates, battle completion, survival, or story progress. No PPO
+  training or NES model/reward changes were made.
+
+### Next GBA milestone
+
+Build a short-episode evaluation harness, then validate field movement,
+battle outcomes, and party survival against independent evidence before any
+training. Keep NES v0.7 untouched.
+
 
 ## 2026-10-27 — Sanitized NES evidence publication and GBA launcher
 
@@ -302,3 +400,76 @@ rewards before that evidence exists.
 - Visual review of session 1 step 1680 identified a title/new-game menu mislabeled as battle-like by the pixel classifier; at that frame `0x0014` and `0x03CD` had the purported battle mode. This is evidence against interpreting the pixel labels as truth and keeps every candidate provisional.
 - Future successful NES capture pipelines now prepare a whitelisted evidence package automatically. GBA now has a Windows one-click runtime probe launcher with dry-run, WSL argument forwarding, unique logs and summaries; party creation still requires visual review. No training or reward logic changed.
 - **Decision:** `0x0014` remains provisional. Next independently review battle-entry, battle-result, field-return, title/menu, and game-over scenes, then compare candidate RAM values with those manual labels. Preserve v0.7 and do not start new training.
+
+## 2026-10-27 — Reviewed successful GBA runtime and guarded menu cycling
+
+- Inspected the complete local run `20261027_203527_887912Z`, including its
+  report, metrics, runtime milestones, all 47 action endpoints, both contact
+  sheets, candidate screenshot, post-reload screenshot, native state presence,
+  and execution log. The screenshots show the boot logo, Dawn of Souls title,
+  game selection, FF1 setup, party name/class assignment, and class selection.
+  They do not show a completed party or playable overworld.
+- The original probe wrote a 397,312-byte native Stable-Retro state and passed
+  a deterministic reset/reload/replay frame comparison. The replayed A action
+  remained in class selection. State serialization and restore are verified at
+  a menu checkpoint; party creation and gameplay resume are not.
+- Fixed GBA result reporting so top-level and nested runtime milestone objects
+  match and the text report prints the runtime results. `status: completed`
+  describes probe execution, while `gameplay_readiness: not_verified` prevents
+  treating it as game completion.
+- Added an exact-frame pair-boundary cycle guard to the bounded START/A party
+  macro. A new one-click WSL run (`20261027_204417_21619_444`) stopped after
+  pair 10 repeated pair 8's screenshot, saved 41 trace rows, and again passed
+  native state reset/reload. Its candidate screen remains party setup, so the
+  guard reduces blind input cycling but does not create a playable checkpoint.
+- Published sanitized findings and milestone metrics at
+  `docs/experiments/gba_feasibility/20261027_203527_887912Z/`. Local screenshots,
+  raw traces, native states, ROMs, and logs remain ignored and uncommitted.
+- Full WSL unittest suite: 26 passed. The one-click runtime probe also
+  completed successfully. No NES reward/model changes or training were made.
+
+### Immediate next decision
+
+Build a bounded feedback-driven party setup route from the recorded menu
+screens. Capture and validate each confirmation/name/class transition, stop on
+unrecognized screens, and reach the Cornelia overworld before saving the
+candidate checkpoint. After reset/reload, demonstrate an actual field movement.
+Keep GBA training disabled; preserve the v0.7 NES baseline and all provisional
+NES RAM findings.
+
+## 2026-10-27 — Automated GBA party and Cornelia checkpoint
+
+- The bounded state machine completed a real Stable-Retro run
+  (`20261027_213318_29077_440`; report directory
+  `20261027_213323_923267Z`). It matched locally observed anchors for Dawn of
+  Souls boot logo and title, game selection, FF1 title, new-game prompt, party
+  editor, and party confirmation. It advanced the opening story with bounded
+  taps rather than repeating a blind setup macro.
+- Stable-Retro's default `FILTERED` action mode discarded START because the
+  custom integration has no valid-action list. The probe now requests
+  `Actions.ALL`; START reached the game's Begin Game confirmation and A
+  accepted its preselected Yes option.
+- All four roster name regions changed after Auto-Name. The resulting party
+  classes were Warrior, Monk, White Mage, and Black Mage. The captured screen
+  showed the Cornelia world map/field.
+- The probe serialized a 397,312-byte native checkpoint. After reset and
+  restore, two equal-length idle observations matched. UP held for 12 frames
+  plus 30 frames idle changed 60.4% of pixels, versus 0% between idle
+  controls (3% minimum movement threshold). The after-UP screenshot shows the
+  map; movement is empirical evidence, while field-screen semantics remain
+  based on screenshot review and the movement control comparison.
+- Corrected stale readiness fields in JSON, milestones, report, and WSL
+  wrapper summary. The fresh run now reports boot, menu/input controls, party
+  confirmation, and verified gameplay readiness consistently. Battery-save
+  loading remains unverified.
+- WSL unittest suite: 33 tests passed. The fresh emulator run completed. A
+  sanitized result is published under
+  `docs/experiments/gba_feasibility/20261027_213323_923267Z/`; full screenshots,
+  trace, native state, ROM, and saves remain local and ignored.
+
+### Next GBA step
+
+Repeat this clean-reset route and compare the milestone summary and movement
+proof, then expose the checkpoint as a reproducible evaluation start state and
+test multiple field directions. Do not begin large-scale GBA training yet.
+NES v0.7 remains untouched.
