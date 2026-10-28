@@ -524,3 +524,48 @@ Repeat this clean-reset route and compare the milestone summary and movement
 proof, then expose the checkpoint as a reproducible evaluation start state and
 test multiple field directions. Do not begin large-scale GBA training yet.
 NES v0.7 remains untouched.
+
+## 2026-10-28 — Controlled GBA locomotion and RAM differential
+
+- Ran the new headless probe in the existing WSL runtime against the official
+  Seed/Red Mage Cornelia checkpoint (`20261028_001816_066107Z`). The native
+  checkpoint hash remained unchanged; all 171 reset observations in the run
+  matched. The run used three independent resets per condition, one emulator
+  frame per control step, and two neutral release frames before RAM sampling.
+- UP/DOWN/LEFT/RIGHT pulses at 1, 2, 4, 8, 16, and 32 frames each produced
+  repeatable rendered-map shifts with the expected sign on 3/3 repeats. At 64
+  frames the DOWN path's scene shift was smaller and phase response weaker,
+  consistent with a route/layout boundary or changed scene composition; this
+  is not accepted as a blocked-tile result. Contact sheets were visually
+  reviewed and show the party moving relative to Cornelia landmarks.
+- Reversing 16- and 32-frame vertical and horizontal routes returned map
+  registration to within 0.04 pixels of the start across all repeats; matched
+  idle controls were within 0.01 pixels. Eight-frame reversals retained about
+  14 pixels of screen-map displacement. Image differences after the longer
+  reversals were close to idle-control changes, consistent with sprite
+  animation/facing rather than continued map displacement. This validates
+  repeatable short movement and relative map-view return, not exact player tile
+  coordinates.
+- The active Stable-Retro `get_ram()` view contains 527,360 bytes. A large
+  number of bytes are stable during no-op and respond repeatably to direction;
+  this is not a coordinate discovery by itself. Offsets `0x33FC` and `0x3404`
+  are provisional examples. At short pulses, their values do not provide two
+  clean independent axes (left and right alias at eight frames), and no second
+  known origin has been tested. No GBA coordinate signal or visit tracker is
+  promoted.
+- A 128-frame northbound probe visibly entered Castle Cornelia 1F. Continued
+  movement followed a scene transition, so the run did not identify a blocked
+  terrain tile. The obstacle milestone remains open.
+- Sanitized report, compact metrics, and three small contact sheets are
+  published at `docs/experiments/gba_locomotion/20261028_031101_730780Z/`.
+  Raw RAM, detailed traces, full captures, ROMs, and native states remain
+  ignored locally. Rewards stayed neutral; no training ran. NES v0.7 and its
+  experiments were untouched.
+
+### Next GBA decision
+
+Repeat RAM analysis from a second visually established field position, and
+target a known wall or water boundary with matched no-op and reverse controls.
+Only after coordinate-like values distinguish those origins and survive
+reversal should an evaluation-only position/visit tracker be added. Do not
+start PPO or add progress rewards yet.
