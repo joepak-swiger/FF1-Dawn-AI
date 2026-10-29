@@ -289,6 +289,7 @@ def run(args: argparse.Namespace) -> Path:
     recorder = (CombatDecisionRecorder(out / "expert_decisions")
                 if args.record_combat_demos else None)
     active_group_id = None
+    pending_expert_decisions = []
     policy_label = ("LEARNED COMBAT + SEEDED RANDOM" if learned_policy else
                     "SCRIPTED" if args.policy == "scripted_baseline" else
                     "AUTONOMOUS SCRIPTED COMBAT + SEEDED RANDOM" if args.policy == "autonomous_session" else
@@ -391,11 +392,13 @@ def run(args: argparse.Namespace) -> Path:
             # Only verified pre-action expert buttons become labels. Learned
             # actions never become training labels for themselves.
             if recorder is not None:
-                recorder.record(
-                    frame=frame.copy(), stage=stage, action=expert_action,
-                    group_id=active_group_id,
-                    encounter_id=f"{run_id}:battle_{session.current_battle_id:02d}",
-                )
+                # Do not write a supervised label until the entire encounter
+                # ends with independent EXP-banner victory evidence.
+                pending_expert_decisions.append({
+                    "frame": frame.copy(), "stage": stage, "action": expert_action,
+                    "group_id": active_group_id,
+                    "encounter_id": f"{run_id}:battle_{session.current_battle_id:02d}",
+                })
             if learned_policy is None:
                 return expert_action, "scripted_expert"
             action, confidence = learned_policy.predict(frame, stage)
@@ -505,6 +508,7 @@ def run(args: argparse.Namespace) -> Path:
                 active_battle_id = session.battle_detected(step_no)
                 active_group_id = hashlib.sha256(
                     env.retro_env.em.get_state()).hexdigest()
+                pending_expert_decisions.clear()
                 battle_confirmation_step = step_no
                 state_bytes = env.retro_env.em.get_state()
                 (out / "battle_command_checkpoint_candidate.state").write_bytes(state_bytes)
@@ -558,6 +562,12 @@ def run(args: argparse.Namespace) -> Path:
                         if terminated or truncated:
                             stop_reason = "emulator_ended_after_target_confirmation"
                             status = "emulator_terminated" if terminated else "episode_truncated"
+                            break
+                        if target_action != "A":
+                            # A non-confirm action is allowed to be issued,
+                            # but it must never be counted as an Attack target.
+                            status = "battle_input_attempted"
+                            stop_reason = "learned_target_action_unverified"
                             break
                         battle_commands += 1
                         total_battle_commands += 1
@@ -713,6 +723,10 @@ def run(args: argparse.Namespace) -> Path:
                                            "event": "postbattle_screen_not_in_reviewed_map_anchors"})
                         outcome = "victory" if battle_victory_exp_confirmed else "unknown"
                         session.finish_battle(outcome)
+                        if recorder is not None and outcome == "victory":
+                            for sample in pending_expert_decisions:
+                                recorder.record(**sample)
+                        pending_expert_decisions.clear()
                         events.append({"step": step_no, "battle_id": active_battle_id,
                                        "event": "battle_finished", "outcome": outcome,
                                        "exp_banner": battle_victory_exp_confirmed,
@@ -1046,6 +1060,8 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("learned combat needs --combat-model and cannot write expert labels")
     if args.combat_policy == "learned" and args.policy != "autonomous_session":
         parser.error("learned combat requires --policy autonomous_session")
+    if args.combat_policy == "learned" and not Path(args.combat_model).is_file():
+        parser.error("learned combat model not found")
     if not 0.0 <= args.min_combat_confidence <= 1.0:
         parser.error("--min-combat-confidence must be 0..1")
     if min(args.decisions, args.capture_every, args.max_approach, args.max_return,
