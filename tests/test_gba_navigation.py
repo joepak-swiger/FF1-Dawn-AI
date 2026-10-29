@@ -20,6 +20,14 @@ from scripts.gba_navigation_imitation import (
     ROUTE_SPECS, TRAIN_START_IDS, VALIDATION_START_IDS, FINAL_TEST_START_IDS,
     select_validation_policy,
 )
+from scripts.gba_route_discovery import candidate_routes, reset_is_valid
+from scripts.gba_navigation_fresh_benchmark import (
+    FINAL_ROUTES as FRESH_FINAL_ROUTES,
+    TRAIN_IDS as FRESH_TRAIN_IDS,
+    VALIDATION_ROUTES as FRESH_VALIDATION_ROUTES,
+    make_specs as fresh_benchmark_specs,
+    validate_split as validate_fresh_split,
+)
 from scripts.gba_navigation_recovery import opposite_direction
 
 
@@ -140,6 +148,20 @@ class NavigationActionTests(unittest.TestCase):
                 result = classifier.classify(np.asarray(source.convert("RGB")))
             self.assertEqual(result.label, "cornelia_exterior_field", name)
             self.assertEqual(result.status, "candidate", name)
+        for name in ("val_east_north_detour", "val_west_north_detour",
+                     "test_east_south_detour", "test_west_south_detour"):
+            path = root / "docs/experiments/gba_scene_classifier" / f"field_anchor_reviewed_{name}.png"
+            with Image.open(path) as source:
+                result = classifier.classify(np.asarray(source.convert("RGB")))
+            self.assertEqual(result.label, "cornelia_exterior_field", name)
+            self.assertEqual(result.status, "candidate", name)
+        for name in ("val_east_north", "val_west_north",
+                     "test_east_south", "test_west_south"):
+            path = root / "docs/experiments/gba_scene_classifier" / f"field_anchor_reviewed_v2_{name}.png"
+            with Image.open(path) as source:
+                result = classifier.classify(np.asarray(source.convert("RGB")))
+            self.assertEqual(result.label, "cornelia_exterior_field", name)
+            self.assertEqual(result.status, "candidate", name)
         controls = {
             root / "docs/experiments/gba_scene_classifier/title_screen_negative_control.png": "unknown",
             root / "docs/experiments/gba_castle_goal/20261028_052724_624774Z/town_ram_collision.png": "cornelia_town",
@@ -227,6 +249,39 @@ class NavigationActionTests(unittest.TestCase):
         self.assertIsNone(select_validation_policy(results, ["BC_A", "BC_B"], horizon=48))
         results["BC_B"] = {"successes": 1, "mean_success_decisions": 20}
         self.assertEqual(select_validation_policy(results, ["BC_A", "BC_B"]), "BC_B")
+
+    def test_route_discovery_candidates_are_bounded_and_directional(self):
+        east = candidate_routes("east_north", horizon=48)
+        west = candidate_routes("west_north", horizon=48)
+        self.assertEqual(east, candidate_routes("east_north", horizon=48))
+        self.assertGreaterEqual(len(east), 40)
+        self.assertTrue(all(len(route["route"]) == 48 for route in east + west))
+        self.assertTrue(all(set(route["route"]) <= {"UP", "DOWN", "LEFT", "RIGHT"}
+                            for route in east + west))
+        self.assertTrue(any(route["segments"][:2] == [["LEFT", 4], ["DOWN", 4]]
+                            for route in east))
+        self.assertTrue(any(route["segments"][:2] == [["RIGHT", 4], ["DOWN", 4]]
+                            for route in west))
+
+    def test_route_reset_gate_requires_repeatability_and_scene_when_requested(self):
+        info = {"checkpoint_loaded": True}
+        self.assertTrue(reset_is_valid(info, "cornelia_exterior_field", True))
+        self.assertFalse(reset_is_valid(info, "unknown", True))
+        self.assertFalse(reset_is_valid(info, "cornelia_exterior_field", False))
+        self.assertTrue(reset_is_valid(info, "unknown", True, require_field=False))
+        self.assertFalse(reset_is_valid(info, "menu", True, require_field=False))
+
+    def test_fresh_benchmark_splits_are_disjoint_and_use_new_four_leg_families(self):
+        specs = fresh_benchmark_specs()
+        validate_fresh_split(specs)
+        self.assertEqual(set(specs), set(FRESH_TRAIN_IDS) |
+                         set(FRESH_VALIDATION_ROUTES) | set(FRESH_FINAL_ROUTES))
+        self.assertTrue(all(len(route) == 12 for route in
+                            list(FRESH_VALIDATION_ROUTES.values()) + list(FRESH_FINAL_ROUTES.values())))
+        self.assertTrue(all(len(set(route)) == 4 for route in
+                            list(FRESH_VALIDATION_ROUTES.values()) + list(FRESH_FINAL_ROUTES.values())))
+        with self.assertRaises(ValueError):
+            validate_fresh_split({**specs, "unexpected": ["UP"]})
 
 
 if __name__ == "__main__":

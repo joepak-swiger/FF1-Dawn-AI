@@ -1,0 +1,62 @@
+{
+  "run_id": "20261029_015018_287848Z",
+  "status": "start_creation_incomplete",
+  "accepted_start_ids": [
+    "center",
+    "east_far",
+    "east_near",
+    "south_far",
+    "south_near",
+    "test_west_south_loop",
+    "val_west_north_loop",
+    "west_far",
+    "west_near"
+  ],
+  "missing_start_ids": [
+    "test_east_south_loop",
+    "val_east_north_loop"
+  ],
+  "rejected_start_scenes": [
+    {
+      "start_id": "val_east_north_loop",
+      "independent_field_confirmation": false,
+      "classification_labels": [
+        "unknown",
+        "unknown",
+        "unknown",
+        "unknown",
+        "unknown",
+        "unknown",
+        "unknown",
+        "unknown",
+        "unknown",
+        "unknown",
+        "unknown",
+        "cornelia_exterior_field"
+      ]
+    },
+    {
+      "start_id": "test_east_south_loop",
+      "independent_field_confirmation": false,
+      "classification_labels": [
+        "unknown",
+        "unknown",
+        "unknown",
+        "unknown",
+        "unknown",
+        "unknown",
+        "unknown",
+        "unknown",
+        "unknown",
+        "unknown",
+        "unknown",
+        "cornelia_exterior_field"
+      ]
+    }
+  ],
+  "policy_evaluations_started": false,
+  "validation_selection": null,
+  "rl_timesteps": 0,
+  "limitation": "The sparse scene anchor set could not independently verify every generated start after reset; no policy outcomes were collected.",
+  "final_policy_evaluation_started": false
+}

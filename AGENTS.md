@@ -227,3 +227,69 @@ observed results from hypotheses.
   Preserve raw data and checkpoints locally; publish only compact sanitized
   evidence. Keep PPO timesteps at zero until fresh route-family and recovery
   tests remain reliable.
+
+### GBA recovery and route-discovery update (2026-10-29)
+
+- PR #13 is merged into `main` at `afb7cf0`. Current recovery work uses the
+  separate `codex/gba-recovery-generalization` branch. Preserve all earlier
+  run artifacts and the official Seed-party checkpoint.
+- The old north-diagonal validation states were reachable. A bounded route
+  feasibility probe found `DOWN×4 → inward lateral×6 → UP` and repeated Castle
+  confirmation 4/4 (east and west, two resets each); the previous 4+4 route
+  failed 0/4. This is a fixed correction route from exposed validation states,
+  not new training data or position inference.
+- `scripts/gba_route_discovery.py` now tries a stable, bounded variety of
+  DOWN-first, horizontal-first, and single-direction plans. Preserve the
+  `candidate_index` order for reproducibility and limit live searches to 40
+  candidates per start. Route search is feasibility diagnosis only.
+- When serializing a learner mistake state, Stable-Retro needs two no-op
+  frames after loading to refresh the GBA framebuffer. Capture the expected
+  frame after that same two-frame sync and keep the rolling observation history
+  (shift it through those frames; do not replace the stack with repeated copies
+  of one frame). Reset twice with two priming frames for deterministic replay.
+  A zero-priming reset returns a stale framebuffer and is not valid evidence.
+- Live recovery run `20261029_014031_526568Z` saved four states after two
+  opposite-policy actions, found repeatable correction routes for both
+  decision-0 states, and collected 59 labels. Original 3-NN succeeded from
+  those saved states 4/4. Augmented 1-NN also succeeded 4/4 but took longer on
+  east; augmented 3-NN collapsed to DOWN and failed 0/2 east. At decision-6
+  timing-heldout states all models succeeded 4/4 using UP only. Do not promote
+  the augmented model or call this a measured improvement.
+- The online perturb test was repeated in run `20261029_013908_600790Z`:
+  0 errors 4/4, 1 error 4/4, 2 errors 0/4, 4 errors 2/4 (east 2/2, west
+  0/2). The difference from saved-state replay remains unresolved. Keep the
+  online stress test and exact-state replay as separate measurements.
+- Moving-state diagnostics show `no_match` dominates unknown results. Reviewed
+  scene anchors intentionally recognize only a few fixed camera compositions;
+  scrolling and sprite/animation changes invalidate their map crops. Keep this
+  classifier sparse and conservative until a broader detector is tested
+  against idle controls and title, transition, menu, town, Castle, and fade
+  negatives. No field reward or coordinate tracking is enabled.
+- No new route-family final test has yet been completed. Do not use old
+  east_south/west_south or north-diagonal results as fresh held-out evidence.
+  Do not start PPO, add speculative RAM rewards, or label the Castle exit route
+  as learned; existing compound exit evidence is scripted DOWN only.
+- `scripts/gba_navigation_fresh_benchmark.py` defines a disjoint four-leg
+  train/validation/final split and freezes validation selection before final
+  policy evaluation. Run it only when every generated start passes the
+  two-frame exterior gate after reset. Run `--dry-run` first. It must stop
+  before policy evaluation when any required start is unverified; see the
+  incomplete start-audit package under
+  `docs/experiments/gba_navigation_fresh_benchmark/20261029_015018_287848Z/`.
+- Final route start views are created before validation because their reset and
+  scene labels must be checked. Do not inspect policy outcomes, tune the policy,
+  or use final routes for training until validation selection is frozen. The
+  earlier `*_loop` candidate route families were visually previewed during
+  scene-anchor debugging and are exposed; only the newer reversal-loop IDs in
+  the current script may be considered for a future final set.
+- New field references under `docs/experiments/gba_scene_classifier/` were
+  visually reviewed against map terrain, town buildings, shore, and player
+  sprites. They classify only the specific reviewed views. Some route creation
+  attempts subsequently produced a battle screen or other unrecognized frames;
+  never treat one field-looking candidate screenshot as a reproducible reset.
+  Preserve the title, town, menu, and transition negative-control regression.
+- The fresh benchmark was not scored: three of four route-derived held-out
+  starts could not be independently confirmed. This is a scene/route-start
+  verification blocker, not evidence that a policy failed. Do not adapt the
+  tested families into training or validation and then continue calling them
+  held out; define another frozen split after the scene gate is reliable.

@@ -43,6 +43,14 @@ FIELD_VARIANTS = BASE_FIELD_VARIANTS + tuple(
     ROOT / "docs/experiments/gba_navigation_imitation" / f"field_anchor_reviewed_{name}.png"
     for name in ("west_far", "east_far", "south_far", "east_north", "west_north",
                  "east_south", "west_south")
+) + tuple(
+    ROOT / "docs/experiments/gba_scene_classifier" / f"field_anchor_reviewed_{name}.png"
+    for name in ("val_east_north_detour", "val_west_north_detour",
+                 "test_east_south_detour", "test_west_south_detour")
+) + tuple(
+    ROOT / "docs/experiments/gba_scene_classifier" / f"field_anchor_reviewed_v2_{name}.png"
+    for name in ("val_east_north", "val_west_north",
+                 "test_east_south", "test_west_south")
 )
 
 # Relative input provenance, not coordinates. Splits are frozen by route
@@ -120,11 +128,12 @@ def _confirmed_field(base: FF1GbaEnv, classifier: SceneAnchorClassifier,
     return gate.confirmed_scene == "cornelia_exterior_field", labels, frame
 
 
-def create_starts(official: Path, out: Path, classifier: SceneAnchorClassifier) -> tuple[list[dict], list[dict]]:
+def create_starts(official: Path, out: Path, classifier: SceneAnchorClassifier,
+                  specs: dict[str, list[str]] | None = None) -> tuple[list[dict], list[dict]]:
     """Save only distinct, field-confirmed starts; paths are provenance, not coordinates."""
     # Each candidate is derived from the official state into this run's unique
     # output directory. Existing native states are never used as write targets.
-    specs = ROUTE_SPECS
+    specs = ROUTE_SPECS if specs is None else specs
     reference_hash = hashlib.sha256(official.read_bytes()).hexdigest()
     env = FF1GbaEnv(official, project_root=ROOT, max_steps=2000, action_frames=1,
                     render_mode="rgb_array", restore_count=2)

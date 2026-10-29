@@ -1,0 +1,58 @@
+{
+  "run_id": "20261028_220745_289874Z",
+  "source_run_id": "20261028_153708_566851Z",
+  "purpose": "bounded reachability diagnosis on previously exposed north-diagonal starts; not training or fresh generalization",
+  "results_by_start": {
+    "east_north": {
+      "route_candidates_attempted": 7,
+      "episodes": 14,
+      "confirmed_castle_successes": 2,
+      "repeatable_successful_routes": [
+        {
+          "route": {
+            "down_macros": 4,
+            "inward_direction": "LEFT",
+            "inward_macros": 6
+          },
+          "successes": 2,
+          "episodes": 2,
+          "goal_steps": [
+            25,
+            25
+          ]
+        }
+      ]
+    },
+    "west_north": {
+      "route_candidates_attempted": 7,
+      "episodes": 14,
+      "confirmed_castle_successes": 2,
+      "repeatable_successful_routes": [
+        {
+          "route": {
+            "down_macros": 4,
+            "inward_direction": "RIGHT",
+            "inward_macros": 6
+          },
+          "successes": 2,
+          "episodes": 2,
+          "goal_steps": [
+            25,
+            25
+          ]
+        }
+      ]
+    }
+  },
+  "elapsed_seconds": 83.958,
+  "limitations": [
+    "Directional macro search is a bounded route feasibility test, not a coordinate or optimal-path search.",
+    "All starts derive from one source checkpoint on the same overworld map.",
+    "Castle entry requires two consecutive independently reviewed title-anchor observations; this run did not repeat the separate negative-control suite."
+  ],
+  "route_comparison": {
+    "failed_previous_route": "DOWN\u00d74, inward\u00d74, then UP",
+    "successful_route": "DOWN\u00d74, inward\u00d76, then UP",
+    "successes": "east and west starts: two of two resets each"
+  }
+}
