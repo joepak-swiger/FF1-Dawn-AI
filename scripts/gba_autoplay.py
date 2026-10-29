@@ -204,6 +204,9 @@ def sanitized_public_metrics(metrics: dict) -> dict:
         "post_battle_map_view_confirmed": metrics["post_battle_map_view_confirmed"],
         "unknown_scene_observations": metrics["unknown_scene_observations"],
         "training_timesteps": 0,
+        "combat_policy": metrics["combat_policy"],
+        "combat_decisions_by_source": metrics["combat_decisions_by_source"],
+        "expert_training_labels_collected": metrics["expert_training_labels_collected"],
         "elapsed_seconds": metrics["elapsed_seconds"],
         "interpretation": "scripted or seeded-random control; not a learned policy",
     }
@@ -243,6 +246,7 @@ def run(args: argparse.Namespace) -> Path:
     from PIL import Image
 
     from ff1_dawn_ai.gba_env import FF1GbaEnv, GBA_ACTIONS
+    from ff1_dawn_ai.gba_combat_learning import CombatDecisionRecorder, CombatLinearPolicy
     from ff1_dawn_ai.gba_landmark import SceneAnchorClassifier, SceneConfirmationGate
     from scripts.gba_castle_learning_smoke import FIELD_VARIANTS, REFERENCES
 
@@ -280,7 +284,13 @@ def run(args: argparse.Namespace) -> Path:
     map_gate = BattleConfirmationGate(map_detector, consecutive_frames=2)
     run_id, out = create_output(ROOT / "videos" / "gba_autoplay")
     started = time.perf_counter()
-    policy_label = ("SCRIPTED" if args.policy == "scripted_baseline" else
+    learned_policy = (CombatLinearPolicy.load(Path(args.combat_model))
+                      if args.combat_policy == "learned" else None)
+    recorder = (CombatDecisionRecorder(out / "expert_decisions")
+                if args.record_combat_demos else None)
+    active_group_id = None
+    policy_label = ("LEARNED COMBAT + SEEDED RANDOM" if learned_policy else
+                    "SCRIPTED" if args.policy == "scripted_baseline" else
                     "AUTONOMOUS SCRIPTED COMBAT + SEEDED RANDOM" if args.policy == "autonomous_session" else
                     "SEEDED RANDOM")
     controller = ScriptedCastleExcursion(args.max_approach, args.max_return) if args.policy == "scripted_baseline" else None
@@ -377,7 +387,28 @@ def run(args: argparse.Namespace) -> Path:
                                        action=action, scene=label, battle_count=session.battles_entered))
                 frame_labels.append(f"{step_no}: {phase} / {action} / {label}")
 
-        def battle_input(control: str, phase: str, marker: float):
+        def combat_decision(frame, stage: str, expert_action: str, actor_index: int):
+            # Only verified pre-action expert buttons become labels. Learned
+            # actions never become training labels for themselves.
+            if recorder is not None:
+                recorder.record(
+                    frame=frame.copy(), stage=stage, action=expert_action,
+                    group_id=active_group_id,
+                    encounter_id=f"{run_id}:battle_{session.current_battle_id:02d}",
+                )
+            if learned_policy is None:
+                return expert_action, "scripted_expert"
+            action, confidence = learned_policy.predict(frame, stage)
+            events.append({"step": len(actions), "battle_id": session.current_battle_id,
+                           "event": "learned_combat_decision", "action": action,
+                           "actor_slot": actor_index, "stage": stage,
+                           "confidence": round(confidence, 6)})
+            if confidence < args.min_combat_confidence:
+                raise RuntimeError("learned combat confidence below threshold; stopped without scripted rescue")
+            return action, "learned"
+
+        def battle_input(control: str, phase: str, marker: float,
+                         source: str = "safety_supervisor"):
             """Execute and trace one battle-control observation."""
             nonlocal battle_a_presses, battle_victory_exp_confirmed
             obs, reward, terminated, truncated, info = env.step(GBA_ACTIONS.index(control))
@@ -420,7 +451,7 @@ def run(args: argparse.Namespace) -> Path:
                                        step=int(marker), action=control, scene="result_message",
                                        battle_count=session.battles_entered))
                 frame_labels.append(f"{marker}: Earned {exp_amount if exp_amount is not None else 'unknown'} EXP result")
-            actions.append({"decision": marker, "action": control, "phase": phase,
+            actions.append({"decision": marker, "action": control, "phase": phase, "source": source,
                             "candidate_scene": result.label, "candidate_status": result.status,
                             "confirmed_scene": gate.confirmed_scene or "unknown",
                             "emulator_frames": info.get("emulator_frames_executed", 1),
@@ -472,6 +503,8 @@ def run(args: argparse.Namespace) -> Path:
                 battle_command_panel_returned = False
                 field_return_after_battle = False
                 active_battle_id = session.battle_detected(step_no)
+                active_group_id = hashlib.sha256(
+                    env.retro_env.em.get_state()).hexdigest()
                 battle_confirmation_step = step_no
                 state_bytes = env.retro_env.em.get_state()
                 (out / "battle_command_checkpoint_candidate.state").write_bytes(state_bytes)
@@ -487,8 +520,10 @@ def run(args: argparse.Namespace) -> Path:
                             break
                         target_gate.reset()
                         marker = step_no + actor_index / 100
+                        attack_action, attack_source = combat_decision(
+                            env.render().copy(), "attack_command", "A", actor_index)
                         frame, terminated, truncated = battle_input(
-                            "A", "battle_attack_select", marker)
+                            attack_action, "battle_attack_select", marker, source=attack_source)
                         if terminated or truncated:
                             stop_reason = "emulator_ended_after_attack_selection"
                             status = "emulator_terminated" if terminated else "episode_truncated"
@@ -515,8 +550,11 @@ def run(args: argparse.Namespace) -> Path:
                                        "event": "single_enemy_target_panel_confirmed",
                                        "actor_slot": actor_index,
                                        "visual_anchor_score": round(target_detector.score(frame), 5)})
+                        target_action, target_source = combat_decision(
+                            env.render().copy(), "target_confirm", "A", actor_index)
                         frame, terminated, truncated = battle_input(
-                            "A", "battle_target_confirm", step_no + actor_index / 100 + 0.5)
+                            target_action, "battle_target_confirm",
+                            step_no + actor_index / 100 + 0.5, source=target_source)
                         if terminated or truncated:
                             stop_reason = "emulator_ended_after_target_confirmation"
                             status = "emulator_terminated" if terminated else "episode_truncated"
@@ -913,13 +951,20 @@ def run(args: argparse.Namespace) -> Path:
         "exp_reward_banner_confirmed": any_exp,
         "unknown_scene_observations": unknown_count,
         "events": events, "elapsed_seconds": round(elapsed, 3), "training_timesteps": 0,
+        "combat_policy": args.combat_policy,
+        "combat_decisions_by_source": {
+            "learned": sum(row.get("source") == "learned" for row in actions),
+            "scripted_expert": sum(row.get("source") == "scripted_expert" for row in actions),
+            "safety_supervisor": sum(row.get("source") == "safety_supervisor" for row in actions),
+        },
+        "expert_training_labels_collected": recorder.count if recorder is not None else 0,
         "output_directory_local_only": str(out.relative_to(ROOT)),
     }
     metrics_path = out / "metrics.json"
     metrics_path.write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")
     with (out / "actions.csv").open("w", newline="", encoding="utf-8") as stream:
         writer = csv.DictWriter(stream, fieldnames=("decision", "action", "phase", "candidate_scene",
-            "candidate_status", "confirmed_scene", "emulator_frames", "reward"))
+            "candidate_status", "confirmed_scene", "emulator_frames", "reward", "source"))
         writer.writeheader()
         writer.writerows(actions)
     with (out / "events.csv").open("w", newline="", encoding="utf-8") as stream:
@@ -935,7 +980,9 @@ def run(args: argparse.Namespace) -> Path:
     report = "\n".join([
         "# GBA autonomous gameplay recording",
         f"Run ID: {run_id}", f"Status: {status}",
-        f"Policy: {args.policy} (field navigation is seeded-random; combat uses scripted Attack/target inputs; not learned)",
+        f"Policy: {args.policy}; combat={args.combat_policy}; field navigation remains scripted or seeded-random.",
+        f"Combat decisions by provenance: {metrics['combat_decisions_by_source']}; pre-action expert examples: {metrics['expert_training_labels_collected']}.",
+        "Training labels are local-only; no supervised/RL optimizer runs inside autoplay.",
         f"Stop reason: {stop_reason}", f"Decisions: {len(actions)}; emulator frames: {metrics['emulator_frames']}",
         f"Confirmed scenes: {', '.join(confirmed_scenes) if confirmed_scenes else 'none'}",
         f"Castle reached: {metrics['castle_reached']}; field return confirmed: {metrics['field_return_confirmed']}",
@@ -955,7 +1002,7 @@ def run(args: argparse.Namespace) -> Path:
           "Battle outcome remains unknown. Leaving a battle-like screen is not treated as victory.")),
         f"Unknown scene observations: {unknown_count}", f"Runtime: {elapsed:.3f} seconds",
         "GIF frames are captures from the Stable-Retro emulator with an on-screen policy/scene overlay.",
-        "No PPO/optimizer training ran; reward remained neutral.", "",
+        "No PPO optimizer training ran; base reward remained neutral.", "",
     ])
     (out / "run_report.txt").write_text(report, encoding="utf-8")
     if args.publish:
@@ -971,6 +1018,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--policy", choices=("scripted_baseline", "seeded_random", "autonomous_session"), default="scripted_baseline")
     parser.add_argument("--checkpoint", help="Explicit local native checkpoint; defaults to verified Seed-party state")
+    parser.add_argument("--combat-policy", choices=("scripted", "learned"), default="scripted",
+                        help="Combat decision source; learned requires a separately trained local model")
+    parser.add_argument("--combat-model", help="Local .npz policy; required for learned combat")
+    parser.add_argument("--min-combat-confidence", type=float, default=0.0)
+    parser.add_argument("--record-combat-demos", action="store_true",
+                        help="Save real PRE-action expert screenshots/labels locally only")
     parser.add_argument("--decisions", type=int, default=280, help="Maximum one-emulator-frame actions")
     parser.add_argument("--max-approach", type=int, default=160)
     parser.add_argument("--max-return", type=int, default=112)
@@ -989,6 +1042,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dry-run", action="store_true", help="Validate dependencies, checkpoint, and anchors only")
     parser.add_argument("--publish", action="store_true", help="Also write sanitized metrics/report/contact sheet under docs/")
     args = parser.parse_args(argv)
+    if args.combat_policy == "learned" and (not args.combat_model or args.record_combat_demos):
+        parser.error("learned combat needs --combat-model and cannot write expert labels")
+    if args.combat_policy == "learned" and args.policy != "autonomous_session":
+        parser.error("learned combat requires --policy autonomous_session")
+    if not 0.0 <= args.min_combat_confidence <= 1.0:
+        parser.error("--min-combat-confidence must be 0..1")
     if min(args.decisions, args.capture_every, args.max_approach, args.max_return,
            args.max_attackers, args.resolution_wait_frames) < 1:
         parser.error("decision, capture interval, and route limits must be positive")
