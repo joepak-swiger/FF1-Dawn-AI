@@ -293,3 +293,11 @@ observed results from hypotheses.
   verification blocker, not evidence that a policy failed. Do not adapt the
   tested families into training or validation and then continue calling them
   held out; define another frozen split after the scene gate is reliable.
+
+### Autonomous GBA gameplay recording
+
+- Use `run_gba_autoplay.cmd` for the one-click bounded gameplay demo; `--dry-run` validates but does not launch gameplay. The script starts only from the discovered verified Seed-party checkpoint and uses unique run folders.
+- The `scripted_baseline` is the measured UP-to-Castle / DOWN-to-exterior route. Report it as scripted. Only two-frame reviewed Castle and exterior scene confirmations may trigger route phase changes.
+- `seeded_random` is cardinal movement for encounter scouting, with optional bounded Attack/target confirmations only after two-frame reviewed menu matches. Use the ROI-specific Attack, Goblin-target, and exact `Earned 6 EXP.` evidence under `docs/experiments/gba_autoplay/`. The controller is provisional and supports only the observed Goblin menu formation; Magic-menu negatives must stop rather than trigger target confirmation. A victory/EXP event is confirmed only by two consecutive matches to the exact reviewed 6-EXP banner. This is one narrow encounter signal, not a general result parser.
+- Full GIFs, action traces, emulator states, ROMs, and raw captures remain local. `--publish` copies only compact sanitized metrics, report, and contact sheet to `docs/experiments/gba_autoplay/<run-id>/`.
+- GBA rewards remain neutral and PPO training remains off. Two of three fresh-reset seeded Goblin trials displayed the exact reviewed 6-EXP banner; a third safely stopped on a Magic-menu mismatch. This is not broad battle reliability. Validate additional formations and field resumption before enabling event rewards or training.

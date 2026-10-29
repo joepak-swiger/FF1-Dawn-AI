@@ -851,3 +851,16 @@ verification, so do not score its unverified starts or relax the two-frame
 gate. Once new route starts can be reset and confirmed repeatably, compare
 policies on a frozen final set. Keep PPO at zero timesteps until those gates
 pass.
+
+### Autonomous gameplay recording push (Issue #15)
+
+- Added `ff1_dawn_ai/gba_autoplay.py`, `scripts/gba_autoplay.py`, and the `run_gba_autoplay.cmd` WSL launcher. The scripted baseline repeats the measured UP-to-Castle / DOWN-to-field excursion. The seeded-random scout drives movement independently and uses a bounded Attack/target routine only after strict two-frame visual menu matches. Both start from and preserve the official Seed-party checkpoint.
+- Fresh-reset seed 77 run `20261029_031018_621251Z` reached a Goblin battle at decision 471, confirmed four Attack/target menu sequences (eight combat A presses), and displayed the exact `Earned 6 EXP.` banner after 742 neutral frames. It then acknowledged the `Obtained 24 gil.` message and confirmed a two-frame Cornelia-area map anchor. The result showed Sif 31/35 HP, Myth 30/30, Milo 32/33, Seed 30/30. Local GIF: `videos/gba_autoplay/20261029_031018_621251Z/autoplay.gif`.
+- Across three fresh seeds, 77 and 1729 confirmed the exact 6-EXP and 24-gil banners; 314 safely stopped after one A input when the resulting Magic submenu did not match the strict Goblin target panel. This is 2/3 narrow Goblin battle outcomes, not a general win rate. The two-frame Cornelia-area map view matched after rewards in seed 77 but not 1729; this anchor is a single-view resume check, not the broad field detector or a coordinate signal.
+- The original small target crop falsely matched a Magic submenu. Battle menus now compare a 100×50 left panel, distinguishing Attack selection, the reviewed Goblin target list, and Magic. The exact result templates require two consecutive matches. Tests include several party-slot positives and field, menu, Castle, and Magic negatives. Other formations, escapes, defeats, HP/EXP parsing, and general field movement remain unverified.
+- GIF capture cadence now uses actual action counts rather than fractional trace IDs; event screenshots for EXP/Gil and the map return are inserted directly, and the overlay stays below the top reward banner. Compact sanitized evidence is published in `docs/experiments/gba_autoplay/20261029_031018_621251Z/` and the two additional seed folders.
+- Navigation and combat remain scripted/stochastic controls, not learned behavior. No PPO timesteps ran; GBA rewards remain neutral and no RAM reward was enabled. NES v0.7 and all checkpoints remain unchanged.
+
+#### Next gameplay action
+
+Repeat battle-control validation on a different enemy formation, then improve the party-slot command selector and verify movement after the narrow map return against matched idle controls. Only enable a sparse battle-result reward after outcome detection repeats beyond this Goblin formation; keep large PPO training off until then.
