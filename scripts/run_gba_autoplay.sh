@@ -59,14 +59,13 @@ if [[ "$MODE" == "--dry-run" ]]; then
   exit 0
 fi
 
-"$PYTHON" scripts/gba_autoplay.py --policy scripted_baseline --decisions 280 --publish || fail "Scripted Castle excursion did not complete; inspect the run output and log."
-"$PYTHON" scripts/gba_autoplay.py --policy seeded_random --decisions 1200 --seed 77 --max-attackers 4 --resolution-wait-frames 1800 --attack-on-confirmed-battle --publish || fail "Seeded encounter/combat probe failed; preserve any partial output."
+"$PYTHON" scripts/gba_autoplay.py --policy autonomous_session --decisions 6000 --seed 77 --max-battles 4 --max-attackers 4 --resolution-wait-frames 1800 --publish || fail "Bounded autonomous gameplay session failed; preserve partial output and inspect the run log."
 {
   echo "Launcher run ID: $RUN_ID"
-  echo "Status: both bounded autoplay captures completed"
-  echo "Scripted excursion: inspect the printed GIF and run_report paths above."
-  echo "Seeded-random encounter/combat probe: inspect the printed GIF and run_report paths above."
-  echo "Combat inputs are bounded to four actor/target confirmations; only the reviewed Earned 6 EXP banner can confirm this specific encounter's victory."
+  echo "Status: bounded autonomous gameplay session completed"
+  echo "Policy: seeded-random cardinal navigation with scripted Attack/target combat; not learned."
+  echo "The session is capped at 6,000 decisions or four distinct battles and stops on unknown postbattle screens."
+  echo "Inspect the printed GIF, metrics, and sanitized evidence paths above."
   echo "Log: $LOG_FILE"
 } > "$SUMMARY_FILE"
 echo "Execution summary: $SUMMARY_FILE"

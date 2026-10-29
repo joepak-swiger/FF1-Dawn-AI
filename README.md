@@ -15,17 +15,16 @@ Start after party creation in Final Fantasy I and train an agent to:
 ## GBA autoplay demonstration
 
 Double-click [`run_gba_autoplay.cmd`](run_gba_autoplay.cmd) to run the bounded
-scripted Cornelia Castle excursion plus a seeded-random movement scout from the
-official local Seed-party checkpoint. The generated GIF and complete logs stay
-under the ignored `videos/gba_autoplay/` directory; compact sanitized evidence
-is prepared under `docs/experiments/gba_autoplay/`. The scripted route is a
-reference controller, not a learned policy. Two of three bounded seeded
-encounter trials confirmed a Goblin victory through the explicit
-`Earned 6 EXP.` result, and one reached a two-frame Cornelia-area map view
-after acknowledging EXP and Gil messages. These are narrow references from
-one formation; general battle menus and outcomes remain unverified. No PPO
-training or non-neutral rewards are enabled.
-See [`docs/gba_autoplay.md`](docs/gba_autoplay.md).
+scripted Cornelia excursion and seeded autonomous session from the official
+local Seed-party checkpoint. Run GIFs, traces, and native states stay under the
+ignored `videos/gba_autoplay/`; sanitized summaries and selected proof frames
+are published under `docs/experiments/gba_autoplay/`. The continuous controller
+has completed repeated Goblin encounters and resumed movement after verified
+postbattle map views. Combat remains scripted and formation-specific, field
+movement is seeded-random, and neither is learned. It currently stops safely on
+unrecognized postbattle camera views. No PPO training or non-neutral rewards
+are enabled. See [`docs/gba_autoplay.md`](docs/gba_autoplay.md) and the
+[Issue #17 session summary](docs/experiments/gba_autoplay/issue17_continuous/REPORT.md).
 
 ## Important
 

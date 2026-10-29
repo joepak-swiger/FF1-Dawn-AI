@@ -1,0 +1,48 @@
+{
+  "summary_id": "issue17_continuous_20261029",
+  "party": [
+    {"name": "Sif", "class": "Warrior"},
+    {"name": "Myth", "class": "Thief"},
+    {"name": "Milo", "class": "Monk"},
+    {"name": "Seed", "class": "Red Mage"}
+  ],
+  "session_count": 5,
+  "distinct_encounters_entered": 11,
+  "encounters_finished": 11,
+  "confirmed_exp_victories": 11,
+  "escapes": 0,
+  "defeats": 0,
+  "unknown_outcomes": 0,
+  "verified_movement_resumptions": 6,
+  "postbattle_map_views_confirmed": 6,
+  "recognized_exp_awards": [6, 6, 4, 6, 6, 4, 4, 4, 6, 4, 6],
+  "recognized_gil_awards": [24, 24, 18, 24, 24, 18, 18, 18, 24, 18, 24],
+  "numeric_templates_tested": {"exp": [4, 6], "gil": [18, 24]},
+  "level_ups_confirmed": [{"run_id": "20261029_153036_754453Z", "character": "Sif", "battle_id": 3}],
+  "observed_enemy_species": ["Goblin"],
+  "visually_read_enemy_counts": [3, 4],
+  "policy": {
+    "field_navigation": "seeded-random cardinal actions",
+    "combat": "scripted Attack and target confirmations",
+    "learned": false,
+    "ppo_timesteps": 0,
+    "reward": "neutral"
+  },
+  "aggregate_policy_decisions": 13622,
+  "aggregate_emulator_frames": 14642,
+  "aggregate_runner_seconds": 78.497,
+  "runs": [
+    {"run_id": "20261029_152615_993483Z", "seed": 77, "battles": 3, "wins": 3, "movement_resumptions": 2, "exp": [6, 6, 4], "gil": [24, 24, 18], "seconds": 16.551},
+    {"run_id": "20261029_153036_754453Z", "seed": 77, "battles": 3, "wins": 3, "movement_resumptions": 2, "exp": [6, 6, 4], "gil": [24, 24, 18], "seconds": 16.521, "level_ups": ["Sif"]},
+    {"run_id": "20261029_153422_852363Z", "seed": 1729, "battles": 1, "wins": 1, "movement_resumptions": 0, "exp": [4], "gil": [18], "seconds": 9.961},
+    {"run_id": "20261029_153654_875430Z", "seed": 1729, "battles": 2, "wins": 2, "movement_resumptions": 1, "exp": [4, 6], "gil": [18, 24], "seconds": 17.761},
+    {"run_id": "20261029_153823_991272Z", "seed": 1729, "battles": 2, "wins": 2, "movement_resumptions": 1, "exp": [4, 6], "gil": [18, 24], "seconds": 17.703}
+  ],
+  "limitations": [
+    "All observed battles used Goblins; visual enemy-count variation is within that species.",
+    "Postbattle map matching covers only narrow reviewed camera compositions; unrecognized views stop the run.",
+    "Movement evidence is matched screen-space change against idle and opposite controls, not a tile coordinate estimate.",
+    "Party HP was visually present in battle screenshots, but automatic HP/MP/KO parsing is not implemented.",
+    "No escape or defeat detector, imitation model, or RL training was validated."
+  ]
+}
