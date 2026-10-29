@@ -47,3 +47,4 @@ Make postbattle recovery work across additional camera views without overfitting
 - [Seed-1729 two-battle contact sheet](proof/seed1729_two_battle_contact_sheet.png)
 - [4 EXP result](proof/seed1729_battle1_earned_4_exp.png), [movement resumed](proof/seed1729_postbattle_movement.png), [second 6 EXP result](proof/seed1729_battle2_earned_6_exp.png)
 - Unrecognized camera views that triggered safe stops: [after run-one win](proof/seed1729_postbattle_camera_candidate_1.png), [after run-two win](proof/seed1729_postbattle_camera_candidate_2.png)
+- [Battle-command negative control](proof/battle_command_negative.png)

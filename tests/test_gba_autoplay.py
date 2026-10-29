@@ -151,7 +151,7 @@ class GbaAutoplayControllerTests(unittest.TestCase):
             root / "docs/experiments/gba_castle_goal/reference_cornelia_1f.png",
             root / "docs/experiments/gba_castle_goal/20261028_052724_624774Z/party_menu_negative_control.png",
             root / "docs/experiments/gba_navigation_imitation/field_anchor_center_settled.png",
-            root / "docs/experiments/gba_autoplay/20261029_023319_343248Z/battle_command_observation_01.png",
+            root / "docs/experiments/gba_autoplay/issue17_continuous/proof/battle_command_negative.png",
         )
         for path in negatives:
             frame = np.asarray(Image.open(path).convert("RGB"))
@@ -306,11 +306,11 @@ class GbaAutoplayControllerTests(unittest.TestCase):
         self.assertTrue(map_gate.update(map_frames[1]))
 
         negatives = (
-            root / "docs/experiments/gba_autoplay/20261029_030049_618548Z/battle_command_confirmed.png",
+            root / "docs/experiments/gba_autoplay/issue17_continuous/proof/battle_command_negative.png",
             root / "docs/experiments/gba_castle_goal/reference_cornelia_1f.png",
             root / "docs/experiments/gba_castle_goal/20261028_052724_624774Z/party_menu_negative_control.png",
             root / "docs/experiments/gba_navigation_imitation/field_anchor_center_settled.png",
-            root / "docs/experiments/gba_autoplay/20261029_153422_852363Z/battle_01_command_confirmed.png",
+            root / "docs/experiments/gba_autoplay/issue17_continuous/proof/battle_command_negative.png",
         )
         for path in negatives:
             frame = np.asarray(Image.open(path).convert("RGB"))
