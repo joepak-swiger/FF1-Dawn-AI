@@ -8,7 +8,9 @@ particular this module never infers a battle outcome from a screen change.
 from __future__ import annotations
 
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from pathlib import Path
+from collections.abc import Sequence
 
 import numpy as np
 from PIL import Image
@@ -64,30 +66,260 @@ class BattleConfirmationGate:
     def update(self, frame: np.ndarray) -> bool:
         self.last_score = self.detector.score(frame)
         self._streak = self._streak + 1 if self.last_score >= self.detector.threshold else 0
-        if self._streak >= self.consecutive_frames:
-            self.confirmed = True
+        # This is a current sustained observation, not a sticky historical
+        # fact. Callers must latch events separately and reset at lifecycle
+        # boundaries; stale battle UI may never trigger a later encounter.
+        self.confirmed = self._streak >= self.consecutive_frames
         return self.confirmed
 
 
-class BattleTargetDetector(BattleCommandDetector):
-    """Match the reviewed Goblin target list, distinct from Magic and Attack."""
+@dataclass
+class AutonomousSessionCoordinator:
+    """Small auditable lifecycle tracker for continuous autoplay sessions.
 
-
-class BattleExpResultDetector:
-    """Match the exact reviewed ``Earned 6 EXP.`` result banner.
-
-    This is narrow evidence from one real Goblin encounter. It verifies that
-    the game displayed this specific experience award; it is not a general
-    battle-state or variable-EXP parser.
+    Evidence is attached to distinct encounter IDs. Reward banners are
+    idempotent per encounter, so EXP and gil messages cannot inflate victory
+    counts. This class does not infer scenes or gameplay outcomes itself.
     """
 
-    def __init__(self, reference: str, *, threshold: float = 0.985):
+    phase: str = "field_navigate"
+    battles_entered: int = 0
+    battles_finished: int = 0
+    victories: int = 0
+    escapes: int = 0
+    defeats: int = 0
+    unknown_outcomes: int = 0
+    map_views: int = 0
+    movement_resumed: int = 0
+    current_battle_id: int | None = None
+    encounters: list[dict] = field(default_factory=list)
+
+    def battle_detected(self, step: int) -> int:
+        if self.phase not in {"field_navigate", "field_recovery"}:
+            raise RuntimeError(f"cannot start battle from phase {self.phase}")
+        self.battles_entered += 1
+        self.current_battle_id = self.battles_entered
+        self.phase = "battle_commands"
+        self.encounters.append({"battle_id": self.current_battle_id,
+                                "entry_step": step, "outcome": "pending",
+                                "exp_confirmed": False, "gil_confirmed": False,
+                                "exp_amount": None, "gil_amount": None,
+                                "level_ups": [],
+                                "finished": False,
+                                "map_view_observed": False, "movement_resumed": False})
+        return self.current_battle_id
+
+    def _current(self) -> dict:
+        if self.current_battle_id is None:
+            raise RuntimeError("no active battle")
+        return self.encounters[self.current_battle_id - 1]
+
+    def reward_confirmed(self, kind: str, amount: int | None = None) -> bool:
+        if kind not in {"exp", "gil"}:
+            raise ValueError(f"unsupported reward kind: {kind}")
+        row = self._current()
+        key = f"{kind}_confirmed"
+        if row[key]:
+            return False
+        row[key] = True
+        row[f"{kind}_amount"] = amount
+        if kind == "exp" and row["outcome"] == "pending":
+            row["outcome"] = "victory"
+            self.victories += 1
+        return True
+
+    def finish_battle(self, outcome: str) -> None:
+        if outcome not in {"victory", "escape", "defeat", "unknown"}:
+            raise ValueError(f"invalid battle outcome: {outcome}")
+        row = self._current()
+        if row["outcome"] == "pending":
+            row["outcome"] = outcome
+            if outcome == "victory":
+                self.victories += 1
+            elif outcome == "escape":
+                self.escapes += 1
+            elif outcome == "defeat":
+                self.defeats += 1
+            else:
+                self.unknown_outcomes += 1
+        elif outcome != row["outcome"]:
+            raise RuntimeError("encounter outcome is already latched")
+        if row["outcome"] != "pending" and not row["finished"]:
+            row["finished"] = True
+            self.battles_finished += 1
+            self.phase = "acknowledge"
+
+    def level_up_confirmed(self, character: str) -> bool:
+        row = self._current()
+        if character in row["level_ups"]:
+            return False
+        row["level_ups"].append(character)
+        return True
+
+    def map_view_observed(self) -> None:
+        row = self._current()
+        if not row["map_view_observed"]:
+            row["map_view_observed"] = True
+            self.map_views += 1
+        self.phase = "field_recovery"
+
+    def movement_observed(self, *, confirmed: bool) -> None:
+        if not confirmed:
+            return
+        row = self._current()
+        if not row["movement_resumed"]:
+            row["movement_resumed"] = True
+            self.movement_resumed += 1
+        self.phase = "field_navigate"
+
+    def new_encounter(self, step: int) -> int:
+        return self.battle_detected(step)
+
+
+def compare_matched_movement_frames(
+    idle_a: np.ndarray, idle_b: np.ndarray,
+    forward_a: np.ndarray, forward_b: np.ndarray,
+    opposite_a: np.ndarray, opposite_b: np.ndarray,
+    *, min_control_difference: float = 1.5,
+) -> dict[str, float | bool]:
+    """Conservatively compare repeated cardinal probes with matched idle.
+
+    Pixel differences are screen-space evidence, never tile coordinates. A
+    positive requires deterministic repeats, a stable idle control, and both
+    directions to differ materially from idle and from each other. Screens
+    should only be sampled after a separately confirmed playable map view.
+    """
+    frames = [np.asarray(frame, dtype=np.uint8) for frame in
+              (idle_a, idle_b, forward_a, forward_b, opposite_a, opposite_b)]
+    if any(frame.shape != frames[0].shape for frame in frames):
+        raise ValueError("matched movement frames must have identical shapes")
+
+    def mad(a: np.ndarray, b: np.ndarray) -> float:
+        return float(np.abs(a.astype(np.int16) - b.astype(np.int16)).mean())
+
+    idle_noise = mad(frames[0], frames[1])
+    forward_repeat = mad(frames[2], frames[3])
+    opposite_repeat = mad(frames[4], frames[5])
+    forward_vs_idle = mad(frames[2], frames[0])
+    opposite_vs_idle = mad(frames[4], frames[0])
+    forward_vs_opposite = mad(frames[2], frames[4])
+    stable = idle_noise <= 0.10 and forward_repeat <= 0.10 and opposite_repeat <= 0.10
+    confirmed = bool(stable and min(forward_vs_idle, opposite_vs_idle,
+                                    forward_vs_opposite) >= min_control_difference)
+    return {
+        "idle_repeat_mae": idle_noise,
+        "forward_repeat_mae": forward_repeat,
+        "opposite_repeat_mae": opposite_repeat,
+        "forward_vs_idle_mae": forward_vs_idle,
+        "opposite_vs_idle_mae": opposite_vs_idle,
+        "forward_vs_opposite_mae": forward_vs_opposite,
+        "matched_controls_stable": stable,
+        "movement_signal_confirmed": confirmed,
+    }
+
+
+class BattleTargetDetector(BattleCommandDetector):
+    """Match the reviewed Goblin target list, distinct from Magic and Attack.
+
+    Evidence includes multiple counts of the same Goblin species. This anchor
+    does not establish support for other enemy formations or target layouts.
+    """
+
+
+class _BattleAmountBannerDetector:
+    """Recognize a fixed result phrase and exact observed numeric glyphs.
+
+    Phrase confirmation masks the amount pixels, while amount recognition
+    compares only the reviewed digit box against observed-value templates.
+    New numeric values remain unparsed until a real template is reviewed.
+    """
+
+    def __init__(self, references: dict[int, str], *, amount_roi: tuple[int, int, int, int],
+                 threshold: float = 0.985, amount_threshold: float = 0.995):
+        if not references or not 0.0 < threshold <= 1.0 or not 0.0 < amount_threshold <= 1.0:
+            raise ValueError("banner templates and thresholds must be valid")
+        self.references = {}
+        for amount, path in references.items():
+            with Image.open(path) as image:
+                banner = np.asarray(image.convert("RGB"), dtype=np.uint8)
+            if banner.shape != (16, 240, 3):
+                raise ValueError(f"result banner must be 240x16 RGB, got {banner.shape}")
+            self.references[int(amount)] = banner
+        self.amount_roi = amount_roi
+        self.threshold = float(threshold)
+        self.amount_threshold = float(amount_threshold)
+        self._phrase_mask = np.ones((16, 240), dtype=bool)
+        x0, y0, x1, y1 = amount_roi
+        self._phrase_mask[y0:y1, x0:x1] = False
+
+    def _banner(self, frame: np.ndarray) -> np.ndarray | None:
+        image = np.asarray(frame, dtype=np.uint8)
+        if image.ndim != 3 or image.shape[0] < 16 or image.shape[1] < 240 or image.shape[2] < 3:
+            return None
+        return image[:16, :240, :3]
+
+    def score(self, frame: np.ndarray) -> float:
+        banner = self._banner(frame)
+        if banner is None:
+            return 0.0
+        return max(1.0 - float(np.abs(banner.astype(np.int16) - reference.astype(np.int16))
+                                [self._phrase_mask].mean()) / 255.0
+                   for reference in self.references.values())
+
+    def is_candidate(self, frame: np.ndarray) -> bool:
+        return self.score(frame) >= self.threshold
+
+    def amount_scores(self, frame: np.ndarray) -> dict[int, float]:
+        banner = self._banner(frame)
+        if banner is None or not self.is_candidate(frame):
+            return {}
+        x0, y0, x1, y1 = self.amount_roi
+        crop = banner[y0:y1, x0:x1]
+        return {amount: 1.0 - float(np.abs(crop.astype(np.int16) - ref[y0:y1, x0:x1].astype(np.int16)).mean()) / 255.0
+                for amount, ref in self.references.items()}
+
+    def recognized_amount(self, frame: np.ndarray) -> int | None:
+        scores = self.amount_scores(frame)
+        if not scores:
+            return None
+        amount, score = max(scores.items(), key=lambda item: item[1])
+        return amount if score >= self.amount_threshold else None
+
+
+class BattleExpResultDetector(_BattleAmountBannerDetector):
+    """Recognize observed ``Earned [amount] EXP.`` results.
+
+    Only the real 4-EXP and 6-EXP values have numeric templates. The fixed
+    message can confirm a victory while an unseen amount remains ``None``.
+    """
+
+    def __init__(self, reference: str, *, alternative_references: dict[int, str] | None = None,
+                 threshold: float = 0.985, amount_threshold: float = 0.995):
+        refs = {6: reference, **(alternative_references or {})}
+        super().__init__(refs, amount_roi=(122, 0, 132, 16), threshold=threshold,
+                         amount_threshold=amount_threshold)
+
+
+class BattleGilResultDetector(_BattleAmountBannerDetector):
+    """Recognize observed ``Obtained [amount] gil.`` result messages."""
+
+    def __init__(self, reference: str, *, alternative_references: dict[int, str] | None = None,
+                 threshold: float = 0.985, amount_threshold: float = 0.995):
+        refs = {24: reference, **(alternative_references or {})}
+        super().__init__(refs, amount_roi=(128, 0, 142, 16), threshold=threshold,
+                         amount_threshold=amount_threshold)
+
+
+class BattleLevelUpDetector:
+    """Match the exact observed ``Sif gained a level!`` top banner."""
+
+    def __init__(self, reference: str, *, threshold: float = 0.999):
         if not 0.0 < threshold <= 1.0:
             raise ValueError("threshold must be in (0, 1]")
         with Image.open(reference) as image:
             self.reference = np.asarray(image.convert("RGB"), dtype=np.uint8)
         if self.reference.shape != (16, 240, 3):
-            raise ValueError(f"EXP banner reference must be 240x16 RGB, got {self.reference.shape}")
+            raise ValueError(f"level-up banner reference must be 240x16 RGB, got {self.reference.shape}")
         self.threshold = float(threshold)
 
     def score(self, frame: np.ndarray) -> float:
@@ -101,26 +333,29 @@ class BattleExpResultDetector:
         return self.score(frame) >= self.threshold
 
 
-class BattleGilResultDetector(BattleExpResultDetector):
-    """Match the exact reviewed ``Obtained 24 gil.`` follow-up banner."""
-
-
 class CorneliaPostBattleMapDetector:
-    """Match one reviewed Cornelia-area world-map composition after rewards.
+    """Match reviewed Cornelia-area world-map compositions after rewards.
 
-    The anchor is a single camera view for a return check. It is not a general
-    field classifier, coordinate estimate, or movement/progress signal.
+    Each anchor is a narrow camera view used only for a post-result return
+    check. It is not a general field classifier, coordinate estimate, or
+    movement/progress signal.
     """
 
     ROI = (20, 24, 180, 72)
 
-    def __init__(self, reference: str, *, threshold: float = 0.995):
+    def __init__(self, reference: str | Sequence[str], *, threshold: float = 0.995):
         if not 0.0 < threshold <= 1.0:
             raise ValueError("threshold must be in (0, 1]")
-        with Image.open(reference) as image:
-            self.reference = np.asarray(image.convert("RGB"), dtype=np.uint8)
-        if self.reference.shape != (48, 160, 3):
-            raise ValueError(f"Cornelia map anchor must be 160x48 RGB, got {self.reference.shape}")
+        references = (reference,) if isinstance(reference, (str, Path)) else tuple(reference)
+        if not references:
+            raise ValueError("at least one Cornelia map anchor is required")
+        self.references = []
+        for path in references:
+            with Image.open(path) as image:
+                anchor = np.asarray(image.convert("RGB"), dtype=np.uint8)
+            if anchor.shape != (48, 160, 3):
+                raise ValueError(f"Cornelia map anchor must be 160x48 RGB, got {anchor.shape}")
+            self.references.append(anchor)
         self.threshold = float(threshold)
 
     def score(self, frame: np.ndarray) -> float:
@@ -129,7 +364,8 @@ class CorneliaPostBattleMapDetector:
         if image.ndim != 3 or image.shape[0] < y1 or image.shape[1] < x1 or image.shape[2] < 3:
             return 0.0
         crop = image[y0:y1, x0:x1, :3]
-        return 1.0 - float(np.abs(crop.astype(np.int16) - self.reference.astype(np.int16)).mean()) / 255.0
+        return max(1.0 - float(np.abs(crop.astype(np.int16) - reference.astype(np.int16)).mean()) / 255.0
+                   for reference in self.references)
 
     def is_candidate(self, frame: np.ndarray) -> bool:
         return self.score(frame) >= self.threshold
