@@ -1,6 +1,6 @@
 # First supervised combat policy — experimental foundation
 
-**Status (2026-10-29):** The recorder, grouped-split trainer, model format and opt-in inference path have been implemented. **They have NOT yet been executed on the owner's live WSL gameplay. No real GBA combat policy was trained in this change.** This is a partial milestone toward issue #19, not completion of that issue.
+**Status (2026-10-29):** The recorder, grouped-split trainer, model format and opt-in inference path have now been exercised in the working WSL emulator. A local supervised model was trained from six encounter-parent groups and deployed in both a held-out Magic-menu branch and a complete three-encounter field session. This is a narrow behavior-cloning result, not RL or a general combat policy; see `docs/experiments/gba_combat_learning/20261029_issue19_live/`.
 
 ## Why these restrictions exist
 
@@ -14,11 +14,11 @@ The output directory is unique under \`videos/gba_autoplay/<run_id>/\`. Its **lo
 
 The current recorder captures only *meaningful* Attack/target confirmations, **not thousands of NOOP wait frames**. To obtain multiple action classes, Codex must independently verify and collect genuinely successful alternatives such as battle menu recovery, legal target changes or other controlled combat interactions. Do **not** manufacture B/DOWN labels or mix incompatible encounter states solely to make training run.
 
-### Train once sufficient verified decisions exist
+### Train from multiple successful captures
 
-    python scripts/gba_train_combat_bc.py --dataset videos/gba_autoplay/<run_id>/expert_decisions --model models/gba_combat_bc.npz
+    python scripts/gba_train_combat_bc.py --dataset videos/gba_autoplay/<run_id>/expert_decisions videos/gba_combat_branch_eval/<run_id>/expert_decisions --model models/gba_combat_bc.npz
 
-\`models/gba_combat_bc.npz\` and the adjacent \`.metrics.json\` remain local. The trainer uses balanced linear softmax supervised imitation over 20×20 resized RGB observations plus a scene-stage one-hot; it splits by original encounter-parent group, chooses its training epoch by validation accuracy/loss, and reports one held-out action accuracy. It is **not** PPO or reinforcement learning; offline action accuracy is not gameplay success. As currently implemented, this command trains on **one dataset run folder**; future collectors can consolidate verified groups with checksums into a larger dataset under ignored local directories.
+\`models/gba_combat_bc.npz\` and the adjacent \`.metrics.json\` remain local. The trainer accepts multiple folders, deduplicates exact replay observations, and keeps rows with the same encounter-parent ID in one split. If a later menu-state replay was captured from an existing encounter state, pass a JSON \`--group-map\` mapping that replay-state hash to its original battle-command-state hash before splitting; otherwise sibling replays could leak across train and test. The trainer uses balanced linear softmax imitation over 20×20 resized RGB observations plus a scene-stage one-hot and chooses its epoch by validation accuracy/loss. It is not PPO or reinforcement learning.
 
 ### Actual closed-loop inference (after a model exists)
 
@@ -26,4 +26,8 @@ The current recorder captures only *meaningful* Attack/target confirmations, **n
 
 Only the Attack and target **button decisions** use the learned model. Encounter identification, animation waits, phase transitions, result acknowledgement and postbattle safety checks remain scripted **supervision**; field exploration remains seeded-random. The trace's \`source\` column records \`learned\`, \`scripted_expert\`, \`safety_supervisor\` or blank for earlier unrelated frames. The public metrics include counts for combat decision sources. Unexpected learned actions are **not** silently replaced with A: unsupported choices cause a safe stop when expected next menus are not confirmed.
 
-**Next required live milestone:** Codex runs real demo collection with varied legal combat decisions; verifies labels and split independence; trains a local model; runs same-start scripted vs learned vs random closed-loop evaluations; records explicit \`LEARNED\` and \`SCRIPTED\` GIFs and compares encounter wins, incorrect input sequences and source-attributed decisions. Capture actual reports before claiming any real learning. Do not alter official Sif/Myth/Milo/Seed checkpoint or NES v0.7.
+**Current measured scope:** Six encounter-parent groups produced 53 deduplicated samples. The learned model selected B on a held-out Magic-menu view, then selected A for Attack/target confirmations and won the confirmed Goblin battle. From that exact state, the scripted comparator also won and seeded random stopped safely after one rejected B choice on the Attack panel. The model reproduced the expert behavior; it has not shown better outcomes than the script. Three-encounter autonomous runs under the same seed yielded three confirmed wins for both learned and scripted combat, with movement resumed after the first two and a safe stop after the third unrecognized post-battle map view. The held-out accuracy was 100% on an eight-sample test group containing only A labels; treat that score as a weak diagnostic, not evidence of broad class generalization.
+
+The field controller remains seeded-random, battle recognition is validated only for the reviewed Goblin layouts, and result detection covers reviewed EXP/Gil templates. No HP/survival model, other enemy species, general battle result parser, PPO, reward shaping, or model superiority has been established. Keep the trained model local and ignored. Do not alter official Sif/Myth/Milo/Seed checkpoints or NES v0.7.
+
+**Next live milestone:** Expand demonstrations and held-out checks to a second enemy species and distinct target/menu layouts, then add independently validated survival/HP observations. Continue comparing learned and scripted decision attribution before claiming improvement.

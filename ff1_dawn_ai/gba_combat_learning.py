@@ -102,6 +102,40 @@ def load_dataset(directory: Path) -> tuple[np.ndarray, np.ndarray, list[dict]]:
     return np.stack(features), np.asarray(labels, dtype=np.int64), rows
 
 
+def load_datasets(directories: list[Path] | tuple[Path, ...], *,
+                  group_mapping: dict[str, str] | None = None
+                  ) -> tuple[np.ndarray, np.ndarray, list[dict]]:
+    """Load multiple local captures while deduplicating exact replay examples.
+
+    Rows retain their encounter-parent ``group_id`` across directories, so
+    repeated branches of one source encounter remain in one split.
+    """
+    if not directories:
+        raise ValueError("at least one expert dataset directory is required")
+    all_features: list[np.ndarray] = []
+    all_labels: list[int] = []
+    all_rows: list[dict] = []
+    seen: set[tuple[str, str, str, str]] = set()
+    group_mapping = group_mapping or {}
+    for directory in directories:
+        features, labels, rows = load_dataset(Path(directory))
+        for vector, label, row in zip(features, labels, rows):
+            row = dict(row)
+            row["group_id"] = group_mapping.get(row["group_id"], row["group_id"])
+            if not row["group_id"].strip():
+                raise ValueError("group remapping produced an empty encounter parent")
+            key = (row["group_id"], row["frame_sha256"], row["stage"], row["action"])
+            if key in seen:
+                continue
+            seen.add(key)
+            all_features.append(vector)
+            all_labels.append(int(label))
+            all_rows.append(row)
+    if not all_rows:
+        raise ValueError("empty expert dataset collection")
+    return np.stack(all_features), np.asarray(all_labels, dtype=np.int64), all_rows
+
+
 def grouped_splits(rows: list[dict], *, seed: int = 2026) -> dict[str, np.ndarray]:
     groups = sorted({row["group_id"] for row in rows})
     if len(groups) < 5:
@@ -168,10 +202,10 @@ def train_policy(features: np.ndarray, labels: np.ndarray, splits: dict[str, np.
                  *, epochs: int = 150, lr: float = .03, l2: float = .01
                  ) -> tuple[CombatLinearPolicy, dict]:
     train_idx, val_idx = splits["train"], splits["validation"]
-    if len(train_idx) < 12 or len(val_idx) < 2:
-        raise ValueError("insufficient independent supervised observations")
     if len(set(labels[train_idx].tolist())) < 2:
         raise ValueError("only one demonstrated action; not a meaningful learned policy")
+    if len(train_idx) < 12 or len(val_idx) < 2:
+        raise ValueError("insufficient independent supervised observations")
     x_train, y_train = features[train_idx].astype(np.float32), labels[train_idx]
     x_val, y_val = features[val_idx].astype(np.float32), labels[val_idx]
     counts = np.bincount(y_train, minlength=len(ACTIONS))
@@ -215,7 +249,13 @@ def train_policy(features: np.ndarray, labels: np.ndarray, splits: dict[str, np.
 
 
 def train_from_directory(dataset: Path, model_path: Path, *, seed: int = 2026) -> dict:
-    features, labels, rows = load_dataset(dataset)
+    return train_from_directories([dataset], model_path, seed=seed)
+
+
+def train_from_directories(directories: list[Path] | tuple[Path, ...],
+                           model_path: Path, *, seed: int = 2026,
+                           group_mapping: dict[str, str] | None = None) -> dict:
+    features, labels, rows = load_datasets(directories, group_mapping=group_mapping)
     splits = grouped_splits(rows, seed=seed)
     policy, metrics = train_policy(features, labels, splits)
     scores = features[splits["test"]] @ policy.weights + policy.bias
@@ -225,5 +265,13 @@ def train_from_directory(dataset: Path, model_path: Path, *, seed: int = 2026) -
         name: len({rows[i]["group_id"] for i in indices}) for name, indices in splits.items()
     }
     metrics["split_provenance"] = "all replay branches inherit original encounter group_id"
+    metrics["dataset_directories"] = len(directories)
+    metrics["unique_encounter_parent_groups"] = len({row["group_id"] for row in rows})
+    metrics["deduplicated_samples"] = int(len(rows))
+    metrics["remapped_source_groups"] = len(group_mapping or {})
+    metrics["group_split_ids"] = {
+        name: sorted({rows[int(i)]["group_id"] for i in indices})
+        for name, indices in splits.items()
+    }
     policy.save(model_path)
     return metrics

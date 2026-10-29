@@ -225,6 +225,29 @@ class BattleTargetDetector(BattleCommandDetector):
     does not establish support for other enemy formations or target layouts.
     """
 
+    def __init__(self, reference: str, *, alternative_references: Sequence[str] = (),
+                 threshold: float = 0.95):
+        super().__init__(reference, threshold=threshold)
+        self.alternative_references = []
+        for path in alternative_references:
+            with Image.open(path) as image:
+                pixels = np.asarray(image.convert("RGB"), dtype=np.uint8)
+            if pixels.shape != self.reference.shape:
+                raise ValueError(
+                    f"alternate Goblin target anchor must match {self.reference.shape}, got {pixels.shape}"
+                )
+            self.alternative_references.append(pixels)
+
+    def score(self, frame: np.ndarray) -> float:
+        image = np.asarray(frame, dtype=np.uint8)
+        x0, y0, x1, y1 = BATTLE_COMMAND_ROI
+        if image.ndim != 3 or image.shape[0] < y1 or image.shape[1] < x1 or image.shape[2] < 3:
+            return 0.0
+        crop = image[y0:y1, x0:x1, :3].astype(np.int16)
+        references = [self.reference, *self.alternative_references]
+        return max(1.0 - float(np.abs(crop - reference.astype(np.int16)).mean()) / 255.0
+                   for reference in references)
+
 
 class _BattleAmountBannerDetector:
     """Recognize a fixed result phrase and exact observed numeric glyphs.
