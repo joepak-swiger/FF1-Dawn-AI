@@ -781,3 +781,73 @@ confirmed for these bounded routes. After repeatable
 recovery on unseen starts, extend to Castle entry → Castle exit → exterior, then
 Cornelia town entry. The next project priority is still actual FF1 gameplay;
 keep NES v0.7 and all prior evidence unchanged.
+
+### GBA recovery audit and north-route feasibility (2026-10-29)
+
+PR #13 is merged at `afb7cf0`; this follow-up is on
+`codex/gba-recovery-generalization`. The official party/checkpoint and NES v0.7
+were not modified.
+
+- The previous north-diagonal validation failures were route-comparator failures,
+  not unreachable goals. A bounded live probe found a repeatable
+  `DOWN×4 → inward×6 → UP` route: 4/4 Castle confirmations from the old east and
+  west north-diagonal starts (2 resets each). The old 4+4 route failed 0/4.
+  These states are exposed and remain validation diagnosis, not new held-out
+  evidence. The sanitized route-by-route results are under
+  `docs/experiments/gba_route_discovery/20261028_220745_289874Z/`.
+- Repeated the online perturb benchmark (`20261029_013908_600790Z`): 0 errors
+  4/4, 1 error 4/4, 2 errors 0/4, and 4 errors 2/4 (east 2/2, west 0/2).
+  The nonmonotonic 4-error result repeated. Detailed online traces remain local;
+  the compact metrics and contact sheet are published under
+  `docs/experiments/gba_navigation_recovery/20261029_013908_600790Z/`.
+- Recovery run `20261029_014031_526568Z` captured four mistake states after two
+  opposite-policy actions, synchronized state restores, and collected 59
+  repeatably successful correction labels (two fit states). On those fit
+  states, original 3-NN and augmented 1-NN each reached Castle 4/4; augmented
+  3-NN regressed to 2/4 and collapsed to DOWN on east (0/2). On decision-6
+  timing-heldout states all three scored 4/4 by pressing UP only. Thus the
+  augmented policy has not shown measurable recovery improvement and is not
+  selected. These are reused route families, not fresh generalization.
+- The exact-state harness bug was traced to the GBA framebuffer needing the
+  normal two-frame no-op sync after loading. A zero-priming reset gave a stale
+  screen; hashing before sync rejected otherwise usable saved states. The
+  corrected capture syncs a saved state through two no-op frames, retains the
+  rolling observation history, and verifies the resulting frame across repeat
+  restores before scoring policy behavior.
+- Moving-frame unknowns were mostly classifier `no_match` with fewer
+  `uncertain`/transition statuses. This supports the current design: reviewed
+  outdoor anchors are sparse fixed camera views; scrolling and sprite/animation
+  changes invalidate the crops. Do not convert unknown to field or add a field
+  reward.
+- Added eight visually reviewed exterior screenshots from novel three/four-leg
+  routes as scene-only anchors under `docs/experiments/gba_scene_classifier/`.
+  Unit regression preserves title, town, menu, and transition negatives.
+  These anchors classify their exact reference views; they have not made the
+  moving-frame classifier broad.
+- The fresh four-direction benchmark reached start-creation only and stopped
+  safely when the two-frame scene gate could not confirm every generated reset
+  state. Some candidate screenshots visibly showed the exterior, but subsequent
+  observations remained unknown; some routes also varied into unrecognized
+  screens. No policy evaluation, model selection, or final-test outcome was
+  collected. The failure report is under
+  `docs/experiments/gba_navigation_fresh_benchmark/20261029_015018_287848Z/`.
+  Those candidate route screens were visually reviewed for scene-anchor work,
+  so they are exposed and removed from the fresh benchmark's future final set.
+  The script now reserves separate, unpreviewed reversal-loop route IDs for a
+  later final run; they must first pass the same reset gate.
+- No new frozen route-family test set was evaluated, and no learned
+  Castle-entry/exit sequence was established. Existing DOWN-to-field exit is a
+  scripted control only. No PPO training, reward changes, RAM position signal,
+  or checkpoint modification occurred. Recovery imitation remains supervised
+  diagnosis, not RL.
+
+### Next GBA milestone
+
+Resolve why online 2-error episodes fail although policy replay from saved,
+synchronized mistake states succeeds; preserve both as separate measurements.
+Then improve the moving-scene observer with independent field/battle/transition
+evidence. The predeclared fresh benchmark is currently blocked at start
+verification, so do not score its unverified starts or relax the two-frame
+gate. Once new route starts can be reset and confirmed repeatably, compare
+policies on a frozen final set. Keep PPO at zero timesteps until those gates
+pass.

@@ -1,0 +1,337 @@
+{
+  "run_id": "20261029_014031_526568Z",
+  "source_run_id": "20261028_153708_566851Z",
+  "base_demonstration_action_labels": 127,
+  "learner_visited_mistake_states": 4,
+  "repeatably_successful_training_correction_states": 2,
+  "expert_correction_action_labels": 59,
+  "route_search": {
+    "east_south_offset0_two_wrong": {
+      "used_for_training": true,
+      "attempts": 5,
+      "successful_routes": [
+        "DOWNx8 LEFTx8 UPx32"
+      ]
+    },
+    "west_south_offset0_two_wrong": {
+      "used_for_training": true,
+      "attempts": 19,
+      "successful_routes": [
+        "RIGHTx8 UPx40"
+      ]
+    },
+    "east_south_offset6_two_wrong": {
+      "used_for_training": false,
+      "attempts": 1,
+      "successful_routes": [
+        "UPx48"
+      ]
+    },
+    "west_south_offset6_two_wrong": {
+      "used_for_training": false,
+      "attempts": 1,
+      "successful_routes": [
+        "UPx48"
+      ]
+    }
+  },
+  "closed_loop_evaluation": [
+    {
+      "policy": "ORIGINAL_3NN",
+      "evaluation_split": "correction_fit_state_diagnostic",
+      "start_id": "east_south",
+      "successes": 2,
+      "episodes": 2,
+      "decisions_per_episode": [
+        26,
+        26
+      ],
+      "action_counts": {
+        "NOOP": 0,
+        "UP": 34,
+        "DOWN": 0,
+        "LEFT": 18,
+        "RIGHT": 0
+      },
+      "unknown_scene_frames": 472,
+      "unknown_status_counts": {
+        "no_match": 434,
+        "uncertain": 26,
+        "uncertain_transition": 12
+      }
+    },
+    {
+      "policy": "ORIGINAL_3NN",
+      "evaluation_split": "correction_fit_state_diagnostic",
+      "start_id": "west_south",
+      "successes": 2,
+      "episodes": 2,
+      "decisions_per_episode": [
+        26,
+        26
+      ],
+      "action_counts": {
+        "NOOP": 0,
+        "UP": 34,
+        "DOWN": 0,
+        "LEFT": 0,
+        "RIGHT": 18
+      },
+      "unknown_scene_frames": 472,
+      "unknown_status_counts": {
+        "no_match": 430,
+        "uncertain": 30,
+        "uncertain_transition": 12
+      }
+    },
+    {
+      "policy": "ORIGINAL_3NN",
+      "evaluation_split": "timing_heldout_state",
+      "start_id": "east_south",
+      "successes": 2,
+      "episodes": 2,
+      "decisions_per_episode": [
+        16,
+        16
+      ],
+      "action_counts": {
+        "NOOP": 0,
+        "UP": 32,
+        "DOWN": 0,
+        "LEFT": 0,
+        "RIGHT": 0
+      },
+      "unknown_scene_frames": 274,
+      "unknown_status_counts": {
+        "no_match": 228,
+        "uncertain": 34,
+        "uncertain_transition": 12
+      }
+    },
+    {
+      "policy": "ORIGINAL_3NN",
+      "evaluation_split": "timing_heldout_state",
+      "start_id": "west_south",
+      "successes": 2,
+      "episodes": 2,
+      "decisions_per_episode": [
+        16,
+        16
+      ],
+      "action_counts": {
+        "NOOP": 0,
+        "UP": 32,
+        "DOWN": 0,
+        "LEFT": 0,
+        "RIGHT": 0
+      },
+      "unknown_scene_frames": 274,
+      "unknown_status_counts": {
+        "no_match": 228,
+        "uncertain": 34,
+        "uncertain_transition": 12
+      }
+    },
+    {
+      "policy": "RECOVERY_AUGMENTED_1NN",
+      "evaluation_split": "correction_fit_state_diagnostic",
+      "start_id": "east_south",
+      "successes": 2,
+      "episodes": 2,
+      "decisions_per_episode": [
+        33,
+        33
+      ],
+      "action_counts": {
+        "NOOP": 0,
+        "UP": 34,
+        "DOWN": 16,
+        "LEFT": 16,
+        "RIGHT": 0
+      },
+      "unknown_scene_frames": 626,
+      "unknown_status_counts": {
+        "no_match": 552,
+        "uncertain": 62,
+        "uncertain_transition": 12
+      }
+    },
+    {
+      "policy": "RECOVERY_AUGMENTED_1NN",
+      "evaluation_split": "correction_fit_state_diagnostic",
+      "start_id": "west_south",
+      "successes": 2,
+      "episodes": 2,
+      "decisions_per_episode": [
+        26,
+        26
+      ],
+      "action_counts": {
+        "NOOP": 0,
+        "UP": 36,
+        "DOWN": 0,
+        "LEFT": 0,
+        "RIGHT": 16
+      },
+      "unknown_scene_frames": 462,
+      "unknown_status_counts": {
+        "no_match": 410,
+        "uncertain": 40,
+        "uncertain_transition": 12
+      }
+    },
+    {
+      "policy": "RECOVERY_AUGMENTED_1NN",
+      "evaluation_split": "timing_heldout_state",
+      "start_id": "east_south",
+      "successes": 2,
+      "episodes": 2,
+      "decisions_per_episode": [
+        16,
+        16
+      ],
+      "action_counts": {
+        "NOOP": 0,
+        "UP": 32,
+        "DOWN": 0,
+        "LEFT": 0,
+        "RIGHT": 0
+      },
+      "unknown_scene_frames": 274,
+      "unknown_status_counts": {
+        "no_match": 228,
+        "uncertain": 34,
+        "uncertain_transition": 12
+      }
+    },
+    {
+      "policy": "RECOVERY_AUGMENTED_1NN",
+      "evaluation_split": "timing_heldout_state",
+      "start_id": "west_south",
+      "successes": 2,
+      "episodes": 2,
+      "decisions_per_episode": [
+        16,
+        16
+      ],
+      "action_counts": {
+        "NOOP": 0,
+        "UP": 32,
+        "DOWN": 0,
+        "LEFT": 0,
+        "RIGHT": 0
+      },
+      "unknown_scene_frames": 274,
+      "unknown_status_counts": {
+        "no_match": 228,
+        "uncertain": 34,
+        "uncertain_transition": 12
+      }
+    },
+    {
+      "policy": "RECOVERY_AUGMENTED_3NN",
+      "evaluation_split": "correction_fit_state_diagnostic",
+      "start_id": "east_south",
+      "successes": 0,
+      "episodes": 2,
+      "decisions_per_episode": [
+        48,
+        48
+      ],
+      "action_counts": {
+        "NOOP": 0,
+        "UP": 0,
+        "DOWN": 94,
+        "LEFT": 2,
+        "RIGHT": 0
+      },
+      "unknown_scene_frames": 960,
+      "unknown_status_counts": {
+        "no_match": 960,
+        "uncertain": 0,
+        "uncertain_transition": 0
+      }
+    },
+    {
+      "policy": "RECOVERY_AUGMENTED_3NN",
+      "evaluation_split": "correction_fit_state_diagnostic",
+      "start_id": "west_south",
+      "successes": 2,
+      "episodes": 2,
+      "decisions_per_episode": [
+        26,
+        26
+      ],
+      "action_counts": {
+        "NOOP": 0,
+        "UP": 36,
+        "DOWN": 0,
+        "LEFT": 0,
+        "RIGHT": 16
+      },
+      "unknown_scene_frames": 462,
+      "unknown_status_counts": {
+        "no_match": 410,
+        "uncertain": 40,
+        "uncertain_transition": 12
+      }
+    },
+    {
+      "policy": "RECOVERY_AUGMENTED_3NN",
+      "evaluation_split": "timing_heldout_state",
+      "start_id": "east_south",
+      "successes": 2,
+      "episodes": 2,
+      "decisions_per_episode": [
+        16,
+        16
+      ],
+      "action_counts": {
+        "NOOP": 0,
+        "UP": 32,
+        "DOWN": 0,
+        "LEFT": 0,
+        "RIGHT": 0
+      },
+      "unknown_scene_frames": 274,
+      "unknown_status_counts": {
+        "no_match": 228,
+        "uncertain": 34,
+        "uncertain_transition": 12
+      }
+    },
+    {
+      "policy": "RECOVERY_AUGMENTED_3NN",
+      "evaluation_split": "timing_heldout_state",
+      "start_id": "west_south",
+      "successes": 2,
+      "episodes": 2,
+      "decisions_per_episode": [
+        16,
+        16
+      ],
+      "action_counts": {
+        "NOOP": 0,
+        "UP": 32,
+        "DOWN": 0,
+        "LEFT": 0,
+        "RIGHT": 0
+      },
+      "unknown_scene_frames": 274,
+      "unknown_status_counts": {
+        "no_match": 228,
+        "uncertain": 34,
+        "uncertain_transition": 12
+      }
+    }
+  ],
+  "false_positive_controls": "not repeated in this run; prior Castle negative-control results remain historical",
+  "rl_timesteps": 0,
+  "elapsed_seconds": 125.439,
+  "limitations": [
+    "The exact route families have already been examined; no new generalization claim is made.",
+    "All route families have prior exposure; timing-heldout states are not fresh route-family tests.",
+    "The bounded route search produces a reproducibly successful route, not an optimal or human expert policy.",
+    "Most moving field frames remain unknown; no RAM or position reward was used."
+  ]
+}\n
