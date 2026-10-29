@@ -29,7 +29,7 @@ The complete repository test suite passed (107 tests). Python compile checks and
 | G0: autonomous recording and repeated known encounter | Pass | Local full GIFs; 11 confirmed results across five runs |
 | G1: postbattle map return, movement, and same-session resume | Pass, narrow | Six matched-control movement signals and six resumptions; no tile coordinates |
 | G2: second battle attempted in same reset | Pass | Three-battle seed-77 session and two-battle seed-1729 sessions |
-| G3: formation/count variation | Partial | Goblin counts 3 and 4 visible; no different species/menu family |
+| G3: formation/count variation | Pass, count-only | Goblin counts 3 and 4 visible; no different species/menu family |
 | G4: variable reward/progression signal | Pass, narrow | 4/6 EXP, 18/24 Gil; one Sif level-up banner |
 | G5: learned behavior | Not attempted | Insufficient independent battle/menu data; zero training steps |
 | G6: watchable local highlights and sanitized GitHub evidence | Pass | Local GIFs plus this report, JSON metrics, and selected proof frames |
