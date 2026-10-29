@@ -879,3 +879,24 @@ Repeat battle-control validation on a different enemy formation, then improve th
 #### Next GBA gameplay milestone
 
 Extend safe postbattle continuation beyond the few reviewed camera anchors, then test at least one genuinely different enemy species/target-menu layout and add a separately validated HP/survival signal. Keep policy behavior scripted until there are independent formations and held-out states for meaningful imitation evaluation. Do not train PPO or activate event rewards yet.
+
+
+## 2026-10-29 — First GBA supervised combat learning foundation (experimental)
+
+- Added an opt-in pre-action expert decision recorder to the autoplay runner; only
+  actions from independently EXP-confirmed victories are committed to a local
+  training manifest. Screen images, native states, trained models and raw data
+  remain ignored. Unverified fights cannot silently become positive labels.
+- Added a grouped train/validation/test splitter, balanced linear supervised
+  imitation trainer, local model serializer and opt-in learned Attack/target
+  inference with source-attributed action traces.
+- **No GBA model was trained or evaluated live by this change.** Existing
+  Goblin actions are almost entirely Attack/target A and do not yet supply
+  meaningful diverse action labels. The trainer refuses single-class learning.
+  Real WSL training, held-out combat scenarios and learned-vs-scripted video
+  comparisons are still required before marking Issue #19 complete.
+- Offline standalone contract tests ran on a local prototype (5 passed);
+  the complete repo unittest suite and WSL emulator were **not available**
+  in this execution environment. The PR must be validated in the owner's
+  functioning WSL setup by Codex before merge.
+- See \`docs/gba_combat_learning.md\` and Issue #19 for the next live work.
