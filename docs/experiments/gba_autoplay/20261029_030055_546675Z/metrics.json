@@ -1,0 +1,34 @@
+{
+  "run_id": "20261029_030055_546675Z",
+  "status": "battle_input_attempted",
+  "policy": "seeded_random",
+  "checkpoint_sha256": "2bad13aa73fdea33661d39f9d1b83e56d2a0936964703ec4195493e1d4607cff",
+  "decisions": 895,
+  "emulator_frames": 895,
+  "confirmed_scenes": [
+    "cornelia_exterior_field"
+  ],
+  "castle_reached": false,
+  "field_return_confirmed": false,
+  "battle_command_screen_confirmed": true,
+  "battle_command_actions": 0,
+  "battle_target_confirmed": false,
+  "next_party_command_confirmed": false,
+  "post_target_wait_frames": 0,
+  "battle_A_presses": 1,
+  "battle_command_panel_returned": false,
+  "field_return_after_battle": false,
+  "battle_resolution_wait_frames": 0,
+  "battle_detection": "two-frame reviewed command-panel anchor; provisional single-encounter validation",
+  "battle_outcomes": {
+    "victory": 0,
+    "escape": 0,
+    "defeat": 0,
+    "unknown": 1
+  },
+  "specific_earned_6_exp_banner_confirmed": false,
+  "unknown_scene_observations": 884,
+  "elapsed_seconds": 2.66,
+  "training_timesteps": 0,
+  "interpretation": "scripted or seeded-random control; not a learned policy"
+}

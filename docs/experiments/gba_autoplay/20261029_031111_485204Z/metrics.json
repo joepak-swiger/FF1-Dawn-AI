@@ -1,0 +1,36 @@
+{
+  "run_id": "20261029_031111_485204Z",
+  "status": "battle_exp_award_confirmed",
+  "policy": "seeded_random",
+  "checkpoint_sha256": "2bad13aa73fdea33661d39f9d1b83e56d2a0936964703ec4195493e1d4607cff",
+  "decisions": 1298,
+  "emulator_frames": 1298,
+  "confirmed_scenes": [
+    "cornelia_exterior_field"
+  ],
+  "castle_reached": false,
+  "field_return_confirmed": false,
+  "battle_command_screen_confirmed": true,
+  "battle_command_actions": 4,
+  "battle_target_confirmed": true,
+  "next_party_command_confirmed": false,
+  "post_target_wait_frames": 11,
+  "battle_A_presses": 11,
+  "battle_command_panel_returned": false,
+  "field_return_after_battle": false,
+  "battle_resolution_wait_frames": 624,
+  "battle_detection": "two-frame 100x50 Attack-selected left-panel anchor; currently validated on Goblin trials",
+  "battle_outcomes": {
+    "victory": 1,
+    "escape": 0,
+    "defeat": 0,
+    "unknown": 0
+  },
+  "specific_earned_6_exp_banner_confirmed": true,
+  "specific_obtained_24_gil_banner_confirmed": true,
+  "post_battle_map_view_confirmed": false,
+  "unknown_scene_observations": 1288,
+  "elapsed_seconds": 4.793,
+  "training_timesteps": 0,
+  "interpretation": "scripted or seeded-random control; not a learned policy"
+}
