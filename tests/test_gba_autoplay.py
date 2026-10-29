@@ -126,15 +126,23 @@ class GbaAutoplayControllerTests(unittest.TestCase):
     def test_reviewed_goblin_target_panel_is_separate_from_command_panel(self):
         root = Path(__file__).resolve().parents[1]
         evidence = root / "docs/experiments/gba_autoplay/battle_ui_reference"
-        detector = BattleTargetDetector(str(evidence / "goblin_target_positive_left.png"), threshold=0.95)
+        detector = BattleTargetDetector(str(evidence / "goblin_target_positive_left.png"),
+            alternative_references=(str(evidence / "goblin_target_positive_four.png"),), threshold=0.95)
         positives = (evidence / "goblin_target_positive_left.png",
-                     evidence / "goblin_target_positive_actor2_left.png")
+                     evidence / "goblin_target_positive_actor2_left.png",
+                     evidence / "goblin_target_positive_four.png")
         for path in positives:
             self.assertTrue(detector.is_candidate(self._frame_with_reviewed_panel(path)), path.name)
         negatives = (evidence / "attack_command_positive_left.png",
                      evidence / "magic_menu_negative_left.png")
         for path in negatives:
             self.assertFalse(detector.is_candidate(self._frame_with_reviewed_panel(path)), path.name)
+
+        # The four-Goblin screenshot was independently captured after B from
+        # a reviewed Magic menu; it must be recognized by its exact reviewed
+        # formation anchor, not by relaxing the matching threshold.
+        four_frame = self._frame_with_reviewed_panel(evidence / "goblin_target_positive_four.png")
+        self.assertGreaterEqual(detector.score(four_frame), 0.999)
 
     def test_specific_exp_award_has_independent_visual_negative_controls(self):
         root = Path(__file__).resolve().parents[1]

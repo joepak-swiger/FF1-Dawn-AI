@@ -309,3 +309,28 @@ observed results from hypotheses.
 - The stable seed-77 run confirmed 3/3 victories, result amounts 6/6/4 EXP and 24/24/18 Gil, two post-result matched movement resumptions, and Sif's level-up banner. Two seed-1729 runs each confirmed two victories (4/18 then 6/24), resumed movement after the first, then safely stopped on a different unrecognized result view. A separate seed-1729 attempt captured the candidate view but could not resume until that view was added as an anchor.
 - Current run recordings and complete raw traces/states are local under `videos/gba_autoplay/<run-id>/`. Only compact, reviewed screenshots and safe metrics are published. The latest sessions' unsupported postbattle camera views remain the blocker to longer continuation.
 - No imitation or RL was trained: available positive samples are repetitive Goblin attack sequences from a narrow layout and do not support a credible held-out learned combat policy. Optimizer timesteps remain zero and rewards neutral. Do not claim learning.
+
+### GBA combat imitation update (2026-10-29)
+
+- The Issue #19 continuation trained a local-only supervised combat policy from
+  six encounter-parent groups and deployed it in live gameplay. The model learned
+  only the narrow reviewed Goblin interaction: B to back out of a verified Magic
+  panel, then A for Attack and target confirmation. It is behavior cloning, not
+  PPO/RL, and did not outperform the scripted expert.
+- The three-encounter learned run matched the same-seed scripted run: 3/3
+  confirmed victories (6/6/4 EXP), 2 movement resumptions, then a safe stop on
+  the third unrecognized post-battle map view. Do not infer general combat,
+  navigation, survival, or species handling from this result.
+- The local trainer now accepts multiple `--dataset` directories, deduplicates
+  exact replay samples, and keeps encounter-parent groups disjoint. If labels
+  come from a derived battle-menu state, map its state SHA to the source
+  battle-command-state SHA with `--group-map`; never let sibling replay states
+  split across train/test. Public evidence is under
+  `docs/experiments/gba_combat_learning/20261029_issue19_live/`. The model,
+  source captures, state files and full recordings remain local/ignored.
+- The test set contained only A labels, so its 100% action accuracy is weak
+  evidence. Keep the held-out Magic-state closed-loop result separate: the model
+  chose B and won; scripted also won; seeded random safely stopped. Continue
+  collecting independent formations and decision alternatives before describing
+  improvement or starting PPO.
+- The optional one-click learned combat launcher is `run_gba_learned_autoplay.cmd`. Its `--dry-run` validates the local model and working WSL runtime without opening the emulator. This entrypoint was exercised end to end through CMD, PowerShell, and WSL.

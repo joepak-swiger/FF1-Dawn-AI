@@ -879,3 +879,38 @@ Repeat battle-control validation on a different enemy formation, then improve th
 #### Next GBA gameplay milestone
 
 Extend safe postbattle continuation beyond the few reviewed camera anchors, then test at least one genuinely different enemy species/target-menu layout and add a separately validated HP/survival signal. Keep policy behavior scripted until there are independent formations and held-out states for meaningful imitation evaluation. Do not train PPO or activate event rewards yet.
+
+
+## 2026-10-29 — First GBA supervised combat learning foundation (experimental)
+
+- Added an opt-in pre-action expert decision recorder to the autoplay runner; only
+  actions from independently EXP-confirmed victories are committed to a local
+  training manifest. Screen images, native states, trained models and raw data
+  remain ignored. Unverified fights cannot silently become positive labels.
+- Added a grouped train/validation/test splitter, balanced linear supervised
+  imitation trainer, local model serializer and opt-in learned Attack/target
+  inference with source-attributed action traces.
+- **No GBA model was trained or evaluated live by this change.** Existing
+  Goblin actions are almost entirely Attack/target A and do not yet supply
+  meaningful diverse action labels. The trainer refuses single-class learning.
+  Real WSL training, held-out combat scenarios and learned-vs-scripted video
+  comparisons are still required before marking Issue #19 complete.
+- Offline standalone contract tests ran on a local prototype (5 passed);
+  the complete repo unittest suite and WSL emulator were **not available**
+  in this execution environment. The PR must be validated in the owner's
+  functioning WSL setup by Codex before merge.
+- See \`docs/gba_combat_learning.md\` and Issue #19 for the next live work.
+
+## 2026-10-29 — Issue #19 live combat-learning continuation
+
+- Reviewed and extended PR #20's combat-learning path. The multi-dataset trainer now deduplicates replay examples, supports explicit replay-state-to-original encounter-parent remapping, reports group split IDs, and still refuses single-action training. Battle branch metrics now distinguish policy choices attempted from inputs actually executed; a random choice rejected by the safety gate is counted and reported as rejected.
+- Ran the full test suite in the existing WSL environment: **114 tests passed**. Python compile checks and the GBA autoplay dry-run passed. Stable-Retro, Gymnasium, SB3, and the project integration were available; no packages or virtual environment were changed. The optional `run_gba_learned_autoplay.cmd --dry-run` also completed through CMD → PowerShell → WSL, confirming the local model without starting the emulator.
+- Real scripted capture `20261029_182321_611128Z`: three distinct battle parent states produced three confirmed victories (6, 6, 4 EXP; 24, 24, 18 Gil), 24 pre-action Attack/target labels, and movement resumed after the first two. After the third win, the controller stopped safely because its postbattle map view did not match reviewed anchors.
+- A replay-parent audit found three menu-state branch IDs descended from prior encounter states. They were remapped to their original battle-command parent hashes before the final split. The local dataset had 53 deduplicated observations across six encounter parents: 35 train, 10 validation, 8 test; training labels were 33 A and 2 B. A balanced linear behavior-cloning model was trained locally (150-epoch cap, validation-selected epoch 150; zero RL timesteps). The eight-sample test group contained only A labels, so its 100% accuracy is not a useful estimate of broad action generalization.
+- Held-out live branch comparison began at a reviewed Magic-menu state from an encounter parent excluded from optimizer training. Learned chose B to return to the target panel, then A for subsequent legal combat decisions; it won with exact 6 EXP evidence (10/10 learned choices, 812 emulator decisions). Scripted also won from the same state with 10/10 expert choices. Seeded random attempted three choices, executed two, and had one B-on-Attack choice rejected by the safety gate; it stopped without victory. The model reproduced the expert behavior but did not outperform it.
+- Full learned autoplay `20261029_182917_704300Z` matched same-seed scripted capture `20261029_182321_611128Z`: each entered and won three battles (6/6/4 EXP), and resumed movement twice. Learned attribution covered all 24 combat choices. Both stopped after the third victory on the same unrecognized map view. Full GIFs and the model/state files remain ignored; compact evidence is under `docs/experiments/gba_combat_learning/20261029_issue19_live/`.
+- **Scope:** this is a real trained supervised imitation policy integrated in live play, but it only copies the narrow reviewed Goblin menu behavior. Field exploration remains seeded-random; battle/menu/result recognition remains limited to reviewed Goblin layouts and EXP/Gil templates. No HP/survival parser, other species, general result detector, PPO, reward shaping, or advantage over scripted play has been demonstrated. Keep the model local and preserve neutral rewards and NES v0.7.
+
+#### Next Issue #19 milestone
+
+Collect independent successful demonstrations from a second enemy species and distinct target layouts; validate HP/survival observations; then compare learned and scripted policies on held-out encounter parents before considering online learning or PPO.

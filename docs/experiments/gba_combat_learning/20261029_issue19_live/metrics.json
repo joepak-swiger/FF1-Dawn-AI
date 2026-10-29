@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "issue": 19,
+  "runtime": "WSL existing project virtual environment; Stable-Retro GBA core",
+  "tests": {
+    "unittest_discover": {"passed": 114, "failed": 0},
+    "python_compileall": "passed",
+    "autoplay_dry_run": "passed",
+    "learned_launcher_dry_run": "passed through CMD -> PowerShell -> WSL; emulator not started"
+  },
+  "training": {
+    "method": "balanced linear supervised behavior cloning",
+    "rl_timesteps": 0,
+    "source_examples_before_deduplication": 61,
+    "deduplicated_examples": 53,
+    "independent_encounter_parent_groups": 6,
+    "group_split_counts": {"train": 4, "validation": 1, "test": 1},
+    "train_samples": 35,
+    "train_action_counts": {"A": 33, "B": 2},
+    "validation_samples": 10,
+    "validation_accuracy": 1.0,
+    "test_samples": 8,
+    "test_accuracy": 1.0,
+    "test_class_counts": {"A": 8},
+    "interpretation": "Test accuracy is a single-group, single-class check and does not establish broad action generalization."
+  },
+  "matched_heldout_magic_menu_branch": {
+    "start": "reviewed Magic menu from an encounter parent withheld from optimizer training",
+    "learned": {"victory": true, "confirmed_exp": 6, "policy_choices_attempted": 10, "choices_executed": 10, "action_counts": {"B": 1, "A": 9}},
+    "scripted": {"victory": true, "confirmed_exp": 6, "policy_choices_attempted": 10, "choices_executed": 10, "action_counts": {"B": 1, "A": 9}},
+    "seeded_random": {"victory": false, "policy_choices_attempted": 3, "choices_executed": 2, "safety_rejections": 1, "stop": "random selected B on the reviewed Attack panel"},
+    "learned_model_sha256": "b015eef5d753f065abf7d98361bb8b8251c48855157769a99a309f6cbdb2ed3b",
+    "decision_attribution": "LEARNED and SCRIPTED each received 100% credit for their 10 executed meaningful choices. Random attempted choices are counted separately from the input rejected by the safety gate.",
+    "scope": "same reviewed Goblin menu family; no other enemy species or strategy tested"
+  },
+  "matched_full_autonomous_sessions": {
+    "seed": 77,
+    "learned_run_id": "20261029_182917_704300Z",
+    "scripted_combat_run_id": "20261029_182321_611128Z",
+    "learned": {"battles_entered": 3, "confirmed_wins": 3, "exp": [6, 6, 4], "gil": [24, 24, 18], "movement_resumptions": 2, "learned_combat_choices": 24},
+    "scripted": {"battles_entered": 3, "confirmed_wins": 3, "exp": [6, 6, 4], "gil": [24, 24, 18], "movement_resumptions": 2},
+    "shared_stop": "third win was confirmed; controller stopped because the post-battle map did not match a reviewed anchor",
+    "interpretation": "The trained model reproduced scripted combat behavior; it did not improve win rate or exploration."
+  },
+  "local_recordings": [
+    {"run_id": "20261029_182917_704300Z", "file": "videos/gba_autoplay/<run_id>/autoplay.gif", "policy": "learned combat; seeded-random field movement"},
+    {"run_id": "20261029_182321_611128Z", "file": "videos/gba_autoplay/<run_id>/autoplay.gif", "policy": "scripted combat; seeded-random field movement"},
+    {"run_id": "20261029_183043_885907Z", "file": "videos/gba_combat_branch_eval/<run_id>/combat_branch.gif", "policy": "learned held-out Magic-menu branch"},
+    {"run_id": "20261029_183048_727478Z", "file": "videos/gba_combat_branch_eval/<run_id>/combat_branch.gif", "policy": "scripted matched branch"},
+    {"run_id": "20261029_183053_617778Z", "file": "videos/gba_combat_branch_eval/<run_id>/combat_branch.gif", "policy": "seeded-random matched branch"}
+  ],
+  "limitations": [
+    "Supervised imitation, not reinforcement learning.",
+    "Only reviewed Goblin battle layouts and exact EXP/Gil result banners are supported.",
+    "HP, survival, escape, defeat, and other species remain unverified.",
+    "The learned policy matched the scripted expert and did not outperform it.",
+    "The model, source observations, savestates, ROM, and full recordings stay local."
+  ]
+}

@@ -159,11 +159,13 @@ def _movement_probe(env, map_state: bytes, *, forward: str, frames: int,
 
 def sanitized_public_metrics(metrics: dict) -> dict:
     """Select auditable fields for GitHub; omit local paths, traces, and states."""
+    combat_policy = metrics.get("combat_policy", "scripted")
+    decision_sources = metrics.get("combat_decisions_by_source", {})
     return {
         "run_id": metrics["run_id"],
         "status": metrics["status"],
         "policy": metrics["policy"],
-        "policy_is_learned": False,
+        "policy_is_learned": combat_policy == "learned",
         "seed": metrics["seed"],
         "checkpoint_sha256": metrics["checkpoint_sha256"],
         "decisions": metrics["decisions"],
@@ -204,8 +206,20 @@ def sanitized_public_metrics(metrics: dict) -> dict:
         "post_battle_map_view_confirmed": metrics["post_battle_map_view_confirmed"],
         "unknown_scene_observations": metrics["unknown_scene_observations"],
         "training_timesteps": 0,
+        "combat_policy": combat_policy,
+        "combat_model_sha256": metrics.get("combat_model_sha256"),
+        "combat_decisions_by_source": {
+            name: int(decision_sources.get(name, 0))
+            for name in ("learned", "scripted_expert", "safety_supervisor", "random")
+        },
+        "combat_decision_source_percentages": metrics.get("combat_decision_source_percentages", {}),
+        "expert_training_labels_collected": int(metrics.get("expert_training_labels_collected", 0)),
         "elapsed_seconds": metrics["elapsed_seconds"],
-        "interpretation": "scripted or seeded-random control; not a learned policy",
+        "interpretation": metrics.get(
+            "interpretation",
+            "learned combat buttons with scripted safety supervision" if combat_policy == "learned"
+            else "scripted or seeded-random control; not a learned policy",
+        ),
     }
 
 
@@ -243,6 +257,7 @@ def run(args: argparse.Namespace) -> Path:
     from PIL import Image
 
     from ff1_dawn_ai.gba_env import FF1GbaEnv, GBA_ACTIONS
+    from ff1_dawn_ai.gba_combat_learning import CombatDecisionRecorder, CombatLinearPolicy
     from ff1_dawn_ai.gba_landmark import SceneAnchorClassifier, SceneConfirmationGate
     from scripts.gba_castle_learning_smoke import FIELD_VARIANTS, REFERENCES
 
@@ -254,8 +269,13 @@ def run(args: argparse.Namespace) -> Path:
     battle_reference = ROOT / "docs/experiments/gba_autoplay/battle_ui_reference/attack_command_positive_left.png"
     battle_detector = BattleCommandDetector(str(battle_reference), threshold=0.95)
     battle_gate = BattleConfirmationGate(battle_detector, consecutive_frames=2)
+    magic_reference = ROOT / "docs/experiments/gba_autoplay/battle_ui_reference/magic_menu_negative_left.png"
+    magic_detector = BattleCommandDetector(str(magic_reference), threshold=0.95)
+    magic_gate = BattleConfirmationGate(magic_detector, consecutive_frames=2)
     target_reference = ROOT / "docs/experiments/gba_autoplay/battle_ui_reference/goblin_target_positive_left.png"
-    target_detector = BattleTargetDetector(str(target_reference), threshold=0.95)
+    target_detector = BattleTargetDetector(str(target_reference), alternative_references=(
+        str(ROOT / "docs/experiments/gba_autoplay/battle_ui_reference/goblin_target_positive_four.png"),
+    ), threshold=0.95)
     target_gate = BattleConfirmationGate(target_detector, consecutive_frames=2)
     exp_reference = ROOT / "docs/experiments/gba_autoplay/battle_win_reference/earned_6_exp_banner.png"
     exp_detector = BattleExpResultDetector(str(exp_reference), alternative_references={
@@ -280,7 +300,16 @@ def run(args: argparse.Namespace) -> Path:
     map_gate = BattleConfirmationGate(map_detector, consecutive_frames=2)
     run_id, out = create_output(ROOT / "videos" / "gba_autoplay")
     started = time.perf_counter()
-    policy_label = ("SCRIPTED" if args.policy == "scripted_baseline" else
+    learned_policy = (CombatLinearPolicy.load(Path(args.combat_model))
+                      if args.combat_policy == "learned" else None)
+    combat_model_sha256 = (hashlib.sha256(Path(args.combat_model).read_bytes()).hexdigest()
+                           if learned_policy is not None else None)
+    recorder = (CombatDecisionRecorder(out / "expert_decisions")
+                if args.record_combat_demos else None)
+    active_group_id = None
+    pending_expert_decisions = []
+    policy_label = ("LEARNED COMBAT + SEEDED RANDOM" if learned_policy else
+                    "SCRIPTED" if args.policy == "scripted_baseline" else
                     "AUTONOMOUS SCRIPTED COMBAT + SEEDED RANDOM" if args.policy == "autonomous_session" else
                     "SEEDED RANDOM")
     controller = ScriptedCastleExcursion(args.max_approach, args.max_return) if args.policy == "scripted_baseline" else None
@@ -334,6 +363,7 @@ def run(args: argparse.Namespace) -> Path:
         reset_info = second_reset
         gate.reset()
         battle_gate.reset()
+        magic_gate.reset()
         # The initial anchor needs two distinct core observations. A neutral
         # release is also the known-safe setup action for this checkpoint.
         for _ in range(2):
@@ -377,7 +407,37 @@ def run(args: argparse.Namespace) -> Path:
                                        action=action, scene=label, battle_count=session.battles_entered))
                 frame_labels.append(f"{step_no}: {phase} / {action} / {label}")
 
-        def battle_input(control: str, phase: str, marker: float):
+        def combat_decision(frame, stage: str, expert_action: str, actor_index: int):
+            # Only verified pre-action expert buttons become labels. Learned
+            # actions never become training labels for themselves.
+            if recorder is not None:
+                # Do not write a supervised label until the entire encounter
+                # ends with independent EXP-banner victory evidence.
+                pending_expert_decisions.append({
+                    "frame": frame.copy(), "stage": stage, "action": expert_action,
+                    "group_id": active_group_id,
+                    "encounter_id": f"{run_id}:battle_{session.current_battle_id:02d}",
+                })
+            if learned_policy is None:
+                return expert_action, "scripted_expert", None
+            action, confidence = learned_policy.predict(frame, stage)
+            legal_actions = {"attack_command": {"A"}, "target_confirm": {"A"},
+                             "menu_other": {"B"}}
+            if action not in legal_actions.get(stage, set()):
+                raise RuntimeError(
+                    f"learned action {action!r} is not verified for stage {stage!r}; stopped safely"
+                )
+            events.append({"step": len(actions), "battle_id": session.current_battle_id,
+                           "event": "learned_combat_decision", "action": action,
+                           "actor_slot": actor_index, "stage": stage,
+                           "confidence": round(confidence, 6),
+                           "model_sha256": combat_model_sha256})
+            if confidence < args.min_combat_confidence:
+                raise RuntimeError("learned combat confidence below threshold; stopped without scripted rescue")
+            return action, "learned", confidence
+
+        def battle_input(control: str, phase: str, marker: float,
+                         source: str = "safety_supervisor", confidence: float | None = None):
             """Execute and trace one battle-control observation."""
             nonlocal battle_a_presses, battle_victory_exp_confirmed
             obs, reward, terminated, truncated, info = env.step(GBA_ACTIONS.index(control))
@@ -393,6 +453,7 @@ def run(args: argparse.Namespace) -> Path:
             target_match_scores.append(target_score)
             battle_gate.update(frame)
             target_gate.update(frame)
+            magic_gate.update(frame)
             if level_gate.update(frame) and session.current_battle_id is not None:
                 if session.level_up_confirmed("Sif"):
                     Image.fromarray(frame).save(out / "sif_level_up.png")
@@ -420,7 +481,9 @@ def run(args: argparse.Namespace) -> Path:
                                        step=int(marker), action=control, scene="result_message",
                                        battle_count=session.battles_entered))
                 frame_labels.append(f"{marker}: Earned {exp_amount if exp_amount is not None else 'unknown'} EXP result")
-            actions.append({"decision": marker, "action": control, "phase": phase,
+            actions.append({"decision": marker, "action": control, "phase": phase, "source": source,
+                            "model_confidence": (round(confidence, 6) if confidence is not None else ""),
+                            "model_sha256": (combat_model_sha256 if source == "learned" else ""),
                             "candidate_scene": result.label, "candidate_status": result.status,
                             "confirmed_scene": gate.confirmed_scene or "unknown",
                             "emulator_frames": info.get("emulator_frames_executed", 1),
@@ -469,57 +532,138 @@ def run(args: argparse.Namespace) -> Path:
                 battle_gil_award_confirmed = False
                 post_battle_map_view_confirmed = False
                 level_gate.reset()
+                magic_gate.reset()
                 battle_command_panel_returned = False
                 field_return_after_battle = False
                 active_battle_id = session.battle_detected(step_no)
+                active_group_id = hashlib.sha256(
+                    env.retro_env.em.get_state()).hexdigest()
+                pending_expert_decisions.clear()
                 battle_confirmation_step = step_no
                 state_bytes = env.retro_env.em.get_state()
-                (out / "battle_command_checkpoint_candidate.state").write_bytes(state_bytes)
+                battle_state_path = out / f"battle_{active_battle_id:02d}_command_checkpoint_candidate.state"
+                battle_state_path.write_bytes(state_bytes)
+                # Keep the historical convenience filename for the first
+                # encounter while preserving every later parent state too.
+                if active_battle_id == 1:
+                    (out / "battle_command_checkpoint_candidate.state").write_bytes(state_bytes)
                 Image.fromarray(frame).save(out / "battle_command_confirmed.png")
                 Image.fromarray(frame).save(out / f"battle_{active_battle_id:02d}_command_confirmed.png")
                 events.append({"step": step_no, "battle_id": active_battle_id,
                                "event": "battle_detected_command_screen_confirmed",
                                "visual_anchor_score": round(battle_score, 5)})
+                current_command_ready = True
                 if args.attack_on_confirmed_battle or args.policy == "autonomous_session":
-                    current_command_ready = True
                     for actor_index in range(1, args.max_attackers + 1):
                         if not current_command_ready:
                             break
-                        target_gate.reset()
                         marker = step_no + actor_index / 100
-                        frame, terminated, truncated = battle_input(
-                            "A", "battle_attack_select", marker)
-                        if terminated or truncated:
-                            stop_reason = "emulator_ended_after_attack_selection"
-                            status = "emulator_terminated" if terminated else "episode_truncated"
-                            break
-                        target_gate.reset()
-                        for offset in range(1, 13):
+                        target_available = False
+                        for attempt in range(2):
+                            target_gate.reset()
+                            attack_action, attack_source, attack_confidence = combat_decision(
+                                env.render().copy(), "attack_command", "A", actor_index)
                             frame, terminated, truncated = battle_input(
-                                "NOOP", "battle_target_wait", step_no + actor_index / 100 + offset / 1000)
-                            if target_gate.confirmed or terminated or truncated:
+                                attack_action, "battle_attack_select", marker,
+                                source=attack_source, confidence=attack_confidence)
+                            if terminated or truncated:
+                                stop_reason = "emulator_ended_after_attack_selection"
+                                status = "emulator_terminated" if terminated else "episode_truncated"
                                 break
-                        Image.fromarray(frame).save(out / ("battle_command_after_A.png" if actor_index == 1
-                                                            else f"battle_actor_{actor_index:02d}_target.png"))
-                        if actor_index == 1:
-                            Image.fromarray(frame).save(out / f"battle_{active_battle_id:02d}_target_panel.png")
-                        if not target_gate.confirmed:
+                            for offset in range(1, 13):
+                                frame, terminated, truncated = battle_input(
+                                    "NOOP", "battle_target_wait",
+                                    step_no + actor_index / 100 + offset / 1000)
+                                if target_gate.confirmed or magic_gate.confirmed or terminated or truncated:
+                                    break
+                            if target_gate.confirmed:
+                                target_available = True
+                                break
+                            if not magic_gate.confirmed or attempt > 0 or terminated or truncated:
+                                break
+
+                            # The known Magic panel was an observed safe-stall
+                            # state in previous runs. B is independently
+                            # verified to return to the Attack command panel;
+                            # only that exact panel permits a bounded retry.
+                            recovery_action, recovery_source, recovery_confidence = combat_decision(
+                                frame.copy(), "menu_other", "B", actor_index)
+                            if recovery_action != "B":
+                                stop_reason = "unverified_magic_menu_recovery_action"
+                                status = "battle_input_attempted"
+                                break
+                            events.append({"step": step_no + actor_index / 100,
+                                           "battle_id": active_battle_id,
+                                           "event": "reviewed_magic_menu_detected",
+                                           "visual_anchor_score": round(magic_detector.score(frame), 5)})
+                            magic_gate.reset()
+                            battle_gate.reset()
+                            frame, terminated, truncated = battle_input(
+                                recovery_action, "battle_magic_menu_back", marker + 0.0001,
+                                source=recovery_source, confidence=recovery_confidence)
+                            if terminated or truncated:
+                                stop_reason = "emulator_ended_during_magic_menu_recovery"
+                                status = "emulator_terminated" if terminated else "episode_truncated"
+                                break
+                            for wait_no in range(1, 31):
+                                frame, terminated, truncated = battle_input(
+                                    "NOOP", "battle_wait_for_attack_panel",
+                                    marker + 0.0001 + wait_no / 10000)
+                                if battle_gate.confirmed or terminated or truncated:
+                                    break
+                            if not battle_gate.confirmed:
+                                stop_reason = "magic_menu_back_did_not_restore_reviewed_attack_panel"
+                                status = "battle_input_attempted"
+                                break
+                            events.append({"step": marker + 0.0001 + wait_no / 10000,
+                                           "battle_id": active_battle_id,
+                                           "event": "magic_menu_recovery_attack_panel_confirmed",
+                                           "visual_anchor_score": round(battle_detector.score(frame), 5)})
+                        if not target_available:
+                            if status in ("emulator_terminated", "episode_truncated"):
+                                break
+                            if status == "battle_input_attempted" and stop_reason not in (
+                                    "attack_selected_but_target_panel_not_confirmed",):
+                                break
+                            diagnostic = out / f"battle_{active_battle_id:02d}_unclassified_after_attack.png"
+                            Image.fromarray(frame).save(diagnostic)
+                            events.append({"step": step_no + actor_index / 100,
+                                           "battle_id": active_battle_id,
+                                           "event": "attack_followup_unclassified",
+                                           "attack_panel_score": round(battle_detector.score(frame), 5),
+                                           "target_panel_score": round(target_detector.score(frame), 5),
+                                           "magic_panel_score": round(magic_detector.score(frame), 5),
+                                           "diagnostic_saved": True})
                             battle_target_confirmed = actor_index > 1
                             current_command_ready = False
                             stop_reason = "attack_selected_but_target_panel_not_confirmed"
                             status = "battle_input_attempted"
                             break
+                        Image.fromarray(frame).save(out / ("battle_command_after_A.png" if actor_index == 1
+                                                            else f"battle_actor_{actor_index:02d}_target.png"))
+                        if actor_index == 1:
+                            Image.fromarray(frame).save(out / f"battle_{active_battle_id:02d}_target_panel.png")
                         battle_target_confirmed = True
                         events.append({"step": step_no + actor_index / 100,
                                        "battle_id": active_battle_id,
                                        "event": "single_enemy_target_panel_confirmed",
                                        "actor_slot": actor_index,
                                        "visual_anchor_score": round(target_detector.score(frame), 5)})
+                        target_action, target_source, target_confidence = combat_decision(
+                            env.render().copy(), "target_confirm", "A", actor_index)
                         frame, terminated, truncated = battle_input(
-                            "A", "battle_target_confirm", step_no + actor_index / 100 + 0.5)
+                            target_action, "battle_target_confirm",
+                            step_no + actor_index / 100 + 0.5, source=target_source,
+                            confidence=target_confidence)
                         if terminated or truncated:
                             stop_reason = "emulator_ended_after_target_confirmation"
                             status = "emulator_terminated" if terminated else "episode_truncated"
+                            break
+                        if target_action != "A":
+                            # A non-confirm action is allowed to be issued,
+                            # but it must never be counted as an Attack target.
+                            status = "battle_input_attempted"
+                            stop_reason = "learned_target_action_unverified"
                             break
                         battle_commands += 1
                         total_battle_commands += 1
@@ -675,6 +819,10 @@ def run(args: argparse.Namespace) -> Path:
                                            "event": "postbattle_screen_not_in_reviewed_map_anchors"})
                         outcome = "victory" if battle_victory_exp_confirmed else "unknown"
                         session.finish_battle(outcome)
+                        if recorder is not None and outcome == "victory":
+                            for sample in pending_expert_decisions:
+                                recorder.record(**sample)
+                        pending_expert_decisions.clear()
                         events.append({"step": step_no, "battle_id": active_battle_id,
                                        "event": "battle_finished", "outcome": outcome,
                                        "exp_banner": battle_victory_exp_confirmed,
@@ -858,9 +1006,19 @@ def run(args: argparse.Namespace) -> Path:
     exp_6_confirmed = 6 in exp_amounts
     gil_24_confirmed = 24 in gil_amounts
     any_map_view = any(row["map_view_observed"] for row in session.encounters)
+    combat_decision_rows = [row for row in actions
+                            if str(row.get("phase", "")).startswith("battle_")
+                            and row.get("action") != "NOOP"]
+    combat_sources = {name: sum(row.get("source") == name for row in combat_decision_rows)
+                      for name in ("learned", "scripted_expert", "safety_supervisor", "random")}
+    combat_decision_total = sum(combat_sources.values())
+    combat_source_percentages = {
+        name: round(count * 100.0 / combat_decision_total, 2) if combat_decision_total else 0.0
+        for name, count in combat_sources.items()
+    }
     metrics = {
         "run_id": run_id, "status": status, "stop_reason": stop_reason,
-        "policy": args.policy, "policy_is_learned": False, "seed": args.seed,
+        "policy": args.policy, "policy_is_learned": learned_policy is not None, "seed": args.seed,
         "checkpoint_sha256": checkpoint_hash,
         "reset_observation_sha256": reset_info.get("observation_sha256"),
         "repeat_reset_observation_hashes_match": len(reset_hashes) == 2 and reset_hashes[0] == reset_hashes[1],
@@ -913,13 +1071,20 @@ def run(args: argparse.Namespace) -> Path:
         "exp_reward_banner_confirmed": any_exp,
         "unknown_scene_observations": unknown_count,
         "events": events, "elapsed_seconds": round(elapsed, 3), "training_timesteps": 0,
+        "combat_policy": args.combat_policy,
+        "combat_model_sha256": combat_model_sha256,
+        "combat_decisions_by_source": combat_sources,
+        "combat_decision_source_percentages": combat_source_percentages,
+        "combat_meaningful_decision_count": combat_decision_total,
+        "expert_training_labels_collected": recorder.count if recorder is not None else 0,
         "output_directory_local_only": str(out.relative_to(ROOT)),
     }
     metrics_path = out / "metrics.json"
     metrics_path.write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")
     with (out / "actions.csv").open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.DictWriter(stream, fieldnames=("decision", "action", "phase", "candidate_scene",
-            "candidate_status", "confirmed_scene", "emulator_frames", "reward"))
+        writer = csv.DictWriter(stream, fieldnames=("decision", "action", "phase", "source",
+            "model_confidence", "model_sha256", "candidate_scene", "candidate_status",
+            "confirmed_scene", "emulator_frames", "reward"))
         writer.writeheader()
         writer.writerows(actions)
     with (out / "events.csv").open("w", newline="", encoding="utf-8") as stream:
@@ -935,7 +1100,9 @@ def run(args: argparse.Namespace) -> Path:
     report = "\n".join([
         "# GBA autonomous gameplay recording",
         f"Run ID: {run_id}", f"Status: {status}",
-        f"Policy: {args.policy} (field navigation is seeded-random; combat uses scripted Attack/target inputs; not learned)",
+        f"Policy: {args.policy}; combat={args.combat_policy}; field navigation remains scripted or seeded-random.",
+        f"Meaningful combat decisions by provenance: {metrics['combat_decisions_by_source']} ({metrics['combat_decision_source_percentages']}%); model SHA-256: {combat_model_sha256 or 'none'}; verified pre-action expert examples: {metrics['expert_training_labels_collected']}.",
+        "Training labels are local-only; no supervised/RL optimizer runs inside autoplay.",
         f"Stop reason: {stop_reason}", f"Decisions: {len(actions)}; emulator frames: {metrics['emulator_frames']}",
         f"Confirmed scenes: {', '.join(confirmed_scenes) if confirmed_scenes else 'none'}",
         f"Castle reached: {metrics['castle_reached']}; field return confirmed: {metrics['field_return_confirmed']}",
@@ -955,7 +1122,7 @@ def run(args: argparse.Namespace) -> Path:
           "Battle outcome remains unknown. Leaving a battle-like screen is not treated as victory.")),
         f"Unknown scene observations: {unknown_count}", f"Runtime: {elapsed:.3f} seconds",
         "GIF frames are captures from the Stable-Retro emulator with an on-screen policy/scene overlay.",
-        "No PPO/optimizer training ran; reward remained neutral.", "",
+        "No PPO optimizer training ran; base reward remained neutral.", "",
     ])
     (out / "run_report.txt").write_text(report, encoding="utf-8")
     if args.publish:
@@ -971,6 +1138,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--policy", choices=("scripted_baseline", "seeded_random", "autonomous_session"), default="scripted_baseline")
     parser.add_argument("--checkpoint", help="Explicit local native checkpoint; defaults to verified Seed-party state")
+    parser.add_argument("--combat-policy", choices=("scripted", "learned"), default="scripted",
+                        help="Combat decision source; learned requires a separately trained local model")
+    parser.add_argument("--combat-model", help="Local .npz policy; required for learned combat")
+    parser.add_argument("--min-combat-confidence", type=float, default=0.0)
+    parser.add_argument("--record-combat-demos", action="store_true",
+                        help="Save real PRE-action expert screenshots/labels locally only")
     parser.add_argument("--decisions", type=int, default=280, help="Maximum one-emulator-frame actions")
     parser.add_argument("--max-approach", type=int, default=160)
     parser.add_argument("--max-return", type=int, default=112)
@@ -989,6 +1162,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dry-run", action="store_true", help="Validate dependencies, checkpoint, and anchors only")
     parser.add_argument("--publish", action="store_true", help="Also write sanitized metrics/report/contact sheet under docs/")
     args = parser.parse_args(argv)
+    if args.combat_policy == "learned" and (not args.combat_model or args.record_combat_demos):
+        parser.error("learned combat needs --combat-model and cannot write expert labels")
+    if args.combat_policy == "learned" and args.policy != "autonomous_session":
+        parser.error("learned combat requires --policy autonomous_session")
+    if args.combat_policy == "learned" and not Path(args.combat_model).is_file():
+        parser.error("learned combat model not found")
+    if not 0.0 <= args.min_combat_confidence <= 1.0:
+        parser.error("--min-combat-confidence must be 0..1")
     if min(args.decisions, args.capture_every, args.max_approach, args.max_return,
            args.max_attackers, args.resolution_wait_frames) < 1:
         parser.error("decision, capture interval, and route limits must be positive")
