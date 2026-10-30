@@ -334,3 +334,33 @@ observed results from hypotheses.
   collecting independent formations and decision alternatives before describing
   improvement or starting PPO.
 - The optional one-click learned combat launcher is `run_gba_learned_autoplay.cmd`. Its `--dry-run` validates the local model and working WSL runtime without opening the emulator. This entrypoint was exercised end to end through CMD, PowerShell, and WSL.
+
+### Issue #23 storage, menu and result-pacing update (2026-10-30)
+
+- Latest local full audit snapshot: 9,608,440,231 bytes / 57,599 files. See
+  `docs/project_inventory.md`; full local reports are ignored under
+  `reports/storage_audit/<run-id>/`. Run `scripts/audit_project_storage.ps1`
+  for read-only audit; `-SafeClean` may remove only the script's explicit
+  regenerable source-tree Python caches. Never delete/relocate ignored game
+  data, runtime files, recordings, models, checkpoints, ROMs, or states based
+  on size, age, or hash matches alone.
+- Only source-tree `__pycache__` files were cleaned in this milestone
+  (116 files / 1,673,287 bytes). No uncertain artifacts were archived or
+  quarantined because no safe replacement/recovery pair was established.
+- `scripts/gba_menu_smoke.py` now records completed and failed menu operations
+  in one partial report. Inventory is visibly empty at the official checkpoint.
+  The equipment path produced an unknown view resembling Sif's Magic list; do
+  not claim Equipment, spell, item-use, purchase, or gear-change capability.
+  The controller is read-only and fail-closed until fresh row-specific screen
+  anchors and observable effects are validated.
+- `scripts/gba_autoplay.py` separates post-victory map wait from the longer
+  battle-resolution budget via `--postvictory-wait-frames` (default 48). It
+  retries only if the exact known Gil banner remains, and unknown views still
+  stop safely. On Issue #23 seed-77 live run the existing supervised model
+  supplied 24/24 narrow Goblin combat choices; navigation was seeded-random,
+  PPO steps zero, rewards neutral. Never present this as learned navigation
+  or a broader combat policy. Full recording and local raw traces stay under
+  unique ignored `videos/gba_autoplay/<run-id>/` paths.
+- WSL suite now includes 122 tests. The new public Issue #23 summaries are in
+  `docs/experiments/gba_menu_controller/20261030_issue23/` and
+  `docs/experiments/gba_autoplay/issue23_result_ack/`.

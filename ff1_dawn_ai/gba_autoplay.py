@@ -87,6 +87,19 @@ def should_retry_attack_selection(*, attempt: int, attack_panel_confirmed: bool,
             and not target_panel_confirmed and not magic_panel_confirmed)
 
 
+def should_retry_known_result_acknowledgement(*, attempt: int, known_banner_still_confirmed: bool,
+                                              max_attempts: int = 3) -> bool:
+    """Retry only a bounded acknowledgement while its exact known banner remains.
+
+    A changed or unknown screen is never acknowledged by this helper. This is
+    used to replace long blind waits on a Gil result with short observe/retry
+    cycles without sending A through an unrecognized level-up/message screen.
+    """
+    if max_attempts < 1 or attempt < 1:
+        raise ValueError("attempt and max_attempts must be positive")
+    return bool(known_banner_still_confirmed and attempt < max_attempts)
+
+
 @dataclass
 class AutonomousSessionCoordinator:
     """Small auditable lifecycle tracker for continuous autoplay sessions.

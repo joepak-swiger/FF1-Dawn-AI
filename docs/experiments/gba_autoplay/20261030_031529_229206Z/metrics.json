@@ -1,0 +1,197 @@
+{
+  "run_id": "20261030_031529_229206Z",
+  "status": "stopped_after_confirmed_battle_unrecognized_postbattle_map",
+  "policy": "autonomous_session",
+  "policy_is_learned": true,
+  "seed": 77,
+  "checkpoint_sha256": "2bad13aa73fdea33661d39f9d1b83e56d2a0936964703ec4195493e1d4607cff",
+  "decisions": 3655,
+  "emulator_frames": 3995,
+  "diagnostic_emulator_frames": 340,
+  "action_counts": {
+    "NOOP": 2165,
+    "UP": 397,
+    "DOWN": 319,
+    "LEFT": 371,
+    "RIGHT": 354,
+    "A": 49,
+    "B": 0,
+    "START": 0,
+    "SELECT": 0,
+    "L": 0,
+    "R": 0
+  },
+  "confirmed_scenes": [
+    "cornelia_exterior_field"
+  ],
+  "castle_reached": false,
+  "field_return_confirmed": false,
+  "battle_command_screen_confirmed": true,
+  "battles_entered": 3,
+  "battles_finished": 3,
+  "battle_victories": 3,
+  "battle_escapes": 0,
+  "battle_defeats": 0,
+  "battle_unknown_outcomes": 0,
+  "movement_resumed": 2,
+  "movement_probes": [
+    {
+      "battle_id": 1,
+      "idle_repeat_mae": 0.0,
+      "forward_repeat_mae": 0.0,
+      "opposite_repeat_mae": 0.0,
+      "forward_vs_idle_mae": 54.430277777777775,
+      "opposite_vs_idle_mae": 52.032916666666665,
+      "forward_vs_opposite_mae": 65.37833333333333,
+      "matched_controls_stable": true,
+      "movement_signal_confirmed": true,
+      "movement_signal_action": "forward",
+      "forward_action": "LEFT",
+      "opposite_action": "RIGHT",
+      "held_frames": 24,
+      "evidence_type": "matched screen-space pixel comparison; not tile coordinates"
+    },
+    {
+      "battle_id": 2,
+      "idle_repeat_mae": 0.0,
+      "forward_repeat_mae": 0.0,
+      "opposite_repeat_mae": 0.0,
+      "forward_vs_idle_mae": 43.740763888888885,
+      "opposite_vs_idle_mae": 44.05111111111111,
+      "forward_vs_opposite_mae": 44.678263888888885,
+      "matched_controls_stable": true,
+      "movement_signal_confirmed": true,
+      "movement_signal_action": "forward",
+      "forward_action": "UP",
+      "opposite_action": "DOWN",
+      "held_frames": 24,
+      "evidence_type": "matched screen-space pixel comparison; not tile coordinates"
+    }
+  ],
+  "battle_encounters": [
+    {
+      "battle_id": 1,
+      "entry_step": 471,
+      "outcome": "victory",
+      "exp_confirmed": true,
+      "gil_confirmed": true,
+      "exp_amount": 6,
+      "gil_amount": 24,
+      "level_ups": [],
+      "finished": true,
+      "map_view_observed": true,
+      "movement_resumed": true
+    },
+    {
+      "battle_id": 2,
+      "entry_step": 1041,
+      "outcome": "victory",
+      "exp_confirmed": true,
+      "gil_confirmed": true,
+      "exp_amount": 6,
+      "gil_amount": 24,
+      "level_ups": [],
+      "finished": true,
+      "map_view_observed": true,
+      "movement_resumed": true
+    },
+    {
+      "battle_id": 3,
+      "entry_step": 1393,
+      "outcome": "victory",
+      "exp_confirmed": true,
+      "gil_confirmed": true,
+      "exp_amount": 4,
+      "gil_amount": 18,
+      "level_ups": [
+        "Sif"
+      ],
+      "finished": true,
+      "map_view_observed": false,
+      "movement_resumed": false
+    }
+  ],
+  "exp_awards": [
+    6,
+    6,
+    4
+  ],
+  "gil_awards": [
+    24,
+    24,
+    18
+  ],
+  "confirmed_level_ups": [
+    {
+      "battle_id": 3,
+      "character": "Sif"
+    }
+  ],
+  "recognized_hp_increase_messages": [
+    {
+      "step": 1394.9131,
+      "battle_id": 3,
+      "event": "hp_increase_27_banner_confirmed",
+      "amount": 27,
+      "template_exact": true
+    }
+  ],
+  "recognized_strength_increase_messages": [
+    {
+      "step": 1394.9141,
+      "battle_id": 3,
+      "event": "strength_increase_banner_confirmed",
+      "template_exact": true
+    }
+  ],
+  "attack_panel_safe_retries": 0,
+  "postvictory_message_acknowledgements": 16,
+  "battle_command_actions": 12,
+  "battle_target_confirmed": true,
+  "next_party_command_confirmed": false,
+  "post_target_wait_frames": 11,
+  "battle_A_presses": 49,
+  "battle_command_panel_returned": false,
+  "field_return_after_battle": false,
+  "battle_resolution_wait_frames": 427,
+  "battle_detection": "two-frame 100x50 Attack-selected left-panel anchor; currently validated on Goblin trials",
+  "battle_outcomes": {
+    "victory": 3,
+    "escape": 0,
+    "defeat": 0,
+    "unknown": 0
+  },
+  "exp_reward_banner_confirmed": true,
+  "recognized_exp_amounts": [
+    6,
+    6,
+    4
+  ],
+  "recognized_gil_amounts": [
+    24,
+    24,
+    18
+  ],
+  "specific_earned_6_exp_banner_confirmed": true,
+  "specific_obtained_24_gil_banner_confirmed": true,
+  "post_battle_map_view_confirmed": true,
+  "unknown_scene_observations": 3588,
+  "training_timesteps": 0,
+  "combat_policy": "learned",
+  "combat_model_sha256": "6ba53b1d29573461cab9d71a5e8efaddb3af16ad76de1c4cf3b5df6c61f63f54",
+  "combat_decisions_by_source": {
+    "learned": 24,
+    "scripted_expert": 0,
+    "safety_supervisor": 0,
+    "random": 0
+  },
+  "combat_decision_source_percentages": {
+    "learned": 100.0,
+    "scripted_expert": 0.0,
+    "safety_supervisor": 0.0,
+    "random": 0.0
+  },
+  "expert_training_labels_collected": 0,
+  "elapsed_seconds": 26.778,
+  "interpretation": "learned combat buttons with scripted safety supervision"
+}
