@@ -1,6 +1,6 @@
 # FF1-Dawn-AI status
 
-**Updated:** 2026-10-28
+**Updated:** 2026-10-30
 **Current milestone:** GBA Dawn of Souls is the primary development target.
 The latest owner-approved GBA roster is Sif/Warrior, Myth/Thief, Milo/Monk,
 Seed/Red Mage. Earlier Seed and Mustar checkpoints, reports, and Gymnasium
@@ -16,7 +16,26 @@ goal events and reached 0/3 post-training episodes from the same start.
 Scripted UP reached 3/3, while random and idle reached 0/3. This is not
 evidence of learned navigation.
 NES remains secondary; v0.7 and its experiments are unchanged, and RAM
-signals remain provisional.
+signals remain provisional. Issue #21's latest WSL gameplay experiment entered
+five Goblin encounters, confirmed four wins, and verified four post-victory
+movement resumptions. The fifth encounter stopped without a confirmed target.
+The local v2 combat behavior-cloning model passed one held-out Magic-menu
+branch, matching v1 and scripted control; it has not shown a gameplay advantage.
+No PPO training or reward changes were made.
+
+## 2026-10-30 — Issue #21 learned-agent v2 and continuous recovery
+
+- In live WSL run `20261030_002302_471698Z`, the learned-combat / seeded-random-field controller entered five encounters, confirmed four Goblin victories (6/6/4/4 EXP; 24/24/18/18 Gil), and resumed movement four times without resetting. The fifth battle stopped safely on an unconfirmed target transition; its outcome is unknown. The full local video is `videos/gba_autoplay/20261030_002302_471698Z/autoplay.gif`.
+- Fixed the fourth-battle postbattle blockage with a reviewed camera-map anchor and direction-aware matched control: if one cardinal probe matches idle but its opposite is stable and distinct, the controller resumes using the independently moving direction. One run's RIGHT probe was 0.43 MAE from idle while LEFT was 44.05; the selected LEFT movement was repeated and the session resumed. This is screen-space evidence, not a coordinate or blocked-tile claim.
+- Added a one-time Attack retry gated by a two-frame match of the exact Attack panel after an A input. The fresh run recorded one retry and resolved battle four. A restored fifth-battle state showed the Flee row rather than Attack after synchronization (score 0.9485 versus the strict 0.95 threshold); the branch comparator safely refused to act. Keep this threshold and report the state mismatch as an unresolved restoration/timing edge.
+- A bounded matched-state branch from a confirmed Goblin Attack panel produced the same 4-EXP victory under learned and scripted control. Random's B proposal was safety-rejected. A second held-out grouped test-state branch began on the reviewed Magic panel: updated v2 chose B then A and won with exact 6 EXP; v1 and scripted also won, while random stopped safely. This shows the narrow B menu-recovery behavior, not a win-rate improvement or new-species generalization.
+- Trained a local-only v2 linear behavior-cloning model for 150 epochs from 69 deduplicated real observations / eight encounter-parent groups. Group splits: train 34 (A 33/B 1), validation 17 (A 16/B 1), test 18 (A 17/B 1). Per-action, per-stage, and confusion-matrix diagnostics are now reported; test accuracy was 18/18, including only one B example. v2 did not beat v1 or scripted performance. Model weights and datasets remain local; PPO timesteps are 0 and rewards remain neutral.
+- Safe evidence and selected small frames: [`Issue #21 experiment`](experiments/gba_combat_learning/20261030_issue21/REPORT.md) and [`autoplay run`](experiments/gba_autoplay/20261030_002302_471698Z/REPORT.md). The official party/checkpoint hash and NES v0.7 were preserved.
+- Validation in the existing WSL virtual environment: **115 tests passed**, compileall passed, default and learned-policy dry-runs passed, and several bounded live state-branch sessions were run. No dependencies were installed.
+
+#### Next Issue #21 milestone
+
+Resolve why a saved fifth encounter restores to the Flee menu after capture, then gather a genuinely new successful non-A combat choice or independently confirmed enemy species/layout. Keep the strict safety gates, neutral rewards, zero PPO timesteps, local-only models/raw data, and NES v0.7 unchanged.
 
 ## 2026-10-28 — Repeatable GBA evaluation and reset audit
 

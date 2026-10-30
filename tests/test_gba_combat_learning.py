@@ -76,6 +76,14 @@ class GBACombatLearningTests(unittest.TestCase):
             self.assertTrue(output.is_file())
             self.assertEqual(7, metrics["unique_encounter_parent_groups"])
             self.assertEqual(21, metrics["deduplicated_samples"])
+            for split_name in ("train", "validation", "test"):
+                report = metrics[f"{split_name}_classification"]
+                self.assertIn("confusion_matrix", report)
+                self.assertIn("per_action", report)
+                self.assertIn("per_stage", report)
+                self.assertGreater(report["samples"], 0)
+            self.assertIn("menu_other", metrics["test_classification"]["per_stage"])
+            self.assertIn("B", metrics["test_classification"]["per_action"])
 
     def test_group_mapping_merges_replay_states_before_splitting(self):
         with tempfile.TemporaryDirectory() as td:

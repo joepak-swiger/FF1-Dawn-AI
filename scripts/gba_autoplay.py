@@ -27,13 +27,17 @@ from ff1_dawn_ai.gba_autoplay import (  # noqa: E402
     BattleConfirmationGate,
     BattleExpResultDetector,
     BattleGilResultDetector,
+    BattleHpIncreaseDetector,
     BattleLevelUpDetector,
+    BattlePostVictoryMessageDetector,
+    BattleStrengthIncreaseDetector,
     BattleTargetDetector,
     CorneliaPostBattleMapDetector,
     ScriptedCastleExcursion,
     SeededRandomExplorer,
     conservative_battle_outcome,
     compare_matched_movement_frames,
+    should_retry_attack_selection,
 )
 
 
@@ -188,6 +192,10 @@ def sanitized_public_metrics(metrics: dict) -> dict:
         "exp_awards": metrics["exp_awards"],
         "gil_awards": metrics["gil_awards"],
         "confirmed_level_ups": metrics["confirmed_level_ups"],
+        "recognized_hp_increase_messages": metrics.get("recognized_hp_increase_messages", []),
+        "recognized_strength_increase_messages": metrics.get("recognized_strength_increase_messages", []),
+        "attack_panel_safe_retries": int(metrics.get("attack_panel_safe_retries", 0)),
+        "postvictory_message_acknowledgements": metrics.get("postvictory_message_acknowledgements", 0),
         "battle_command_actions": metrics["battle_commands"],
         "battle_target_confirmed": metrics["battle_target_confirmed"],
         "next_party_command_confirmed": metrics["next_party_command_confirmed"],
@@ -290,11 +298,21 @@ def run(args: argparse.Namespace) -> Path:
     level_reference = ROOT / "docs/experiments/gba_autoplay/battle_win_reference/sif_level_up_banner.png"
     level_detector = BattleLevelUpDetector(str(level_reference), threshold=0.999)
     level_gate = BattleConfirmationGate(level_detector, consecutive_frames=2)
+    hp_increase_reference = ROOT / "docs/experiments/gba_autoplay/battle_win_reference/hp_increased_27_banner.png"
+    hp_increase_detector = BattleHpIncreaseDetector(str(hp_increase_reference), threshold=0.999)
+    hp_increase_gate = BattleConfirmationGate(hp_increase_detector, consecutive_frames=2)
+    strength_reference = ROOT / "docs/experiments/gba_autoplay/battle_win_reference/strength_increased_banner.png"
+    strength_detector = BattleStrengthIncreaseDetector(str(strength_reference), threshold=0.999)
+    strength_gate = BattleConfirmationGate(strength_detector, consecutive_frames=2)
+    postvictory_message_detector = BattlePostVictoryMessageDetector()
+    postvictory_message_gate = BattleConfirmationGate(postvictory_message_detector, consecutive_frames=2)
     map_references = (
         ROOT / "docs/experiments/gba_autoplay/battle_win_reference/cornelia_postbattle_static_anchor.png",
         ROOT / "docs/experiments/gba_autoplay/battle_win_reference/cornelia_postbattle_map_anchor_camera2.png",
         ROOT / "docs/experiments/gba_autoplay/battle_win_reference/cornelia_postbattle_map_anchor_camera3.png",
         ROOT / "docs/experiments/gba_autoplay/battle_win_reference/cornelia_postbattle_map_anchor_camera4.png",
+        ROOT / "docs/experiments/gba_autoplay/battle_win_reference/cornelia_postbattle_map_anchor_camera5.png",
+        ROOT / "docs/experiments/gba_autoplay/battle_win_reference/cornelia_postbattle_map_anchor_camera6.png",
     )
     map_detector = CorneliaPostBattleMapDetector(tuple(map(str, map_references)), threshold=0.995)
     map_gate = BattleConfirmationGate(map_detector, consecutive_frames=2)
@@ -319,6 +337,7 @@ def run(args: argparse.Namespace) -> Path:
     frame_labels = []
     actions = []
     events = []
+    attack_panel_safe_retries = 0
     action_counts = {name: 0 for name in GBA_ACTIONS}
     unknown_count = 0
     battle_commands = 0
@@ -345,6 +364,12 @@ def run(args: argparse.Namespace) -> Path:
     stop_reason = "decision_limit"
     session = AutonomousSessionCoordinator()
     movement_probes = []
+    hp_increase_messages = []
+    strength_increase_messages = []
+    postvictory_message_acknowledgements = []
+    postvictory_queue_state = {"current_banner_sha256": None, "frames_on_banner": 0,
+                               "attempts_for_current_banner": 0}
+    levelup_sequence_active = False
     diagnostic_emulator_frames = 0
     env = None
     initial_scene = None
@@ -439,7 +464,7 @@ def run(args: argparse.Namespace) -> Path:
         def battle_input(control: str, phase: str, marker: float,
                          source: str = "safety_supervisor", confidence: float | None = None):
             """Execute and trace one battle-control observation."""
-            nonlocal battle_a_presses, battle_victory_exp_confirmed
+            nonlocal battle_a_presses, battle_victory_exp_confirmed, levelup_sequence_active
             obs, reward, terminated, truncated, info = env.step(GBA_ACTIONS.index(control))
             action_counts[control] += 1
             if control == "A":
@@ -454,13 +479,54 @@ def run(args: argparse.Namespace) -> Path:
             battle_gate.update(frame)
             target_gate.update(frame)
             magic_gate.update(frame)
+            if (hp_increase_gate.update(frame) and session.current_battle_id is not None
+                    and not any(row.get("event") == "hp_increase_27_banner_confirmed"
+                                and row.get("battle_id") == session.current_battle_id
+                                for row in events)):
+                event = {"step": marker, "battle_id": session.current_battle_id,
+                         "event": "hp_increase_27_banner_confirmed",
+                         "amount": 27, "template_exact": True}
+                hp_increase_messages.append(event)
+                events.append(event)
+                levelup_sequence_active = True
+            if (strength_gate.update(frame) and session.current_battle_id is not None
+                    and not any(row.get("event") == "strength_increase_banner_confirmed"
+                                and row.get("battle_id") == session.current_battle_id
+                                for row in events)):
+                event = {"step": marker, "battle_id": session.current_battle_id,
+                         "event": "strength_increase_banner_confirmed",
+                         "template_exact": True}
+                strength_increase_messages.append(event)
+                events.append(event)
+                levelup_sequence_active = True
             if level_gate.update(frame) and session.current_battle_id is not None:
+                levelup_sequence_active = True
                 if session.level_up_confirmed("Sif"):
                     Image.fromarray(frame).save(out / "sif_level_up.png")
                     Image.fromarray(frame).save(out / f"battle_{session.current_battle_id:02d}_level_up_sif.png")
                     events.append({"step": marker, "battle_id": session.current_battle_id,
                                    "event": "level_up_banner_confirmed", "character": "Sif",
                                    "visual_anchor_score": round(level_detector.score(frame), 5)})
+            if levelup_sequence_active:
+                postvictory_message_gate.update(frame)
+                if postvictory_message_detector.is_candidate(frame):
+                    banner_hash = postvictory_message_detector.message_signature(frame)
+                    if postvictory_queue_state["current_banner_sha256"] == banner_hash:
+                        postvictory_queue_state["frames_on_banner"] += 1
+                    else:
+                        postvictory_queue_state["current_banner_sha256"] = banner_hash
+                        postvictory_queue_state["frames_on_banner"] = 1
+                        postvictory_queue_state["attempts_for_current_banner"] = 0
+                else:
+                    postvictory_message_gate.reset()
+                    postvictory_queue_state["current_banner_sha256"] = None
+                    postvictory_queue_state["frames_on_banner"] = 0
+                    postvictory_queue_state["attempts_for_current_banner"] = 0
+            else:
+                postvictory_message_gate.reset()
+                postvictory_queue_state["current_banner_sha256"] = None
+                postvictory_queue_state["frames_on_banner"] = 0
+                postvictory_queue_state["attempts_for_current_banner"] = 0
             if exp_gate.update(frame) and not battle_victory_exp_confirmed:
                 battle_victory_exp_confirmed = True
                 exp_amount = exp_detector.recognized_amount(frame)
@@ -532,6 +598,10 @@ def run(args: argparse.Namespace) -> Path:
                 battle_gil_award_confirmed = False
                 post_battle_map_view_confirmed = False
                 level_gate.reset()
+                hp_increase_gate.reset()
+                strength_gate.reset()
+                postvictory_message_gate.reset()
+                levelup_sequence_active = False
                 magic_gate.reset()
                 battle_command_panel_returned = False
                 field_return_after_battle = False
@@ -561,6 +631,7 @@ def run(args: argparse.Namespace) -> Path:
                         target_available = False
                         for attempt in range(2):
                             target_gate.reset()
+                            battle_gate.reset()
                             attack_action, attack_source, attack_confidence = combat_decision(
                                 env.render().copy(), "attack_command", "A", actor_index)
                             frame, terminated, truncated = battle_input(
@@ -579,6 +650,19 @@ def run(args: argparse.Namespace) -> Path:
                             if target_gate.confirmed:
                                 target_available = True
                                 break
+                            if (not magic_gate.confirmed and not terminated and not truncated
+                                    and should_retry_attack_selection(
+                                        attempt=attempt,
+                                        attack_panel_confirmed=battle_gate.confirmed,
+                                        target_panel_confirmed=target_gate.confirmed,
+                                        magic_panel_confirmed=magic_gate.confirmed)):
+                                attack_panel_safe_retries += 1
+                                events.append({"step": step_no + actor_index / 100,
+                                               "battle_id": active_battle_id,
+                                               "event": "attack_panel_persisted_safe_retry",
+                                               "attack_panel_score": round(
+                                                   battle_detector.score(frame), 5)})
+                                continue
                             if not magic_gate.confirmed or attempt > 0 or terminated or truncated:
                                 break
 
@@ -781,16 +865,79 @@ def run(args: argparse.Namespace) -> Path:
                                     break
                             if battle_gil_award_confirmed and not terminated and not truncated:
                                 map_gate.reset()
+                                level_up_acknowledged = False
+                                postvictory_message_acknowledgements = []
+                                postvictory_queue_state = {
+                                    "current_banner_sha256": None,
+                                    "frames_on_banner": 0,
+                                    "attempts_for_current_banner": 0,
+                                }
                                 for ack_attempt in range(1, 4):
                                     frame, terminated, truncated = battle_input(
                                         "A", "acknowledge_gil_award",
                                         result_marker + 0.99 + ack_attempt / 10000)
                                     if terminated or truncated:
                                         break
-                                    for map_wait in range(1, 61):
+                                    # Post-victory level-ups can queue several
+                                    # per-character stat messages. Keep the
+                                    # wait bounded by the same explicit result
+                                    # frame budget rather than the old 60-frame
+                                    # cap that stopped in the middle of a
+                                    # verified level-up sequence.
+                                    for map_wait in range(1, args.resolution_wait_frames + 1):
                                         frame, terminated, truncated = battle_input(
                                             "NOOP", "wait_for_postbattle_map",
                                             result_marker + 1.0 + ack_attempt / 100 + map_wait / 1000)
+                                        # A level-up overlay can appear after
+                                        # the Gil message has been dismissed.
+                                        # It is a recognized result screen, not
+                                        # a playable map: acknowledge that
+                                        # exact banner once, then continue the
+                                        # bounded map wait. Unknown overlays
+                                        # remain blocked by the full-screen UI
+                                        # guards in CorneliaPostBattleMapDetector.
+                                        if level_gate.confirmed and not level_up_acknowledged:
+                                            level_up_acknowledged = True
+                                            level_gate.reset()
+                                            banner_hash = postvictory_message_detector.message_signature(frame)
+                                            postvictory_queue_state["current_banner_sha256"] = banner_hash
+                                            postvictory_queue_state["frames_on_banner"] = 0
+                                            postvictory_queue_state["attempts_for_current_banner"] = 1
+                                            events.append({"step": result_marker + 1.0 + ack_attempt / 100 + map_wait / 1000,
+                                                           "battle_id": active_battle_id,
+                                                           "event": "recognized_level_up_acknowledged",
+                                                           "character": "Sif",
+                                                           "input_source": "safety_supervisor"})
+                                            frame, terminated, truncated = battle_input(
+                                                "A", "acknowledge_level_up_banner",
+                                                result_marker + 1.0 + ack_attempt / 100 + map_wait / 1000 + 0.0001)
+                                            if terminated or truncated:
+                                                break
+                                            continue
+                                        if (levelup_sequence_active and postvictory_message_gate.confirmed
+                                                and len(postvictory_message_acknowledgements) < 48):
+                                            banner_hash = postvictory_message_detector.message_signature(frame)
+                                            attempts = postvictory_queue_state["attempts_for_current_banner"]
+                                            frames_on_banner = postvictory_queue_state["frames_on_banner"]
+                                            if attempts and not (frames_on_banner >= 12 and attempts < 3):
+                                                continue
+                                            postvictory_message_gate.reset()
+                                            postvictory_message_acknowledgements.append(banner_hash)
+                                            postvictory_queue_state["attempts_for_current_banner"] = attempts + 1
+                                            postvictory_queue_state["frames_on_banner"] = 0
+                                            events.append({"step": result_marker + 1.0 + ack_attempt / 100 + map_wait / 1000,
+                                                           "battle_id": active_battle_id,
+                                                           "event": "postvictory_message_acknowledged",
+                                                           "sequence_index": len(postvictory_message_acknowledgements),
+                                                           "banner_sha256": banner_hash,
+                                                           "attempt_for_banner": attempts + 1,
+                                                           "input_source": "safety_supervisor"})
+                                            frame, terminated, truncated = battle_input(
+                                                "A", "acknowledge_postvictory_message",
+                                                result_marker + 1.0 + ack_attempt / 100 + map_wait / 1000 + 0.0001)
+                                            if terminated or truncated:
+                                                break
+                                            continue
                                         if map_gate.update(frame):
                                             post_battle_map_view_confirmed = True
                                             Image.fromarray(frame).save(out / "battle_postbattle_map_view.png")
@@ -869,15 +1016,23 @@ def run(args: argparse.Namespace) -> Path:
                                 events.append({"step": step_no, "battle_id": active_battle_id,
                                                "event": "movement_resume_blocked"})
                                 break
+                            resume_action = (movement["forward_action"]
+                                             if movement["movement_signal_action"] == "forward"
+                                             else movement["opposite_action"])
+                            movement["resume_action"] = resume_action
+                            events.append({"step": step_no, "battle_id": active_battle_id,
+                                           "event": "movement_resume_direction_selected",
+                                           "action": resume_action,
+                                           "based_on": movement["movement_signal_action"]})
                             # Replay the selected direction on the live branch
                             # after the matched-control fork, so the session
                             # truly continues without an episode reset.
                             for move_frame in range(args.movement_probe_frames):
                                 obs, reward, terminated, truncated, info = env.step(
-                                    GBA_ACTIONS.index(probe_action))
-                                action_counts[probe_action] += 1
+                                    GBA_ACTIONS.index(resume_action))
+                                action_counts[resume_action] += 1
                                 actions.append({"decision": step_no + 0.91 + move_frame / 1000,
-                                    "action": probe_action, "phase": "post_battle_movement_resume",
+                                    "action": resume_action, "phase": "post_battle_movement_resume",
                                     "candidate_scene": "unknown", "candidate_status": "unknown",
                                     "confirmed_scene": "unknown",
                                     "emulator_frames": info.get("emulator_frames_executed", 1),
@@ -896,7 +1051,7 @@ def run(args: argparse.Namespace) -> Path:
                             Image.fromarray(frame).save(out / f"battle_{active_battle_id:02d}_movement_resumed.png")
                             session.movement_observed(confirmed=True)
                             events.append({"step": step_no + 0.93, "battle_id": active_battle_id,
-                                "event": "post_battle_movement_resumed", "action": probe_action,
+                                "event": "post_battle_movement_resumed", "action": resume_action,
                                 "verification": "repeated matched controls; screen-space pixel signal"})
                             if session.battles_entered >= args.max_battles:
                                 status = "bounded_battle_cap_reached"
@@ -1043,6 +1198,9 @@ def run(args: argparse.Namespace) -> Path:
         "confirmed_level_ups": [
             {"battle_id": row["battle_id"], "character": name}
             for row in session.encounters for name in row["level_ups"]],
+        "recognized_hp_increase_messages": hp_increase_messages,
+        "recognized_strength_increase_messages": strength_increase_messages,
+        "postvictory_message_acknowledgements": len(postvictory_message_acknowledgements),
         "next_party_command_confirmations": sum(
             event.get("event") == "next_party_command_panel_confirmed" for event in events),
         "movement_resumed": session.movement_resumed,
@@ -1071,6 +1229,7 @@ def run(args: argparse.Namespace) -> Path:
         "exp_reward_banner_confirmed": any_exp,
         "unknown_scene_observations": unknown_count,
         "events": events, "elapsed_seconds": round(elapsed, 3), "training_timesteps": 0,
+        "attack_panel_safe_retries": attack_panel_safe_retries,
         "combat_policy": args.combat_policy,
         "combat_model_sha256": combat_model_sha256,
         "combat_decisions_by_source": combat_sources,
@@ -1196,10 +1355,14 @@ def main(argv: list[str] | None = None) -> int:
                           ROOT / "docs/experiments/gba_autoplay/battle_win_reference/obtained_24_gil_banner.png",
                           ROOT / "docs/experiments/gba_autoplay/battle_win_reference/obtained_18_gil_banner.png",
                           ROOT / "docs/experiments/gba_autoplay/battle_win_reference/sif_level_up_banner.png",
+                          ROOT / "docs/experiments/gba_autoplay/battle_win_reference/hp_increased_27_banner.png",
+                          ROOT / "docs/experiments/gba_autoplay/battle_win_reference/strength_increased_banner.png",
                           ROOT / "docs/experiments/gba_autoplay/battle_win_reference/cornelia_postbattle_static_anchor.png",
                           ROOT / "docs/experiments/gba_autoplay/battle_win_reference/cornelia_postbattle_map_anchor_camera2.png",
                           ROOT / "docs/experiments/gba_autoplay/battle_win_reference/cornelia_postbattle_map_anchor_camera3.png",
-                          ROOT / "docs/experiments/gba_autoplay/battle_win_reference/cornelia_postbattle_map_anchor_camera4.png")
+                          ROOT / "docs/experiments/gba_autoplay/battle_win_reference/cornelia_postbattle_map_anchor_camera4.png",
+                          ROOT / "docs/experiments/gba_autoplay/battle_win_reference/cornelia_postbattle_map_anchor_camera5.png",
+                          ROOT / "docs/experiments/gba_autoplay/battle_win_reference/cornelia_postbattle_map_anchor_camera6.png")
                        if not Path(path).is_file()]
             if missing:
                 raise FileNotFoundError("Missing reviewed scene assets: " + ", ".join(missing))
