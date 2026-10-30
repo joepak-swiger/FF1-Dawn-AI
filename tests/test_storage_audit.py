@@ -37,6 +37,8 @@ class StorageAuditTests(unittest.TestCase):
             self.assertEqual(summary["git_status_breakdown"]["ignored"]["files"], 1)
             self.assertEqual(summary["git_status_breakdown"]["untracked"]["files"], 3)
             self.assertTrue(summary["duplicate_groups"])
+            self.assertTrue(summary["oldest_30_files"])
+            self.assertTrue(summary["newest_30_files"])
             self.assertTrue(cache.exists())
 
     def test_safe_clean_only_removes_source_tree_python_caches(self):

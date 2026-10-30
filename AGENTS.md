@@ -337,7 +337,7 @@ observed results from hypotheses.
 
 ### Issue #23 storage, menu and result-pacing update (2026-10-30)
 
-- Latest local full audit snapshot: 9,608,440,231 bytes / 57,599 files. See
+- Latest local full audit snapshot: 9,617,137,711 bytes / 57,095 files. See
   `docs/project_inventory.md`; full local reports are ignored under
   `reports/storage_audit/<run-id>/`. Run `scripts/audit_project_storage.ps1`
   for read-only audit; `-SafeClean` may remove only the script's explicit

@@ -93,6 +93,12 @@ $GitBreakdown = @($Records | Group-Object git_status | ForEach-Object {
 $TopFiles = @($Records | Sort-Object bytes -Descending | Select-Object -First 30 | ForEach-Object {
     [pscustomobject]@{ path = $_.path; bytes = $_.bytes; git_status = $_.git_status; mtime_utc = $_.mtime_utc }
 })
+$OldestFiles = @($Records | Sort-Object { [datetime]$_.mtime_utc } | Select-Object -First 30 | ForEach-Object {
+    [pscustomobject]@{ path = $_.path; bytes = $_.bytes; git_status = $_.git_status; mtime_utc = $_.mtime_utc }
+})
+$NewestFiles = @($Records | Sort-Object { [datetime]$_.mtime_utc } -Descending | Select-Object -First 30 | ForEach-Object {
+    [pscustomobject]@{ path = $_.path; bytes = $_.bytes; git_status = $_.git_status; mtime_utc = $_.mtime_utc }
+})
 $SuffixCounts = @($Records | Group-Object extension | Sort-Object Count -Descending | ForEach-Object {
     [pscustomobject]@{ extension = $_.Name; files = $_.Count }
 })
@@ -118,6 +124,7 @@ $Summary = [ordered]@{
     disk_free_before_bytes = $FreeBefore; disk_free_after_bytes = $FreeAfter
     git_object_store_bytes = $GitBytes; git_status_breakdown = $GitBreakdown
     top_level = $TopLevel; suffix_counts = $SuffixCounts; top_30_largest_files = $TopFiles
+    oldest_30_files = $OldestFiles; newest_30_files = $NewestFiles
     duplicate_hash_bytes_read = $HashBytes; duplicate_groups = $DuplicateRows
     duplicate_size_groups_skipped_by_budget = $HashGroupsSkipped; hash_budget_bytes = $HashBudget
     cleanup_mode = $(if ($SafeClean) { 'safe-clean' } else { 'audit-only' }); cleanup_proposals = $Proposals
@@ -131,6 +138,10 @@ $Lines.Add("Disk free: $FreeBefore -> $FreeAfter bytes"); $Lines.Add(''); $Lines
 foreach ($Item in ($TopLevel | Select-Object -First 20)) { $Lines.Add("- $($Item.name): $($Item.bytes) bytes ($($Item.files) files)") }
 $Lines.Add(''); $Lines.Add('Largest individual files:')
 foreach ($Item in $TopFiles) { $Lines.Add("- $($Item.bytes) bytes: $($Item.path) [$($Item.git_status)]") }
+$Lines.Add(''); $Lines.Add('Oldest files:')
+foreach ($Item in $OldestFiles) { $Lines.Add("- $($Item.mtime_utc): $($Item.path)") }
+$Lines.Add(''); $Lines.Add('Newest files:')
+foreach ($Item in $NewestFiles) { $Lines.Add("- $($Item.mtime_utc): $($Item.path)") }
 $Lines.Add(''); $Lines.Add("Exact duplicate groups found within hash budget: $($DuplicateRows.Count)")
 $Lines.Add('No experiment, model, ROM, save state, dataset, or recording was removed.')
 $Lines | Set-Content -LiteralPath (Join-Path $Output 'run_report.txt') -Encoding UTF8

@@ -25,16 +25,16 @@ No PPO training or reward changes were made.
 
 ## 2026-10-30 — Issue #23 storage, result pacing, and menu probe
 
-- Final full Windows audit snapshot: **9,608,440,231 B / 57,599 files**. `.venv`
+- Final full Windows audit snapshot: **9,617,137,711 B / 57,095 files**. `.venv`
   used 6,451,887,284 B, `videos/` 1,836,932,561 B, `checkpoints/`
   885,399,413 B, and `models/` 302,422,426 B. The runtime, ROMs, states,
   checkpoints, models, recordings, and experiment history were retained.
-  Source-tree Python caches were removed (first 116 files / 1,673,287 B; after
-  tests regenerated 99 / 1,466,273 B, those were removed too). The final audit
-  found no remaining cache proposals. Its report output reduced free space by
-  7,708,672 B, so no net saving from the audit itself is claimed. See
+  Latest `-SafeClean` removed 99 source-tree Python bytecode files / 1,467,499
+  B; an earlier pass removed 116 / 1,673,287 B, with test-generated caches
+  removed again afterward. The final report output reduced free space by
+  5,955,584 B, so no net saving from the audit itself is claimed. See
   [`project_inventory.md`](project_inventory.md) and ignored local report
-  `reports/storage_audit/20261030_032102_8090Z/`.
+  `reports/storage_audit/20261030_032500_4686Z/`.
 - Live read-only menu run `20261030_031147_663554Z` confirmed the checkpoint's
   Items screen is empty (score 1.0). Equipment navigation stopped on a
   visually Magic-like but unclassified screen (score 0.84966 below the 0.975

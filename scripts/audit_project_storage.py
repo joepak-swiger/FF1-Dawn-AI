@@ -164,6 +164,8 @@ def run_audit(root: Path, output_root: Path, *, safe_clean: bool = False,
         writer.writerows(proposals)
 
     top_files = sorted(records, key=lambda row: row["bytes"], reverse=True)[:30]
+    oldest_files = sorted(records, key=lambda row: row["mtime_utc"])[:30]
+    newest_files = sorted(records, key=lambda row: row["mtime_utc"], reverse=True)[:30]
     size_by_git_status = defaultdict(lambda: [0, 0])
     for row in records:
         cell = size_by_git_status[row["git_status"]]
@@ -185,6 +187,7 @@ def run_audit(root: Path, output_root: Path, *, safe_clean: bool = False,
         "top_level": {k: {"files": v[0], "bytes": v[1]} for k, v in
                       sorted(top.items(), key=lambda item: item[1][1], reverse=True)},
         "suffix_counts": dict(suffix.most_common()), "top_30_largest_files": top_files,
+        "oldest_30_files": oldest_files, "newest_30_files": newest_files,
         "duplicate_hash_bytes_read": hash_used, "duplicate_groups": duplicates,
         "duplicate_size_groups_skipped_by_budget": skipped_duplicate_size_groups,
         "hash_budget_bytes": hash_budget, "cleanup_mode": "safe-clean" if safe_clean else "audit-only",
@@ -203,6 +206,10 @@ def run_audit(root: Path, output_root: Path, *, safe_clean: bool = False,
                  sorted(top.items(), key=lambda item: item[1][1], reverse=True)[:20])
     lines.extend(["", "Largest individual files:"])
     lines.extend(f"- {row['bytes']:,} bytes: {row['path']} [{row['git_status']}]" for row in top_files)
+    lines.extend(["", "Oldest files:"])
+    lines.extend(f"- {row['mtime_utc']}: {row['path']}" for row in oldest_files)
+    lines.extend(["", "Newest files:"])
+    lines.extend(f"- {row['mtime_utc']}: {row['path']}" for row in newest_files)
     lines.extend(["", f"Exact duplicate groups within hash budget: {len(duplicates)}",
                   "No experiment, model, ROM, save state, or recording was removed."])
     (output / "run_report.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
