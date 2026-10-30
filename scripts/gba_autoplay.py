@@ -38,6 +38,7 @@ from ff1_dawn_ai.gba_autoplay import (  # noqa: E402
     conservative_battle_outcome,
     compare_matched_movement_frames,
     should_retry_attack_selection,
+    should_retry_known_result_acknowledgement,
 )
 
 
@@ -884,7 +885,9 @@ def run(args: argparse.Namespace) -> Path:
                                     # frame budget rather than the old 60-frame
                                     # cap that stopped in the middle of a
                                     # verified level-up sequence.
-                                    for map_wait in range(1, args.resolution_wait_frames + 1):
+                                    for map_wait in range(1, min(
+                                            args.postvictory_wait_frames,
+                                            args.resolution_wait_frames) + 1):
                                         frame, terminated, truncated = battle_input(
                                             "NOOP", "wait_for_postbattle_map",
                                             result_marker + 1.0 + ack_attempt / 100 + map_wait / 1000)
@@ -957,7 +960,9 @@ def run(args: argparse.Namespace) -> Path:
                                         break
                                     # Retry only while the exact known Gil
                                     # banner remains; otherwise stop safely.
-                                    if not gil_detector.is_candidate(frame):
+                                    if not should_retry_known_result_acknowledgement(
+                                            attempt=ack_attempt,
+                                            known_banner_still_confirmed=gil_detector.is_candidate(frame)):
                                         break
                         if battle_gil_award_confirmed and not post_battle_map_view_confirmed:
                             Image.fromarray(frame).save(
@@ -1171,6 +1176,12 @@ def run(args: argparse.Namespace) -> Path:
         name: round(count * 100.0 / combat_decision_total, 2) if combat_decision_total else 0.0
         for name, count in combat_sources.items()
     }
+    phase_metrics = {}
+    for row in actions:
+        phase = str(row.get("phase", "unknown"))
+        summary = phase_metrics.setdefault(phase, {"actions": 0, "emulator_frames": 0})
+        summary["actions"] += 1
+        summary["emulator_frames"] += int(row.get("emulator_frames", 1))
     metrics = {
         "run_id": run_id, "status": status, "stop_reason": stop_reason,
         "policy": args.policy, "policy_is_learned": learned_policy is not None, "seed": args.seed,
@@ -1183,6 +1194,7 @@ def run(args: argparse.Namespace) -> Path:
         "emulator_frames": sum(row["emulator_frames"] for row in actions) + diagnostic_emulator_frames,
         "diagnostic_emulator_frames": diagnostic_emulator_frames,
         "action_counts": action_counts, "confirmed_scenes": confirmed_scenes,
+        "phase_metrics": phase_metrics,
         "castle_reached": bool(controller and controller.castle_reached),
         "field_return_confirmed": bool(controller and controller.field_return_confirmed),
         "battle_command_screen_confirmed": session.battles_entered > 0,
@@ -1214,6 +1226,7 @@ def run(args: argparse.Namespace) -> Path:
         "specific_obtained_24_gil_banner_confirmed": gil_24_confirmed,
         "post_battle_map_view_confirmed": any_map_view,
         "battle_resolution_wait_frames": battle_resolution_wait_frames,
+        "postvictory_wait_frame_cap": args.postvictory_wait_frames,
         "battle_target_anchor_scores": [round(value, 5) for value in target_match_scores],
         "battle_confirmation_step": battle_confirmation_step,
         "battle_anchor_scores_min_max": ([round(min(battle_match_scores), 5), round(max(battle_match_scores), 5)]
@@ -1310,6 +1323,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="Bound attack/target selections to this many party slots")
     parser.add_argument("--resolution-wait-frames", type=int, choices=range(1, 2401), default=1200,
                         help="Bound neutral frames to observe after all party attacks")
+    parser.add_argument("--postvictory-wait-frames", type=int, choices=range(4, 1201), default=48,
+                        help="Short per-attempt wait for the verified Gil banner to advance; unknown screens stop safely")
     parser.add_argument("--max-battles", type=int, choices=range(1, 11), default=2,
                         help="Maximum distinct battle-menu entries in autonomous_session mode")
     parser.add_argument("--movement-probe-frames", type=int, choices=range(4, 121), default=24,
@@ -1330,7 +1345,7 @@ def main(argv: list[str] | None = None) -> int:
     if not 0.0 <= args.min_combat_confidence <= 1.0:
         parser.error("--min-combat-confidence must be 0..1")
     if min(args.decisions, args.capture_every, args.max_approach, args.max_return,
-           args.max_attackers, args.resolution_wait_frames) < 1:
+           args.max_attackers, args.resolution_wait_frames, args.postvictory_wait_frames) < 1:
         parser.error("decision, capture interval, and route limits must be positive")
     try:
         checkpoint = Path(args.checkpoint).resolve() if args.checkpoint else discover_checkpoint()

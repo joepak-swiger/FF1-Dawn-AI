@@ -21,12 +21,24 @@ from ff1_dawn_ai.gba_autoplay import (
     conservative_battle_outcome,
     compare_matched_movement_frames,
     should_retry_attack_selection,
+    should_retry_known_result_acknowledgement,
 )
 from scripts.gba_autoplay import _overlay
 from scripts.gba_autoplay import sanitized_public_metrics
 
 
 class GbaAutoplayControllerTests(unittest.TestCase):
+    def test_result_ack_retry_requires_known_gil_banner_and_is_bounded(self):
+        self.assertTrue(should_retry_known_result_acknowledgement(
+            attempt=1, known_banner_still_confirmed=True))
+        self.assertFalse(should_retry_known_result_acknowledgement(
+            attempt=1, known_banner_still_confirmed=False))
+        self.assertFalse(should_retry_known_result_acknowledgement(
+            attempt=3, known_banner_still_confirmed=True))
+        with self.assertRaises(ValueError):
+            should_retry_known_result_acknowledgement(
+                attempt=0, known_banner_still_confirmed=True)
+
     def test_attack_retries_only_once_when_reviewed_attack_panel_persists(self):
         self.assertTrue(should_retry_attack_selection(
             attempt=0, attack_panel_confirmed=True,

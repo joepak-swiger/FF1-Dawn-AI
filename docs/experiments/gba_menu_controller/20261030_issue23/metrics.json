@@ -1,0 +1,28 @@
+{
+  "run_id": "20261030_031147_663554Z",
+  "status": "partial_failed",
+  "checkpoint_family": "official_seed_party_cornelia",
+  "inventory": {
+    "status": "empty_inventory_confirmed",
+    "anchor_score": 1.0,
+    "input_release_frames": 46,
+    "items_used": 0
+  },
+  "equipment": {
+    "status": "not_verified",
+    "last_scene": "unknown",
+    "last_anchor_score": 0.84966,
+    "recognition_threshold": 0.975,
+    "input_release_frames": 121,
+    "gear_changed": false,
+    "visual_note": "Observed frame resembles Sif Magic/spell list; no scene claim is made."
+  },
+  "shopping_attempted": false,
+  "healing_item_used": false,
+  "official_checkpoint_modified": false,
+  "limitations": [
+    "No consumables are visible in the starting inventory.",
+    "Equipment and spell actions were not verified.",
+    "HP/MP, item count, compatibility, and purchase outcomes remain unverified."
+  ]
+}

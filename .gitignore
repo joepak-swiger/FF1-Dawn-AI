@@ -19,6 +19,7 @@ states/
 runs/
 videos/
 logs/
+reports/storage_audit/
 models/
 checkpoints/
 

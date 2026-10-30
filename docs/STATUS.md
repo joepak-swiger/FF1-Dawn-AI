@@ -23,6 +23,60 @@ The local v2 combat behavior-cloning model passed one held-out Magic-menu
 branch, matching v1 and scripted control; it has not shown a gameplay advantage.
 No PPO training or reward changes were made.
 
+## 2026-10-30 — Issue #23 storage, result pacing, and menu probe
+
+- Final full Windows audit snapshot: **9,617,137,711 B / 57,095 files**. `.venv`
+  used 6,451,887,284 B, `videos/` 1,836,932,561 B, `checkpoints/`
+  885,399,413 B, and `models/` 302,422,426 B. The runtime, ROMs, states,
+  checkpoints, models, recordings, and experiment history were retained.
+  Latest `-SafeClean` removed 99 source-tree Python bytecode files / 1,467,499
+  B; an earlier pass removed 116 / 1,673,287 B, with test-generated caches
+  removed again afterward. The final report output reduced free space by
+  5,955,584 B, so no net saving from the audit itself is claimed. See
+  [`project_inventory.md`](project_inventory.md) and ignored local report
+  `reports/storage_audit/20261030_032500_4686Z/`.
+- Live read-only menu run `20261030_031147_663554Z` confirmed the checkpoint's
+  Items screen is empty (score 1.0). Equipment navigation stopped on a
+  visually Magic-like but unclassified screen (score 0.84966 below the 0.975
+  gate). No item/spell was used or gear modified. Preserve this as a failure;
+  inventory is the only newly verified menu result. Report and small selected
+  frames are in
+  [`menu probe`](experiments/gba_menu_controller/20261030_issue23/REPORT.md).
+- The controller's post-victory map wait now has an independent 48-frame
+  default cap and only retries a still-confirmed Gil banner. The real seed-77
+  run `20261030_031529_229206Z` confirmed 3/3 Goblin wins (6/6/4 EXP,
+  24/24/18 Gil), acknowledged Sif's level-up, and resumed movement 2/3 times
+  before a safe stop on the third unrecognized postbattle view. Its map-wait
+  phase used 184 frames, about 61 per win, compared with 3,981 frames / 4 wins
+  (about 995 per win) in the prior run: approximately 93.8% fewer wait-phase
+  frames per win. This is a run-average comparison, not a per-battle matched
+  timing study. Same-seed scripted combat also matched 3/3 wins, 2/3 movement
+  resumptions, the 6/6/4 EXP and 24/24/18 Gil results, and the third-view stop;
+  the model showed no performance advantage. Local GIF:
+  `videos/gba_autoplay/20261030_031529_229206Z/autoplay.gif`;
+  sanitized comparison is in
+  [`result pacing`](experiments/gba_autoplay/issue23_result_ack/REPORT.md).
+- The existing local supervised v2 policy supplied 24/24 meaningful combat
+  decisions in that run, all attributed to the model, but these remain narrow
+  Goblin A/target selections. Field movement was seeded-random; PPO timesteps
+  stayed zero and base rewards remained neutral. No diverse action labels or
+  non-Goblin evidence justified training another model. The fifth-battle
+  restore-to-Flee issue remains unresolved and was not reached in this run.
+- WSL validation: **122 tests passed**, compileall passed, and menu plus
+  learned/scripted autoplay dry-runs passed. Live read-only menu and two- and
+  five-battle-capped autoplay sessions ran in the existing WSL environment.
+  No package was installed; no ROM, state, model, data set, or full recording
+  was committed.
+
+#### Next Issue #23 milestone
+
+Use row-specific, reviewed menu cursor anchors to distinguish Equipment from
+Magic, then inspect all four characters' gear read-only. Do not enable item,
+healing, shopping, or equipment policy actions until a fresh-reset before/after
+effect is confirmed. Extend postbattle map anchors from the saved third-result
+frame and reproduce the fifth-battle menu restoration failure. Collect a truly
+different legal combat action and held-out encounter family before retraining.
+
 ## 2026-10-30 — Issue #21 learned-agent v2 and continuous recovery
 
 - In live WSL run `20261030_002302_471698Z`, the learned-combat / seeded-random-field controller entered five encounters, confirmed four Goblin victories (6/6/4/4 EXP; 24/24/18/18 Gil), and resumed movement four times without resetting. The fifth battle stopped safely on an unconfirmed target transition; its outcome is unknown. The full local video is `videos/gba_autoplay/20261030_002302_471698Z/autoplay.gif`.
