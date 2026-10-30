@@ -1,0 +1,179 @@
+{
+  "issue": 21,
+  "training": {
+    "method": "supervised_balanced_linear_imitation",
+    "optimizer_epochs": 150,
+    "rl_timesteps": 0,
+    "deduplicated_samples": 69,
+    "encounter_parent_groups": 8,
+    "split_groups": {
+      "train": 4,
+      "validation": 2,
+      "test": 2
+    },
+    "split_samples": {
+      "train": 34,
+      "validation": 17,
+      "test": 18
+    },
+    "action_counts": {
+      "train": {
+        "A": 33,
+        "B": 1
+      },
+      "validation": {
+        "A": 16,
+        "B": 1
+      },
+      "test": {
+        "A": 17,
+        "B": 1
+      }
+    },
+    "test_confusion": {
+      "A": {
+        "A": 17,
+        "B": 0
+      },
+      "B": {
+        "A": 0,
+        "B": 1
+      }
+    },
+    "test_stage_accuracy": {
+      "attack_command": {
+        "samples": 8,
+        "accuracy": 1.0
+      },
+      "target_confirm": {
+        "samples": 9,
+        "accuracy": 1.0
+      },
+      "menu_other": {
+        "samples": 1,
+        "accuracy": 1.0
+      }
+    },
+    "mean_test_max_probability": 0.9466685057,
+    "model_sha256_local_only": "6ba53b1d29573461cab9d71a5e8efaddb3af16ad76de1c4cf3b5df6c61f63f54",
+    "interpretation": "The held-out split contains only one B menu-recovery example; 18/18 accuracy is narrow evidence, not generalization."
+  },
+  "heldout_magic_branch": {
+    "same_state_policies": [
+      {
+        "run_id": "20261030_002442_912301Z",
+        "policy": "learned_v2",
+        "status": "victory_confirmed",
+        "exp": 6,
+        "meaningful_choices": 10,
+        "learned_choices": 10,
+        "action_counts": {
+          "A": 9,
+          "B": 1
+        },
+        "runtime_seconds": 2.304
+      },
+      {
+        "run_id": "20261030_002506_424158Z",
+        "policy": "learned_v1",
+        "status": "victory_confirmed",
+        "exp": 6,
+        "meaningful_choices": 10,
+        "learned_choices": 10,
+        "action_counts": {
+          "A": 9,
+          "B": 1
+        },
+        "runtime_seconds": 2.207
+      },
+      {
+        "run_id": "20261030_002447_557483Z",
+        "policy": "scripted",
+        "status": "victory_confirmed",
+        "exp": 6,
+        "meaningful_choices": 10,
+        "scripted_choices": 10,
+        "action_counts": {
+          "A": 9,
+          "B": 1
+        },
+        "runtime_seconds": 2.233
+      },
+      {
+        "run_id": "20261030_002452_061994Z",
+        "policy": "seeded_random",
+        "status": "safe_stop",
+        "exp": null,
+        "meaningful_choices": 0,
+        "attempted_choices": 1,
+        "safety_rejected_choices": 1,
+        "runtime_seconds": 0.053
+      }
+    ],
+    "heldout_action_set": [
+      "B on reviewed Magic menu",
+      "A on Attack command",
+      "A on target confirmation"
+    ],
+    "scope": "One held-out Goblin Magic-menu state; v2 matched v1 and script, without outcome advantage."
+  },
+  "continuous_learned_session": {
+    "run_id": "20261030_002302_471698Z",
+    "decisions": 9334,
+    "emulator_frames": 10014,
+    "runtime_seconds": 76.064,
+    "encounters_entered": 5,
+    "confirmed_victories": 4,
+    "unknown_outcomes": 1,
+    "exp_awards": [
+      6,
+      6,
+      4,
+      4
+    ],
+    "gil_awards": [
+      24,
+      24,
+      18,
+      18
+    ],
+    "postbattle_movement_resumptions": 4,
+    "attack_panel_safe_retries": 1,
+    "combat_decisions_by_source": {
+      "learned": 34,
+      "scripted_expert": 0,
+      "safety_supervisor": 0,
+      "random": 0
+    },
+    "field_policy": "seeded random cardinal exploration",
+    "stop_reason": "fifth encounter target panel was not confirmed"
+  },
+  "same_state_attack_branch": {
+    "scripted": {
+      "run_id": "20261030_001515_523046Z",
+      "status": "victory_confirmed",
+      "exp": 4,
+      "meaningful_choices": 8
+    },
+    "learned_v1": {
+      "run_id": "20261030_001519_491472Z",
+      "status": "victory_confirmed",
+      "exp": 4,
+      "meaningful_choices": 8
+    },
+    "seeded_random": {
+      "run_id": "20261030_001523_186755Z",
+      "status": "safe_stop",
+      "attempted_choices": 1,
+      "safety_rejected_choices": 1,
+      "executed_meaningful_choices": 0
+    }
+  },
+  "limitations": [
+    "All confirmed encounters were the known Goblin species; no new species was verified.",
+    "The fifth outcome remains unknown because target confirmation failed.",
+    "A captured fifth-battle state restored to the Flee row after synchronization and was refused by the strict safety gate.",
+    "The new model matched v1 and scripted outcomes; no gameplay advantage was shown.",
+    "No HP/KO/survival parser, PPO run, or reward change was introduced."
+  ]
+}

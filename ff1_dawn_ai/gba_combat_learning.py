@@ -248,6 +248,54 @@ def train_policy(features: np.ndarray, labels: np.ndarray, splits: dict[str, np.
     return policy, metrics
 
 
+def _classification_summary(y_true: np.ndarray, y_pred: np.ndarray,
+                           confidence: np.ndarray, rows: list[dict],
+                           indices: np.ndarray) -> dict:
+    """Summarize action and UI-stage behavior without collapsing to accuracy."""
+    present = sorted(set(y_true.tolist()) | set(y_pred.tolist()))
+    confusion = {ACTIONS[actual]: {
+        ACTIONS[predicted]: int(np.sum((y_true == actual) & (y_pred == predicted)))
+        for predicted in present
+    } for actual in present}
+    per_action = {}
+    for action in present:
+        selected = y_true == action
+        per_action[ACTIONS[action]] = {
+            "count": int(selected.sum()),
+            "correct": int(np.sum((y_true == action) & (y_pred == action))),
+            "accuracy": (float(np.mean(y_pred[selected] == y_true[selected]))
+                         if selected.any() else None),
+        }
+    stage_summary = {}
+    for stage in STAGES:
+        positions = [position for position, row_index in enumerate(indices)
+                     if rows[int(row_index)]["stage"] == stage]
+        if not positions:
+            continue
+        actual = y_true[positions]
+        predicted = y_pred[positions]
+        stage_summary[stage] = {
+            "count": len(positions),
+            "accuracy": float(np.mean(actual == predicted)),
+            "actual_action_counts": {ACTIONS[index]: int(np.sum(actual == index))
+                                     for index in sorted(set(actual.tolist()))},
+            "predicted_action_counts": {ACTIONS[index]: int(np.sum(predicted == index))
+                                        for index in sorted(set(predicted.tolist()))},
+        }
+    return {
+        "samples": int(len(y_true)),
+        "accuracy": float(np.mean(y_true == y_pred)) if len(y_true) else None,
+        "actual_action_counts": {ACTIONS[index]: int(np.sum(y_true == index))
+                                 for index in sorted(set(y_true.tolist()))},
+        "predicted_action_counts": {ACTIONS[index]: int(np.sum(y_pred == index))
+                                    for index in sorted(set(y_pred.tolist()))},
+        "per_action": per_action,
+        "confusion_matrix": confusion,
+        "per_stage": stage_summary,
+        "mean_max_probability": float(np.mean(confidence)) if len(confidence) else None,
+    }
+
+
 def train_from_directory(dataset: Path, model_path: Path, *, seed: int = 2026) -> dict:
     return train_from_directories([dataset], model_path, seed=seed)
 
@@ -258,9 +306,19 @@ def train_from_directories(directories: list[Path] | tuple[Path, ...],
     features, labels, rows = load_datasets(directories, group_mapping=group_mapping)
     splits = grouped_splits(rows, seed=seed)
     policy, metrics = train_policy(features, labels, splits)
-    scores = features[splits["test"]] @ policy.weights + policy.bias
-    scores[:, ~policy.action_mask] = -1e5
-    metrics["heldout_accuracy"] = float(np.mean(scores.argmax(axis=1) == labels[splits["test"]]))
+    for split_name, split_indices in splits.items():
+        scores = features[split_indices] @ policy.weights + policy.bias
+        scores[:, ~policy.action_mask] = -1e5
+        shifted = scores - scores.max(axis=1, keepdims=True)
+        probabilities = np.exp(shifted)
+        probabilities /= probabilities.sum(axis=1, keepdims=True)
+        predictions = scores.argmax(axis=1)
+        summary = _classification_summary(labels[split_indices], predictions,
+                                          probabilities.max(axis=1), rows,
+                                          split_indices)
+        metrics[f"{split_name}_classification"] = summary
+        if split_name == "test":
+            metrics["heldout_accuracy"] = summary["accuracy"]
     metrics["group_counts"] = {
         name: len({rows[i]["group_id"] for i in indices}) for name, indices in splits.items()
     }

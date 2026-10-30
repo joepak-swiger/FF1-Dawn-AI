@@ -9,7 +9,10 @@ from ff1_dawn_ai.gba_autoplay import (
     BattleConfirmationGate,
     BattleExpResultDetector,
     BattleGilResultDetector,
+    BattleHpIncreaseDetector,
     BattleLevelUpDetector,
+    BattlePostVictoryMessageDetector,
+    BattleStrengthIncreaseDetector,
     BattleTargetDetector,
     CorneliaPostBattleMapDetector,
     AutonomousSessionCoordinator,
@@ -17,12 +20,30 @@ from ff1_dawn_ai.gba_autoplay import (
     SeededRandomExplorer,
     conservative_battle_outcome,
     compare_matched_movement_frames,
+    should_retry_attack_selection,
 )
 from scripts.gba_autoplay import _overlay
 from scripts.gba_autoplay import sanitized_public_metrics
 
 
 class GbaAutoplayControllerTests(unittest.TestCase):
+    def test_attack_retries_only_once_when_reviewed_attack_panel_persists(self):
+        self.assertTrue(should_retry_attack_selection(
+            attempt=0, attack_panel_confirmed=True,
+            target_panel_confirmed=False, magic_panel_confirmed=False))
+        self.assertFalse(should_retry_attack_selection(
+            attempt=1, attack_panel_confirmed=True,
+            target_panel_confirmed=False, magic_panel_confirmed=False))
+        self.assertFalse(should_retry_attack_selection(
+            attempt=0, attack_panel_confirmed=False,
+            target_panel_confirmed=False, magic_panel_confirmed=False))
+        self.assertFalse(should_retry_attack_selection(
+            attempt=0, attack_panel_confirmed=True,
+            target_panel_confirmed=True, magic_panel_confirmed=False))
+        self.assertFalse(should_retry_attack_selection(
+            attempt=0, attack_panel_confirmed=True,
+            target_panel_confirmed=False, magic_panel_confirmed=True))
+
     def test_public_metrics_keep_battle_level_evidence_and_omit_local_artifact_paths(self):
         raw = {
             "run_id": "run-1", "status": "bounded", "policy": "autonomous_session",
@@ -251,6 +272,36 @@ class GbaAutoplayControllerTests(unittest.TestCase):
         self.assertTrue(detector.is_candidate(positive))
         self.assertGreaterEqual(detector.score(positive), 0.999)
         self.assertFalse(detector.is_candidate(negative))
+        hp_reference = evidence / "hp_increased_27_banner.png"
+        hp_detector = BattleHpIncreaseDetector(str(hp_reference))
+        hp_positive = np.zeros((160, 240, 3), dtype=np.uint8)
+        hp_positive[:16] = np.asarray(Image.open(hp_reference).convert("RGB"))
+        self.assertTrue(hp_detector.is_candidate(hp_positive))
+        self.assertFalse(hp_detector.is_candidate(positive))
+        self.assertFalse(hp_detector.is_candidate(negative))
+        strength_reference = evidence / "strength_increased_banner.png"
+        strength_detector = BattleStrengthIncreaseDetector(str(strength_reference))
+        strength_positive = np.zeros((160, 240, 3), dtype=np.uint8)
+        strength_positive[:16] = np.asarray(Image.open(strength_reference).convert("RGB"))
+        self.assertTrue(strength_detector.is_candidate(strength_positive))
+        self.assertFalse(strength_detector.is_candidate(hp_positive))
+        result_message_detector = BattlePostVictoryMessageDetector()
+        level_message_frame = np.asarray(Image.open(
+            evidence / "sif_level_up_frame.png").convert("RGB"))
+        self.assertTrue(result_message_detector.is_candidate(level_message_frame))
+        field_frame = np.asarray(Image.open(
+            evidence / "cornelia_postbattle_map_frame_camera2.png").convert("RGB"))
+        self.assertFalse(result_message_detector.is_candidate(field_frame))
+        result_gate = BattleConfirmationGate(result_message_detector, consecutive_frames=2)
+        self.assertFalse(result_gate.update(level_message_frame))
+        self.assertTrue(result_gate.update(level_message_frame))
+        level_signature = result_message_detector.message_signature(level_message_frame)
+        hp_signature = result_message_detector.message_signature(hp_positive)
+        self.assertNotEqual(level_signature, hp_signature)
+        animated_panel = level_message_frame.copy()
+        non_text = np.min(animated_panel[:16], axis=2) < 185
+        animated_panel[:16][non_text] = (20, 70, 210)
+        self.assertEqual(level_signature, result_message_detector.message_signature(animated_panel))
         gate = BattleConfirmationGate(detector, consecutive_frames=2)
         self.assertFalse(gate.update(positive))
         self.assertTrue(gate.update(positive))
@@ -271,6 +322,13 @@ class GbaAutoplayControllerTests(unittest.TestCase):
         result = compare_matched_movement_frames(idle, idle, forward, forward,
                                                   forward, forward)
         self.assertFalse(result["movement_signal_confirmed"])
+        result = compare_matched_movement_frames(idle, idle, idle, idle,
+                                                  opposite, opposite)
+        self.assertTrue(result["movement_signal_confirmed"])
+        self.assertEqual(result["movement_signal_action"], "opposite")
+        result = compare_matched_movement_frames(idle, idle, idle, idle,
+                                                  idle, idle)
+        self.assertFalse(result["movement_signal_confirmed"])
 
     def test_exact_gil_message_and_narrow_postbattle_map_have_negative_controls(self):
         root = Path(__file__).resolve().parents[1]
@@ -289,6 +347,8 @@ class GbaAutoplayControllerTests(unittest.TestCase):
             str(evidence / "cornelia_postbattle_map_anchor_camera2.png"),
             str(evidence / "cornelia_postbattle_map_anchor_camera3.png"),
             str(evidence / "cornelia_postbattle_map_anchor_camera4.png"),
+            str(evidence / "cornelia_postbattle_map_anchor_camera5.png"),
+            str(evidence / "cornelia_postbattle_map_anchor_camera6.png"),
         ), threshold=0.995)
         map_frames = (
             np.asarray(Image.open(evidence / "cornelia_postbattle_map_frame.png").convert("RGB")),
@@ -309,6 +369,32 @@ class GbaAutoplayControllerTests(unittest.TestCase):
             root / "docs/experiments/gba_autoplay/issue17_continuous/proof/seed1729_postbattle_camera_candidate_2.png"
         ).convert("RGB"))
         self.assertTrue(map_detector.is_candidate(second_candidate_view))
+        # Bounded camera settling is tolerated for a verified playable-map
+        # frame. Battle/result UI overlays must not pass on matching scenery
+        # alone, even when the outdoor pixels are identical.
+        shifted = np.zeros_like(map_frames[0])
+        shifted[:, 4:] = map_frames[0][:, :-4]
+        self.assertTrue(map_detector.is_candidate(shifted))
+        camera5_crop = np.asarray(Image.open(
+            evidence / "cornelia_postbattle_map_anchor_camera5.png").convert("RGB"))
+        camera5_frame = np.zeros((160, 240, 3), dtype=np.uint8)
+        camera5_frame[24:72, 20:180] = camera5_crop
+        self.assertTrue(map_detector.is_candidate(camera5_frame))
+        camera6_crop = np.asarray(Image.open(
+            evidence / "cornelia_postbattle_map_anchor_camera6.png").convert("RGB"))
+        camera6_frame = np.zeros((160, 240, 3), dtype=np.uint8)
+        camera6_frame[24:72, 20:180] = camera6_crop
+        self.assertTrue(map_detector.is_candidate(camera6_frame))
+        camera6_battle_hud = camera6_frame.copy()
+        camera6_battle_hud[120:158, :100] = (20, 40, 180)
+        self.assertFalse(map_detector.is_candidate(camera6_battle_hud),
+                         "battle command UI must not match the post-victory field anchor")
+        banner = map_frames[0].copy()
+        banner[:16] = (20, 40, 180)
+        self.assertFalse(map_detector.is_candidate(banner), "result banner must block map confirmation")
+        battle_hud = map_frames[0].copy()
+        battle_hud[120:158, :100] = (20, 40, 180)
+        self.assertFalse(map_detector.is_candidate(battle_hud), "battle HUD must block map confirmation")
         map_gate = BattleConfirmationGate(map_detector, consecutive_frames=2)
         self.assertFalse(map_gate.update(map_frames[0]))
         self.assertTrue(map_gate.update(map_frames[1]))
